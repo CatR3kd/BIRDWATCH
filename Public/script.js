@@ -48,6 +48,8 @@
     if(command.toLowerCase() == 'help') return help();
     if(command.toLowerCase() == 'location') return whereAmI();
     if(command.toLowerCase() == 'balance') return balance();
+    if(command.toLowerCase() == 'inventory') return inventory();
+    if(command.toLowerCase() == 'health') return health();
     
     socket.emit('action', actionObj);
   }
@@ -58,7 +60,9 @@
     text.innerText = text.innerText + `Use commands to navigate and interact with the game!
     Global commands:
     "location" Reminds you of your surroundings.
+    "health": Tells you how much health you have left.
     "balance" Tells you how much money you have.
+    "inventory" Shows you what items you own.
     "move {direction}" Moves you in a given direction. (North, South, East, West)
     "talk {name}" Interact with an NPC by name.
     \nLocation specific commands:
@@ -81,6 +85,34 @@
     const text = document.getElementById('text');
     
     text.innerText = `${text.innerText}Current balance: $${savedUser.game.money}\n\n`;
+    
+    scroll();
+  }
+
+  function health(){
+    const text = document.getElementById('text');
+    
+    text.innerText = `${text.innerText}Current HP: ${savedUser.game.health}/${savedUser.game.maxHealth}\n\n`;
+    
+    scroll();
+  }
+
+  function inventory(){
+    const inventory = savedUser.game.items;
+    let textToDisplay = '';
+
+    if(inventory.length <= 0){
+      textToDisplay = 'Your inventory is empty!';
+    } else {
+      textToDisplay = 'Your items:';
+      for(let item of inventory){
+        textToDisplay += `\n${item}`;
+      }
+    }
+    
+    const text = document.getElementById('text');
+    
+    text.innerText = `${text.innerText}${textToDisplay}\n\n`;
     
     scroll();
   }
