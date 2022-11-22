@@ -52,7 +52,8 @@
   function help(){
     const text = document.getElementById('text');
     text.innerText = text.innerText + `Use commands to navigate and interact with the game! Available commands:
-    move {direction}\n\n`;
+    move {direction}
+    talk {name}\n\n`;
     scroll();
   }
 

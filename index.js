@@ -20,6 +20,7 @@ class Game{
     this.maxHealth = 100;
     this.location = 'spawnpoint';
   	this.items = [];
+    this.alliances = [];
   }
 }
 
@@ -128,8 +129,9 @@ async function playAction(username, socket, actionObj){
   const args = (actionObj.args).map(elem => {
     return elem.toLowerCase();
   });
-  
+
   if(command == 'move'){
+    // Moving system
     const destinationName = gameMap[user.game.location].neighbors[args[0]];
     const destination = gameMap[destinationName];
     if(destination == undefined) return socket.emit('message', 'That is not an available action.');
@@ -150,8 +152,17 @@ async function playAction(username, socket, actionObj){
     
     await db.set(username, newUser);
     
-    socket.emit('gameUpdate', newUser);
+    return socket.emit('gameUpdate', newUser);
+  } else if(command == 'talk'){
+    // NPC Interaction system
+    const availableNPCs = gameMap[user.game.location].npcs;
+    const targetNPC= availableNPCs[args[0]];
+
+    if(targetNPC == undefined) return socket.emit('message', 'That is not an available action.');
+
+    return socket.emit('message', `${targetNPC.name}: "${targetNPC.text}"`);
   } else {
+    // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
   }
 }

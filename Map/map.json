@@ -36,12 +36,13 @@
     "name":"Cliffside",
     "neededToEnter":[],
     "neighbors":{
+      "north": "mine",
       "east":"spawnpoint",
       "west":"pigeonBase"
     },
     "npcs":{},
     "items":{},
-    "text":"You walk to the bottom of the cliff. It soars higher now than you could have noticed before; easily over a hundred feet up. The pigeons look at you tauntingly, but you know you will require more than your bare hands to scale the cliff. Farther to the west, on top of the cliff, you see a strange building. Back to the east, you can see the spawnpoint."
+    "text":"You walk to the bottom of the cliff. It soars higher now than you could have noticed before; easily over a hundred feet up. The pigeons look at you tauntingly, but you know you will require more than your bare hands to scale the cliff. Farther to the west, on top of the cliff, you see a strange building. Back to the east, you can see the spawnpoint, and to the north, you can see what looks like a mineshaft."
   },
   "pigeonBase":{
     "name":"Pigeon Base",
@@ -57,7 +58,35 @@
     "name":"Town Center",
     "neededToEnter":[],
     "neighbors":{
-      "south":"spawnpoint"
+      "south":"spawnpoint",
+      "west":"mine"
+    },
+    "npcs":{
+      "seller":{
+        "name":"Mysterious Seller",
+        "text":"Welcome to my shoppe! Here you can purchase from my endless stock of seemingly random products, ha!",
+        "wares":{}
+      },
+      "governor":{
+        "name": "Governor Humdrum",
+        "text":"Hello there, commoner. I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.)",
+        "wares":{}
+      },
+      "prospector":{
+        "name": "Gold Prospector",
+        "text":"Well howdy, kid. If yer lookin' to make a few dimes, I'd suggest you head on over to the gold mines. It don't pay all that well, but I reckon it's better than any other job that silly governor will put you up to.",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "text":"You walk to the center of the town and look around. In a corner stands a man with a small table of wares and a sign that proclaims it to be a \"Shoppe\". You can interact with him by using \"talk seller\". In the center of the square, a man in a tweed suit and tophat is standing by himself. (\"talk governor\") Back to the south, you can see the spawnpoint, and to the west, you see what looks like a mineshaft. A man with a pickaxe and candle with a reflector strapped to his forehead is standing by the entrance trail to the mineshaft. (\"talk prospector\")"
+  },
+  "mine":{
+    "name":"Gold Mine",
+    "neededToEnter":[],
+    "neighbors":{
+      "east":"town",
+      "south":"cliffside"
     },
     "npcs":{},
     "items":{},
