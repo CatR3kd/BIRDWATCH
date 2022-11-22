@@ -64,7 +64,7 @@
     "npcs":{
       "seller":{
         "name":"Mysterious Seller",
-        "text":"Welcome to my shoppe! Here you can purchase from my endless stock of seemingly random products, ha!",
+        "text":"Welcome to my shoppe! Here you can purchase from my endless stock of seemingly random products, ha!\nWares:\n\nSuperPick - $1000\n\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "superpick":{
             "name":"SuperPick",
