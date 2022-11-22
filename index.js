@@ -185,6 +185,9 @@ async function playAction(username, socket, actionObj){
     }
 
     // Buy
+    // Make sure user doesn't already have the item
+    if(user.game.items.includes(item.name)) return socket.emit('message', 'You already own this item!');
+    
     // Make sure user has enough money
     if(user.game.money < item.price) return socket.emit('message', 'You don\'t have enough money to buy this item.');
 
@@ -204,6 +207,8 @@ async function playAction(username, socket, actionObj){
     if(user.game.items.includes('SuperPick')) mineTime = 650;
 
     let counter = 0;
+
+    socket.emit('message', `Mining... (${counter * 10}%)`);
     const mineInterval = setInterval(function(){
       counter++;
       socket.emit('message', `Mining... (${counter * 10}%)`);

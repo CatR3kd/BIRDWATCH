@@ -85,7 +85,7 @@
       }
     },
     "items":{},
-    "text":"You walk to the center of the town and look around. In a corner stands a skinny man with strange eyes and a small table of wares, attached to which is a sign that proclaims it to be a \"Shoppe\". You can interact with him by using \"talk seller\". In the center of the square, a man in a tweed suit and tophat is standing by himself. (\"talk governor\") Back to the south, you can see the spawnpoint, and to the west, you see what looks like a mineshaft. A man with a pickaxe and candle with a reflector strapped to his forehead is standing by the entrance trail to the mineshaft. (\"talk prospector\")"
+    "text":"You walk to the center of the town and look around. In a corner stands a skinny man with strange eyes and a small table of wares, attached to which is a sign that proclaims it to be a \"Shoppe\". (\"talk seller\") In the center of the square, a man in a tweed suit and tophat is standing by himself. (\"talk governor\") Back to the south, you can see the spawnpoint, and to the west, you see what looks like a mineshaft. A man with a pickaxe and candle with a reflector strapped to his forehead is standing by the entrance trail to the mineshaft. (\"talk prospector\")"
   },
   "mine":{
     "name":"Gold Mine",
