@@ -65,7 +65,13 @@
       "seller":{
         "name":"Mysterious Seller",
         "text":"Welcome to my shoppe! Here you can purchase from my endless stock of seemingly random products, ha!",
-        "wares":{}
+        "wares":{
+          "superpick":{
+            "name":"SuperPick",
+            "price":1000,
+            "description":"The newest SuperPick model, even though it's not yet released? Grants 35% faster mining speed."
+          }
+        }
       },
       "governor":{
         "name": "Governor Humdrum",
@@ -79,7 +85,7 @@
       }
     },
     "items":{},
-    "text":"You walk to the center of the town and look around. In a corner stands a man with a small table of wares and a sign that proclaims it to be a \"Shoppe\". You can interact with him by using \"talk seller\". In the center of the square, a man in a tweed suit and tophat is standing by himself. (\"talk governor\") Back to the south, you can see the spawnpoint, and to the west, you see what looks like a mineshaft. A man with a pickaxe and candle with a reflector strapped to his forehead is standing by the entrance trail to the mineshaft. (\"talk prospector\")"
+    "text":"You walk to the center of the town and look around. In a corner stands a skinny man with strange eyes and a small table of wares, attached to which is a sign that proclaims it to be a \"Shoppe\". You can interact with him by using \"talk seller\". In the center of the square, a man in a tweed suit and tophat is standing by himself. (\"talk governor\") Back to the south, you can see the spawnpoint, and to the west, you see what looks like a mineshaft. A man with a pickaxe and candle with a reflector strapped to his forehead is standing by the entrance trail to the mineshaft. (\"talk prospector\")"
   },
   "mine":{
     "name":"Gold Mine",
@@ -88,8 +94,14 @@
       "east":"town",
       "south":"cliffside"
     },
-    "npcs":{},
+    "npcs":{
+      "prospector":{
+        "name": "Gold Prospector",
+        "text":"Hey there, welcome to the gold mine! To start mining, use the command \"mine\". You'll find yerself some gold sure 'nuff. If you do, bring it to me and I'll take it off yer hands in exchange fer some dough.",
+        "wares":{}
+      }
+    },
     "items":{},
-    "text":""
+    "text":"You walk into the mine's opening, and find a large interior hewn from the rock. Another prospector stands by a torch on one of the support structures. (\"talk prospector\") Back to the east is the town, and to the south is the cliffside."
   }
 }

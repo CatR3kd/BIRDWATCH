@@ -161,6 +161,70 @@ async function playAction(username, socket, actionObj){
     if(targetNPC == undefined) return socket.emit('message', 'That is not an available action.');
 
     return socket.emit('message', `${targetNPC.name}: "${targetNPC.text}"`);
+  } else if((command == 'buy') || (command == 'inspect')){
+    const currentLocation = gameMap[user.game.location];
+    
+    // Buying and inspecting items
+    let targetItem;
+
+    // Find item in the wares of nearby NPC's
+    Object.keys(currentLocation.npcs).forEach(function(key){
+      const npc = currentLocation.npcs[key];
+      const item = npc.wares[args[0]];
+      
+      if(item != undefined) targetItem = item;
+    });
+    
+    const item = targetItem;
+    
+    if(item == undefined) return socket.emit('message', 'That is not an available action.');
+
+    // Inspect
+    if(command == 'inspect'){
+      return socket.emit('message', `${item.name}: ${item.description}\nPrice: ${item.price}`);
+    }
+
+    // Buy
+    // Make sure user has enough money
+    if(user.game.money < item.price) return socket.emit('message', 'You don\'t have enough money to buy this item.');
+
+    let newUser = user;
+    newUser.game.money -= item.price;
+    newUser.game.items.push(item.name);
+
+    await db.set(username, newUser);
+
+    socket.emit('message', `You purchased the ${item.name}!`);
+    return socket.emit('gameUpdate', newUser);
+  } else if(command == 'mine'){
+    // Mining
+    if(user.game.location != 'mine') return socket.emit('message', 'That is not an available action.');
+
+    let mineTime = 1000;
+    if(user.game.items.includes('SuperPick')) mineTime = 650;
+
+    let counter = 0;
+    const mineInterval = setInterval(function(){
+      counter++;
+      socket.emit('message', `Mining... (${counter * 10}%)`);
+
+      // Notify and profit when completed
+      if(counter >= 10){
+        const goldFound = Math.floor(Math.random() * Math.random() * 10);
+          
+        socket.emit('message', `Finished! Found ${goldFound} grams of gold! Earned $${goldFound * 50}!`);
+
+        // Save profit
+        let newUser = user;
+        newUser.game.money += (goldFound * 50);
+        
+        db.set(username, newUser);
+
+        socket.emit('gameUpdate', newUser);
+        
+        clearInterval(mineInterval);
+      }
+    }, mineTime);
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
