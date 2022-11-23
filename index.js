@@ -217,7 +217,7 @@ async function playAction(username, socket, actionObj){
       if(counter >= 10){
         const goldFound = Math.floor(Math.random() * Math.random() * 10);
           
-        socket.emit('message', `Finished! Found ${goldFound} grams of gold! Earned $${goldFound * 50}!`);
+        socket.emit('message', `Finished! Found ${goldFound} gram(s) of gold! Earned $${goldFound * 50}!`);
 
         // Save profit
         let newUser = user;
