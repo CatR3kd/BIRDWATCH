@@ -7,20 +7,27 @@
       "south":"tundra",
       "west":"cliffside"
     },
-    "npcs":{},
+    "npcs":{
+      "girl":{
+        "name": "Amelia",
+        "text":"Hey there! My name's Amelia! I see you're another newcomer, if you want to find anyone else, I'd advise that you go check out the town up north. Oh! If you ever need to be healed, I've heard there's a magic fountain around here somewhere... It's a dangerous world out there. See ya!",
+        "wares":{}
+      }
+    },
     "items":{},
-    "text":"You arrive at the world spawnpoint. To the north, you see a small town area. To the south, you see a snowy area to which a trail of small, tri-pointed tracks lead. To the west, you see a soaring cliff flocked by pigeons."
+    "text":"You arrive at the world spawnpoint. It's a well-forested area, and the ground is scattered with rocks and leaves. On a particularly large bolder, a little girl is sitting and looking at the trees. (\"talk girl\") To the north, you see a small town area. To the south, you see a snowy area to which a trail of small, tri-pointed tracks lead. To the west, you see a soaring cliff flocked by pigeons."
   },
   "tundra":{
     "name":"Tundra",
     "neededToEnter":[],
     "neighbors":{
       "north":"spawnpoint",
-      "south":"penguinBase"
+      "south":"penguinBase",
+      "west": "fountain"
     },
     "npcs":{},
     "items":{},
-    "text":"You walk to the precipice of the snow. The change in temperature is immediate and unnatural, you know you can't pass without some form of higher insulation. Farther to the south, sat in the middle of the snow is an odd building surrounded by unidenifiable figures. Back to the north, you can see the spawnpoint."
+    "text":"You walk to the precipice of the snow. The change in temperature is immediate and unnatural, you know you can't pass without some form of higher insulation. Farther to the south, sat in the middle of the snow is an odd building surrounded by unidenifiable figures. Back to the north, you can see the spawnpoint, and to the west, you see a fountain."
   },
   "penguinBase":{
     "name":"Penguin Base",
@@ -38,11 +45,29 @@
     "neighbors":{
       "north": "mine",
       "east":"spawnpoint",
+      "south": "fountain",
       "west":"pigeonBase"
     },
     "npcs":{},
     "items":{},
-    "text":"You walk to the bottom of the cliff. It soars higher now than you could have noticed before; easily over a hundred feet up. The pigeons look at you tauntingly, but you know you will require more than your bare hands to scale the cliff. Farther to the west, on top of the cliff, you see a strange building. Back to the east, you can see the spawnpoint, and to the north, you can see what looks like a mineshaft."
+    "text":"You walk to the bottom of the cliff. It soars higher now than you could have noticed before; easily over a hundred feet up. The pigeons look at you tauntingly, but you know you will require more than your bare hands to scale the cliff. Farther to the west, on top of the cliff, you see a strange building. Back to the east, you can see the spawnpoint, to the south, you see a fountain, and to the north, you can see what looks like a mineshaft."
+  },
+  "fountain":{
+    "name":"Glowing Fountain",
+    "neededToEnter":[],
+    "neighbors":{
+      "north":"cliffside",
+      "east": "tundra"
+    },
+    "npcs":{
+      "squirrel":{
+        "name": "Bizarre Squirrel",
+        "text":"[The squirrel doesn't speak, of course, but you look into its eyes and understand the IT is the source of healing the people speak of, and it will heal you too, for a price. (\"heal\")]",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "text":"You walk into an opening in the trees and in the middle is a hill with a gorgeous marble fountain atop it. It looks centuries old, but has somehow remained untarnished, despite being in the only exposed spot in the forest. You immediately understand that it must be magic, to be so beautiful in the face of adveristy. At that very moment, an unusually large squirrel crawls around the side of the fountain and looks at you. It has an exeptionally long tounge, a queer grin, and an equally odd gaze. (\"talk squirrel\") To the north, you can see the cliffside, and to the east, you spy the tundra."
   },
   "pigeonBase":{
     "name":"Pigeon Base",
@@ -62,8 +87,8 @@
       "west":"mine"
     },
     "npcs":{
-      "seller":{
-        "name":"Mysterious Seller",
+      "merchant":{
+        "name":"Strange Merchant",
         "text":"Welcome to my shoppe! Here you can purchase from my endless stock of seemingly random products, ha!\nWares:\n\nSuperPick - $1000\n\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "superpick":{
@@ -85,7 +110,7 @@
       }
     },
     "items":{},
-    "text":"You walk to the center of the town and look around. In a corner stands a skinny man with strange eyes and a small table of wares, attached to which is a sign that proclaims it to be a \"Shoppe\". (\"talk seller\") In the center of the square, a man in a tweed suit and tophat is standing by himself. (\"talk governor\") Back to the south, you can see the spawnpoint, and to the west, you see what looks like a mineshaft. A man with a pickaxe and candle with a reflector strapped to his forehead is standing by the entrance trail to the mineshaft. (\"talk prospector\")"
+    "text":"You walk to the center of the town and look around. In a corner stands a skinny man with strange eyes and a small table of wares, attached to which is a sign that proclaims it to be a \"Shoppe\". (\"talk merchant\") In the center of the square, a man in a tweed suit and tophat is standing by himself. (\"talk governor\") Back to the south, you can see the spawnpoint, and to the west, you see what looks like a mineshaft. A man with a pickaxe and candle with a reflector strapped to his forehead is standing by the entrance trail to the mineshaft. (\"talk prospector\")"
   },
   "mine":{
     "name":"Gold Mine",

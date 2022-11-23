@@ -160,7 +160,7 @@ async function playAction(username, socket, actionObj){
 
     if(targetNPC == undefined) return socket.emit('message', 'That is not an available action.');
 
-    return socket.emit('message', `${targetNPC.name}: "${targetNPC.text}"`);
+    return socket.emit('message', `${targetNPC.name}: ${targetNPC.text}`);
   } else if((command == 'buy') || (command == 'inspect')){
     const currentLocation = gameMap[user.game.location];
     

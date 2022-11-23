@@ -67,6 +67,7 @@
     "talk {name}" Interact with an NPC by name.
     \nLocation specific commands:
     "mine" Begin mining for gold. [Mineshaft]
+    "heal" Heal with foreign power [Fountain]
     "buy {item}" Purchase an item from a vendor. [Near vendor]
     "inspect {item}" Get more information about a vendor's item. [Near vendor]\n\n`;
     
