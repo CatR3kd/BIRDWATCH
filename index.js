@@ -122,7 +122,7 @@ function isEmpty(path) {
 
 async function playAction(username, socket, actionObj){
   const user = await db.get(username);
-  //console.log(user)
+  
   if(user == undefined) return;
 
   const command = (actionObj.command).toLowerCase();
@@ -152,7 +152,7 @@ async function playAction(username, socket, actionObj){
     
     await db.set(username, newUser);
     
-    return socket.emit('gameUpdate', newUser);
+    return socket.emit('gameUpdate', {"user": newUser, "notify": true});
   } else if(command == 'talk'){
     // NPC Interaction system
     const availableNPCs = gameMap[user.game.location].npcs;
@@ -198,7 +198,7 @@ async function playAction(username, socket, actionObj){
     await db.set(username, newUser);
 
     socket.emit('message', `You purchased the ${item.name}!`);
-    return socket.emit('gameUpdate', newUser);
+    return socket.emit('gameUpdate', {"user": newUser, "notify": false});
   } else if(command == 'mine'){
     // Mining
     if(user.game.location != 'mine') return socket.emit('message', 'That is not an available action.');
@@ -216,20 +216,43 @@ async function playAction(username, socket, actionObj){
       // Notify and profit when completed
       if(counter >= 10){
         const goldFound = Math.floor(Math.random() * Math.random() * 10);
-          
-        socket.emit('message', `Finished! Found ${goldFound} gram(s) of gold! Earned $${goldFound * 50}!`);
+        const punctuation = (goldFound > 0)? '!' : '.';
+        const grams = (goldFound != 1)? 'grams' : 'gram';
+        
+        socket.emit('message', `Finished${punctuation} Found ${goldFound} ${grams} of gold${punctuation} (Earned: $${goldFound * 50})`);
 
         // Save profit
         let newUser = user;
         newUser.game.money += (goldFound * 50);
         
         db.set(username, newUser);
-
-        socket.emit('gameUpdate', newUser);
+        socket.emit('gameUpdate', {"user": newUser, "notify": false});
         
         clearInterval(mineInterval);
       }
     }, mineTime);
+  } else if(command == 'heal'){
+    // Healing
+    if(user.game.location != 'fountain') return socket.emit('message', 'That is not an available action.');
+    if(user.game.money < 5) return socket.emit('message', 'You don\'t have enough money.');
+
+    // Get amount of HP to heal, and cost
+    let HPToHeal = (user.game.maxHealth - user.game.health);
+
+    if(HPToHeal <= 0) return socket.emit('message', 'You are already at full health!');
+
+    if(user.game.money < (HPToHeal * 5)) HPToHeal = Math.floor(user.game.money / 5);
+    const price = (HPToHeal * 5);
+    let newUser = user;
+    newUser.game.money -= price;
+    newUser.game.health += HPToHeal;
+    
+    // Save user and update the client
+    socket.emit('gameUpdate', {"user": newUser, "notify": false});
+    await db.set(username, newUser);
+
+    // Emit message
+    socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth})\nMoney spent: $${price}`);
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');

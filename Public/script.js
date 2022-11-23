@@ -12,11 +12,11 @@
   socket.on('loggedIn', function(user){
     document.getElementById('login').style.visibility = 'hidden';
     document.getElementById('content').style.visibility = 'visible';
-    updateGame(user);
+    updateGame({"user": user, "notify": true});
   });
 
-  socket.on('gameUpdate', function(user){
-    updateGame(user);
+  socket.on('gameUpdate', function(updateObj){
+    updateGame(updateObj);
   });
 
   socket.on('message', function(message){
@@ -64,12 +64,7 @@
     "balance" Tells you how much money you have.
     "inventory" Shows you what items you own.
     "move {direction}" Moves you in a given direction. (North, South, East, West)
-    "talk {name}" Interact with an NPC by name.
-    \nLocation specific commands:
-    "mine" Begin mining for gold. [Mineshaft]
-    "heal" Heal with foreign power [Fountain]
-    "buy {item}" Purchase an item from a vendor. [Near vendor]
-    "inspect {item}" Get more information about a vendor's item. [Near vendor]\n\n`;
+    NOTE: There are other location-specific commands that will be explained by other characters.\n\n`;
     
     scroll();
   }
@@ -118,13 +113,16 @@
     scroll();
   }
 
-  function updateGame(user){
-    const text = document.getElementById('text');
-    savedUser = user;
-    
-    text.innerText = `${text.innerText}Entered ${map[user.game.location].name}.\n${map[user.game.location].text}\n\n`;
-    
-    scroll();
+  function updateGame(updateObj){
+    savedUser = updateObj.user;
+
+    if(updateObj.notify == true){
+      const text = document.getElementById('text');
+      
+      text.innerText = `${text.innerText}Entered ${map[updateObj.user.game.location].name}.\n${map[updateObj.user.game.location].text}\n\n`;
+      
+      scroll();
+    }
   }
 
   function scroll(){
