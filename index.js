@@ -16,11 +16,14 @@ const gameMap = getMap();
 class Game{
 	constructor(){
     this.money = 0;
-    this.health = 100;
-    this.maxHealth = 100;
+    this.speed = 1;
+    this.damage = 15;
+    this.health = 1;
+    this.maxHealth = 1;
     this.location = 'spawnpoint';
   	this.items = [];
     this.alliances = [];
+    this.defeatedEnemies = [];
   }
 }
 
@@ -139,9 +142,20 @@ async function playAction(username, socket, actionObj){
     let cannotPass = false;
     
     for(let item of destination.neededToEnter){
-      if(!((user.game.items).includes(item))){
+      if(!(user.game.items.includes(item))){
         cannotPass = true;
         return socket.emit('message', `You need the "${item}" to pass!`);
+      }
+    }
+
+    const currentLocation = gameMap[user.game.location];
+    
+    for(let enemyID in currentLocation.enemies){
+      const enemy = currentLocation.enemies[enemyID];
+      
+      if((!(user.game.defeatedEnemies.includes(enemy.name))) && (enemy.blockedDirection == args[0])){
+        cannotPass = true;
+        return socket.emit('message', `Before you can move to the ${args[0]}, you must defeat the ${enemyID}! ("fight ${enemyID}")`);
       }
     }
 
@@ -151,8 +165,16 @@ async function playAction(username, socket, actionObj){
     newUser.game.location = destinationName;
     
     await db.set(username, newUser);
+
+    let addedMessage = '';
     
-    return socket.emit('gameUpdate', {"user": newUser, "notify": true});
+    for(let enemyID in destination.enemies){
+      const enemy = destination.enemies[enemyID];
+      
+      if(!(user.game.defeatedEnemies.includes(enemy.name))) addedMessage += `\n${enemyID} blocks travel to the ${enemy.blockedDirection}! ("fight ${enemyID}")`;
+    }
+    
+    return socket.emit('gameUpdate', {"user": newUser, "notify": true, "addedMessage": addedMessage});
   } else if(command == 'talk'){
     // NPC Interaction system
     const availableNPCs = gameMap[user.game.location].npcs;
@@ -161,6 +183,51 @@ async function playAction(username, socket, actionObj){
     if(targetNPC == undefined) return socket.emit('message', 'That is not an available action.');
 
     return socket.emit('message', `${targetNPC.name}: ${targetNPC.text}`);
+  } else if(command == 'fight'){
+    // Fighting system
+    const targetEnemy = gameMap[user.game.location].enemies[args[0]];
+
+    if(targetEnemy == undefined) return socket.emit('message', 'That is not an available action.');
+
+    let nextTurn = (user.game.speed >= targetEnemy.stats.speed)? 'user' : 'enemy';
+
+    const fightInterval = setInterval(function(){
+      if(nextTurn == 'user'){
+        targetEnemy.stats.health -= user.game.damage;
+        socket.emit('message', `You attacked the ${targetEnemy.name} and dealt ${user.game.damage} damage.`);
+        nextTurn = 'enemy';
+      } else { // else instead of elseif is lost redundancy and potentially bad
+        user.game.health -= targetEnemy.stats.damage;
+        socket.emit('message', `The ${targetEnemy.name} attacked you and dealt ${targetEnemy.stats.damage} damage.`);
+        nextTurn = 'user';
+      }
+
+      socket.emit('gameUpdate', {"user": user, "notify": false, "addedMessage": ''});
+      socket.emit('message', `Your health: ${user.game.health}/${user.game.maxHealth}\nEnemy health:${targetEnemy.stats.health}/${targetEnemy.stats.maxHealth}`);
+      
+      if((user.game.health <= 0) || (targetEnemy.stats.health <= 0)){
+        let newUser = user;
+        
+        if(user.game.health > 0){
+          // Fight won
+          newUser.game.defeatedEnemies.push(targetEnemy.name);
+          
+          socket.emit('message', `You beat the ${targetEnemy.name}!`);
+        } else {
+          // Fight lost
+          newUser.game.location = 'spawnpoint';
+          newUser.game.money = Math.floor(user.game.money / 2);
+          newUser.health = user.game.maxHealth;
+
+          socket.emit('message', 'You died and lost half of your money. You\'ve respawned at the world spawnpoint.');
+        }
+
+        db.set(username, newUser);
+        socket.emit('gameUpdate', {"user": newUser, "notify": true, "addedMessage": ''});
+        
+        clearInterval(fightInterval);
+      }
+    }, 1000);
   } else if((command == 'buy') || (command == 'inspect')){
     const currentLocation = gameMap[user.game.location];
     
@@ -198,7 +265,7 @@ async function playAction(username, socket, actionObj){
     await db.set(username, newUser);
 
     socket.emit('message', `You purchased the ${item.name}!`);
-    return socket.emit('gameUpdate', {"user": newUser, "notify": false});
+    return socket.emit('gameUpdate', {"user": newUser, "notify": false, "addedMessage": ''});
   } else if(command == 'mine'){
     // Mining
     if(user.game.location != 'mine') return socket.emit('message', 'That is not an available action.');
@@ -226,7 +293,7 @@ async function playAction(username, socket, actionObj){
         newUser.game.money += (goldFound * 50);
         
         db.set(username, newUser);
-        socket.emit('gameUpdate', {"user": newUser, "notify": false});
+        socket.emit('gameUpdate', {"user": newUser, "notify": false, "addedMessage": ''});
         
         clearInterval(mineInterval);
       }
@@ -248,7 +315,7 @@ async function playAction(username, socket, actionObj){
     newUser.game.health += HPToHeal;
     
     // Save user and update the client
-    socket.emit('gameUpdate', {"user": newUser, "notify": false});
+    socket.emit('gameUpdate', {"user": newUser, "notify": false, "addedMessage": ''});
     await db.set(username, newUser);
 
     // Emit message

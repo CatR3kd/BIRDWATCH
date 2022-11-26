@@ -12,7 +12,7 @@
   socket.on('loggedIn', function(user){
     document.getElementById('login').style.visibility = 'hidden';
     document.getElementById('content').style.visibility = 'visible';
-    updateGame({"user": user, "notify": true});
+    updateGame({"user": user, "notify": true, "addedMessage": ''});
   });
 
   socket.on('gameUpdate', function(updateObj){
@@ -115,11 +115,11 @@
 
   function updateGame(updateObj){
     savedUser = updateObj.user;
-
+    
     if(updateObj.notify == true){
       const text = document.getElementById('text');
       
-      text.innerText = `${text.innerText}Entered ${map[updateObj.user.game.location].name}.\n${map[updateObj.user.game.location].text}\n\n`;
+      text.innerText = `${text.innerText}Entered ${map[updateObj.user.game.location].name}.\n${map[updateObj.user.game.location].text}${updateObj.addedMessage}\n\n`;
       
       scroll();
     }
