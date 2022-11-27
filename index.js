@@ -18,8 +18,8 @@ class Game{
     this.money = 0;
     this.speed = 1;
     this.damage = 15;
-    this.health = 1;
-    this.maxHealth = 1;
+    this.health = 100;
+    this.maxHealth = 100;
     this.location = 'spawnpoint';
   	this.items = [];
     this.alliances = [];
@@ -188,6 +188,8 @@ async function playAction(username, socket, actionObj){
     const targetEnemy = gameMap[user.game.location].enemies[args[0]];
 
     if(targetEnemy == undefined) return socket.emit('message', 'That is not an available action.');
+
+      if(user.game.defeatedEnemies.includes(targetEnemy.name)) return socket.emit('message', 'That is not an available action. (You have already beaten this enemy!)');
 
     let nextTurn = (user.game.speed >= targetEnemy.stats.speed)? 'user' : 'enemy';
 
