@@ -7,6 +7,7 @@ const fs = require('fs');
 const { QuickDB } = require("quick.db");
 const db = new QuickDB({filePath: "Data/db.sqlite"});
 const connectedPlayers = new Map();
+const busyPlayers = new Map();
 
 const gameMap = getMap();
 
@@ -124,9 +125,12 @@ function isEmpty(path) {
 
 
 async function playAction(username, socket, actionObj){
+  // Make sure user exists and isn't busy
   const user = await db.get(username);
-  
   if(user == undefined) return;
+  
+  const busy = busyPlayers.get(user.username);
+  if(busy != undefined) return socket.emit('message', `You cannot use this command while ${busy}.`);
 
   const command = (actionObj.command).toLowerCase();
   const args = (actionObj.args).map(elem => {
@@ -163,18 +167,9 @@ async function playAction(username, socket, actionObj){
     
     let newUser = user;
     newUser.game.location = destinationName;
-    
     await db.set(username, newUser);
-
-    let addedMessage = '';
     
-    for(let enemyID in destination.enemies){
-      const enemy = destination.enemies[enemyID];
-      
-      if(!(user.game.defeatedEnemies.includes(enemy.name))) addedMessage += `\n${enemyID} blocks travel to the ${enemy.blockedDirection}! ("fight ${enemyID}")`;
-    }
-    
-    return socket.emit('gameUpdate', {"user": newUser, "notify": true, "addedMessage": addedMessage});
+    return socket.emit('gameUpdate', {"user": newUser, "notify": true});
   } else if(command == 'talk'){
     // NPC Interaction system
     const availableNPCs = gameMap[user.game.location].npcs;
@@ -204,7 +199,7 @@ async function playAction(username, socket, actionObj){
         nextTurn = 'user';
       }
 
-      socket.emit('gameUpdate', {"user": user, "notify": false, "addedMessage": ''});
+      socket.emit('gameUpdate', {"user": user, "notify": false});
       socket.emit('message', `Your health: ${user.game.health}/${user.game.maxHealth}\nEnemy health:${targetEnemy.stats.health}/${targetEnemy.stats.maxHealth}`);
       
       if((user.game.health <= 0) || (targetEnemy.stats.health <= 0)){
@@ -219,13 +214,13 @@ async function playAction(username, socket, actionObj){
           // Fight lost
           newUser.game.location = 'spawnpoint';
           newUser.game.money = Math.floor(user.game.money / 2);
-          newUser.health = user.game.maxHealth;
+          newUser.game.health = user.game.maxHealth;
 
           socket.emit('message', 'You died and lost half of your money. You\'ve respawned at the world spawnpoint.');
         }
 
         db.set(username, newUser);
-        socket.emit('gameUpdate', {"user": newUser, "notify": true, "addedMessage": ''});
+        socket.emit('gameUpdate', {"user": newUser, "notify": true});
         
         clearInterval(fightInterval);
       }
@@ -267,7 +262,7 @@ async function playAction(username, socket, actionObj){
     await db.set(username, newUser);
 
     socket.emit('message', `You purchased the ${item.name}!`);
-    return socket.emit('gameUpdate', {"user": newUser, "notify": false, "addedMessage": ''});
+    return socket.emit('gameUpdate', {"user": newUser, "notify": false});
   } else if(command == 'mine'){
     // Mining
     if(user.game.location != 'mine') return socket.emit('message', 'That is not an available action.');
@@ -278,6 +273,8 @@ async function playAction(username, socket, actionObj){
     let counter = 0;
 
     socket.emit('message', `Mining... (${counter * 10}%)`);
+    busyPlayers.set(user.username, 'mining');
+    
     const mineInterval = setInterval(function(){
       counter++;
       socket.emit('message', `Mining... (${counter * 10}%)`);
@@ -295,8 +292,9 @@ async function playAction(username, socket, actionObj){
         newUser.game.money += (goldFound * 50);
         
         db.set(username, newUser);
-        socket.emit('gameUpdate', {"user": newUser, "notify": false, "addedMessage": ''});
-        
+        socket.emit('gameUpdate', {"user": newUser, "notify": false});
+
+        busyPlayers.delete(user.username);
         clearInterval(mineInterval);
       }
     }, mineTime);
@@ -317,7 +315,7 @@ async function playAction(username, socket, actionObj){
     newUser.game.health += HPToHeal;
     
     // Save user and update the client
-    socket.emit('gameUpdate', {"user": newUser, "notify": false, "addedMessage": ''});
+    socket.emit('gameUpdate', {"user": newUser, "notify": false});
     await db.set(username, newUser);
 
     // Emit message

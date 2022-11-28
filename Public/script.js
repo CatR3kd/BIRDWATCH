@@ -12,7 +12,7 @@
   socket.on('loggedIn', function(user){
     document.getElementById('login').style.visibility = 'hidden';
     document.getElementById('content').style.visibility = 'visible';
-    updateGame({"user": user, "notify": true, "addedMessage": ''});
+    updateGame({"user": user, "notify": true});
   });
 
   socket.on('gameUpdate', function(updateObj){
@@ -46,7 +46,7 @@
     };
 
     if(command.toLowerCase() == 'help') return help();
-    if(command.toLowerCase() == 'location') return whereAmI();
+    if(command.toLowerCase() == 'location') return location();
     if(command.toLowerCase() == 'balance') return balance();
     if(command.toLowerCase() == 'inventory') return inventory();
     if(command.toLowerCase() == 'health') return health();
@@ -69,12 +69,26 @@
     scroll();
   }
 
-  function whereAmI(){
+  function location(){
     const text = document.getElementById('text');
+      const location = map[savedUser.game.location];
+
+      let addedMessage = '\n';
+
+      Object.keys(location.neighbors).forEach(function(key){
+        const neighbor = map[location.neighbors[key]];
+        addedMessage +=`\n${key.charAt(0).toUpperCase() + key.slice(1)}: ${neighbor.name}`;
+      });
     
-    text.innerText = `${text.innerText}Entered ${map[savedUser.game.location].name}.\n${map[savedUser.game.location].text}\n\n`;
-    
-    scroll();
+      for(let enemyID in location.enemies){
+        const enemy = location.enemies[enemyID];
+        
+        if(!(savedUser.game.defeatedEnemies.includes(enemy.name))) addedMessage += `\n${enemyID} blocks travel to the ${enemy.blockedDirection}! ("fight ${enemyID}")`;
+      }
+      
+      text.innerText = `${text.innerText}Entered ${map[savedUser.game.location].name}.\n${map[savedUser.game.location].text}${addedMessage}\n\n`;
+      
+      scroll();
   }
 
   function balance(){
@@ -117,11 +131,7 @@
     savedUser = updateObj.user;
     
     if(updateObj.notify == true){
-      const text = document.getElementById('text');
-      
-      text.innerText = `${text.innerText}Entered ${map[updateObj.user.game.location].name}.\n${map[updateObj.user.game.location].text}${updateObj.addedMessage}\n\n`;
-      
-      scroll();
+      location();
     }
   }
 
