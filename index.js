@@ -183,6 +183,7 @@ async function playAction(username, socket, actionObj){
 
       if(user.game.defeatedEnemies.includes(targetEnemy.name)) return socket.emit('message', 'That is not an available action. (You have already beaten this enemy!)');
 
+    busyPlayers.set(user.username, 'fighting');
     let nextTurn = (user.game.speed >= targetEnemy.stats.speed)? 'user' : 'enemy';
 
     const fightInterval = setInterval(function(){
@@ -218,6 +219,7 @@ async function playAction(username, socket, actionObj){
 
         db.set(username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": true});
+        busyPlayers.delete(user.username);
         
         clearInterval(fightInterval);
       }
