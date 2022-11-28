@@ -102,7 +102,7 @@
   function stats(){
     const text = document.getElementById('text');
     
-    text.innerText = `${text.innerText}Health: ${savedUser.game.health}/${savedUser.game.maxHealth}\Strength: ${savedUser.game.damage}\nSpeed: ${savedUser.game.speed}\n\n`;
+    text.innerText = `${text.innerText}Health: ${savedUser.game.health}/${savedUser.game.maxHealth}\nStrength: ${savedUser.game.damage}\nSpeed: ${savedUser.game.speed}\n\n`;
     
     scroll();
   }
