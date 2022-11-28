@@ -11,9 +11,6 @@ const busyPlayers = new Map();
 
 const gameMap = getMap();
 
-
-// Game class
-
 class Game{
 	constructor(){
     this.money = 0;
