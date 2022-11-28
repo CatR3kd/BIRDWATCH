@@ -49,7 +49,7 @@
     if(command.toLowerCase() == 'location') return location();
     if(command.toLowerCase() == 'balance') return balance();
     if(command.toLowerCase() == 'inventory') return inventory();
-    if(command.toLowerCase() == 'health') return health();
+    if(command.toLowerCase() == 'stats') return stats();
     
     socket.emit('action', actionObj);
   }
@@ -60,7 +60,7 @@
     text.innerText = text.innerText + `Use commands to navigate and interact with the game!
     Global commands:
     "location" Reminds you of your surroundings.
-    "health": Tells you how much health you have left.
+    "stats": List your current stats. (Health, strength, speed, etc.)
     "balance" Tells you how much money you have.
     "inventory" Shows you what items you own.
     "move {direction}" Moves you in a given direction. (North, South, East, West)
@@ -99,10 +99,10 @@
     scroll();
   }
 
-  function health(){
+  function stats(){
     const text = document.getElementById('text');
     
-    text.innerText = `${text.innerText}Current HP: ${savedUser.game.health}/${savedUser.game.maxHealth}\n\n`;
+    text.innerText = `${text.innerText}Health: ${savedUser.game.health}/${savedUser.game.maxHealth}\Strength: ${savedUser.game.damage}\nSpeed: ${savedUser.game.speed}\n\n`;
     
     scroll();
   }

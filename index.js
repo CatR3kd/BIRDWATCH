@@ -244,7 +244,7 @@ async function playAction(username, socket, actionObj){
 
     // Inspect
     if(command == 'inspect'){
-      return socket.emit('message', `${item.name}: ${item.description}\nPrice: ${item.price}`);
+      return socket.emit('message', `${item.name}: ${item.description}\nPrice: $${item.price}`);
     }
 
     // Buy
