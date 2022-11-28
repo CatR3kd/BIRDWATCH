@@ -258,6 +258,11 @@ async function playAction(username, socket, actionObj){
     newUser.game.money -= item.price;
     newUser.game.items.push(item.name);
 
+    // Change player stats
+    if(item.type == 'weapon'){
+      newUser.game.damage += item.damage;
+    }
+
     await db.set(username, newUser);
 
     socket.emit('message', `You purchased the ${item.name}!`);

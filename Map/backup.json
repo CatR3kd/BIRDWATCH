@@ -101,7 +101,15 @@
           "superpick":{
             "name":"SuperPick",
             "price":1000,
+            "type":"other",
             "description":"The newest SuperPick model, even though it's not yet released? Grants 35% faster mining speed."
+          },
+          "dagger":{
+            "name":"Dagger",
+            "price":250,
+            "type":"weapon",
+            "damage":5,
+            "description":"A small, shiny dagger. Increases attack damage by 5."
           }
         }
       },
