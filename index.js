@@ -271,9 +271,13 @@ async function playAction(username, socket, actionObj){
     // Mining
     if(user.game.location != 'mine') return socket.emit('message', 'That is not an available action.');
 
+    // Change stats based on user items
     let mineTime = 1000;
     if(user.game.items.includes('SuperPick')) mineTime = 650;
 
+    let multiplier = 10;
+    if(user.game.items.includes('SuperDetector')) multiplier = 12.5;
+    
     let counter = 0;
 
     socket.emit('message', `Mining... (${counter * 10}%)`);
@@ -285,7 +289,7 @@ async function playAction(username, socket, actionObj){
 
       // Notify and profit when completed
       if(counter >= 10){
-        const goldFound = Math.floor(Math.random() * Math.random() * 10);
+        const goldFound = Math.floor(Math.random() * Math.random() * multiplier);
         const punctuation = (goldFound > 0)? '!' : '.';
         const grams = (goldFound != 1)? 'grams' : 'gram';
         

@@ -1,8 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata&display=swap');
 
 html, body {
-  height: 100%;
-  width: 100%;
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  bottom: 0;
+  right: 0;
   background: #1a1a1a;
   overflow: hidden;
 }
@@ -36,7 +39,7 @@ html, body {
 }
 
 #terminal{
-  width: 100vw;
+  width: 75vw;
   height: calc(100vh - 25px);
   overflow-x: scroll;
   padding-bottom: 30px;
@@ -44,17 +47,17 @@ html, body {
 
 #text{
   margin: 5px;
-  color: white;
+  color: #ffffff;
   font-size: 20px;
   text-shadow: 0 0 5px #C8C8C8;
 }
 
 #actionInput{
   height: 25px;
-  width: calc(100vw - 8px);
+  width: calc(75vw - 8px);
   margin: 0 2px;
   border: 2px solid #ffffff;
-  color: white;
+  color: #ffffff;
   background: #1a1a1a;
   outline: none;
   font-size: 18px;
@@ -64,6 +67,45 @@ html, body {
 #terminal, #actionInput{
   margin: 0;
   bottom: 0;
+  left: 0;
+  position: absolute;
+}
+
+#sidebar{
+  width: calc(25vw - 3px);
+  height: calc(100vh - 4px);
+  margin: 0;
+  bottom: 0;
   right: 0;
   position: absolute;
+  border: 2px solid #ffffff;
+  border-radius: 2px;
+  color: #ffffff;
+}
+
+/* Responsiveness */
+
+@media (max-width: 767px) {
+  html, body{
+    margin: 0;
+    overflow-y: scroll;
+  }
+  
+  #terminal, #text, #actionInput{
+    font-size: 16px;
+  }
+
+  #sidebar{
+    visibility: hidden;
+    bottom: 0;
+    left: 0;
+  }
+
+  #actionInput{
+    width: calc(100vw - 8px);
+  }
+
+  #terminal{
+    width: 100vw;
+  }
 }

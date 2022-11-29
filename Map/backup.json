@@ -34,7 +34,7 @@
   },
   "penguinBase":{
     "name":"Penguin Base",
-    "neededToEnter":["Warm Coat"],
+    "neededToEnter":["Coat"],
     "neighbors":{
       "north":"tundra"
     },
@@ -162,7 +162,8 @@
     "name":"Beaten Trail",
     "neededToEnter":[],
     "neighbors":{
-      "west":"trail"
+      "west":"trail",
+      "east":"fort"
     },
     "npcs":{},
     "items":{},
@@ -178,6 +179,41 @@
         }
       }
     },
-    "text":"You continue on the trail. It goes on to the east, and westward, towards the world spawnpoint."
+    "text":"You continue on the trail. It goes on to the east towards a towering fortress, and westward, towards the world spawnpoint."
+  },
+  "fort":{
+    "name":"Fort",
+    "neededToEnter":[],
+    "neighbors":{
+      "west":"trailTwo"
+    },
+    "npcs":{
+      "scientist":{
+        "name": "Scientist",
+        "text":"\"Hello there. I'm the scientist that runs this fort, and even if nobody else will admit it, I'm the only reason it's still around... Anything you'd like to purchase?\"\nWares:\n\nCoat - $1500\nSuperDetector - $2000\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "wares":{
+          "coat":{
+            "name":"Coat",
+            "price":1500,
+            "type":"other",
+            "description":"A jacket engineered to keep the user at an adjustable temperature in any condition, with science!"
+          },
+          "superdetector":{
+            "name":"SuperDetector",
+            "price":2000,
+            "type":"other",
+            "description":"A metal detector that helps you find 25% more gold when mining!"
+          }
+        }
+      },
+      "guard":{
+        "name": "Fortress Guard",
+        "text":"*grunt* \"Five minutes 'till my shift is over...\"",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You walk into the fort, through the opened gates. Even though it looked old outside, it's modern and sleek on the inside. In the middle of the room stands a man next to a few desks covered in computers and other trinkets and gadgets (\"talk scientist\"), and by the entrance is a lone guard. (\"talk guard\") Back to the west, you see the trail you came from."
   }
 }
