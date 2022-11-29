@@ -198,7 +198,7 @@ async function playAction(username, socket, actionObj){
       }
 
       socket.emit('gameUpdate', {"user": user, "notify": false});
-      socket.emit('message', `Your health: ${user.game.health}/${user.game.maxHealth}\nEnemy health:${targetEnemy.stats.health}/${targetEnemy.stats.maxHealth}`);
+      socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health:${(targetEnemy.stats.health > 0)? targetEnemy.stats.health : 0}/${targetEnemy.stats.maxHealth}`);
       
       if((user.game.health <= 0) || (targetEnemy.stats.health <= 0)){
         let newUser = user;
@@ -261,6 +261,11 @@ async function playAction(username, socket, actionObj){
     // Change player stats
     if(item.type == 'weapon'){
       newUser.game.damage += item.damage;
+    }
+
+    if(item.type == 'armor'){
+      newUser.game.maxHealth += item.defense;
+      newUser.game.health += item.defense;
     }
 
     await db.set(username, newUser);

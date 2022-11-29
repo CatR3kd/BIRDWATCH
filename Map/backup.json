@@ -190,7 +190,7 @@
     "npcs":{
       "scientist":{
         "name": "Scientist",
-        "text":"\"Hello there. I'm the scientist that runs this fort, and even if nobody else will admit it, I'm the only reason it's still around... Anything you'd like to purchase?\"\nWares:\n\nCoat - $1500\nSuperDetector - $2000\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "text":"\"Hello there. I'm the scientist that runs this place, and even if nobody else will admit it, I'm the only reason it's still around... Anything you'd like to purchase?\"\nWares:\n\nCoat - $1500\nSuperDetector - $2000\nArmorplates - $1500\n\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "coat":{
             "name":"Coat",
@@ -203,6 +203,13 @@
             "price":2000,
             "type":"other",
             "description":"A metal detector that helps you find 25% more gold when mining!"
+          },
+          "armorplates":{
+            "name":"Armorplates",
+            "price":1500,
+            "type":"armor",
+            "defense":20,
+            "description":"A vest with armored plating to better defend yourself in a fight. Grants 20 extra HP."
           }
         }
       },
