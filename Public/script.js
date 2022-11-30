@@ -83,7 +83,7 @@
       for(let enemyID in location.enemies){
         const enemy = location.enemies[enemyID];
         
-        if(!(savedUser.game.defeatedEnemies.includes(enemy.name))) addedMessage += `\n${enemyID} blocks travel to the ${enemy.blockedDirection}! ("fight ${enemyID}")`;
+        if(!(savedUser.game.defeatedEnemies.includes(enemy.name))) addedMessage += `\n${enemyID.charAt(0).toUpperCase() + enemyID.slice(1)} blocks travel to the ${enemy.blockedDirection}! ("fight ${enemyID}")`;
       }
       
       text.innerText = `${text.innerText}Entered ${map[savedUser.game.location].name}.\n${map[savedUser.game.location].text}${addedMessage}\n\n`;

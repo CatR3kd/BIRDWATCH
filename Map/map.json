@@ -11,7 +11,7 @@
     "npcs":{
       "girl":{
         "name": "Amelia",
-        "text":"\"Hey there! My name's Amelia! I see you're another newcomer, if you want to find anyone else, I'd advise that you go check out the town up north. Oh! If you ever need to be healed, I've heard there's a magic fountain around here somewhere... It's a dangerous world out there. See ya!\"",
+        "text":"\"Hey there! My name's Amelia! I see you're another newcomer, if you want to find anyone else, I'd advise that you go check out the town up north, or the fort to the east. Oh! If you ever need to be healed, I've heard there's a magic fountain around here somewhere... It's a dangerous world out there. See ya!\"",
         "wares":{}
       }
     },
@@ -162,6 +162,7 @@
     "name":"Beaten Trail",
     "neededToEnter":[],
     "neighbors":{
+      "north": "forestTrail",
       "west":"trail",
       "east":"fort"
     },
@@ -179,7 +180,7 @@
         }
       }
     },
-    "text":"You continue on the trail. It goes on to the east towards a towering fortress, and westward, towards the world spawnpoint."
+    "text":"You continue on the trail. It goes on to the east towards a towering fortress, and westward, towards the world spawnpoint. To the north, the trail continues through a more heavily forested area."
   },
   "fort":{
     "name":"Fort",
@@ -222,5 +223,45 @@
     "items":{},
     "enemies":{},
     "text":"You walk into the fort, through the opened gates. Even though it looked old outside, it's modern and sleek on the inside. In the middle of the room stands a man next to a few desks covered in computers and other trinkets and gadgets (\"talk scientist\"), and by the entrance is a lone guard. (\"talk guard\") Back to the west, you see the trail you came from."
+  },
+  "forestTrail":{
+    "name":"Forested Trail",
+    "neededToEnter":[],
+    "neighbors":{
+      "north": "forestTrailTwo",
+      "south": "trailTwo"
+    },
+    "npcs":{
+      "guard":{
+        "name": "Trail Guard",
+        "text":"\"I wouldn't go any farther if I were you, there's a notorious bandit nest farther up north...\"",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You continue along the trail. A guard stands by the trail. (\"talk guard\") To north is the larger trail, and to the south continues the forested path."
+  },
+  "forestTrailTwo":{
+    "name":"Forested Trail",
+    "neededToEnter":[],
+    "neighbors":{
+      "south": "forestTrail"
+    },
+    "npcs":{},
+    "items":{},
+    "enemies":{
+      "bandits":{
+        "name":"Bandit Gang",
+        "blockedDirection": "north",
+        "stats":{
+          "health": 160,
+          "maxHealth": 160,
+          "speed": 1,
+          "damage": 20
+        }
+      }
+    },
+    "text":"You enter a darker part of the trail. The trees are very dense now, and it's becoming hard to see where you're going. To the south is the entrance to the forested trail."
   }
 }

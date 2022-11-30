@@ -9,7 +9,8 @@ const db = new QuickDB({filePath: "Data/db.sqlite"});
 const connectedPlayers = new Map();
 const busyPlayers = new Map();
 
-const gameMap = getMap();
+// Make sure map is good and present
+validateMap();
 
 class Game{
 	constructor(){
@@ -61,7 +62,7 @@ io.on('connection', (socket) => {
 
   socket.on('action', function(actionObj) {
     const username = socket.handshake.headers['x-replit-user-name'];
-
+    
     playAction(username, socket, actionObj);
   });
 
@@ -90,7 +91,7 @@ async function createAccount(username){
 
 // Map
 
-function getMap(){
+function validateMap(){
   const map = JSON.parse(fs.readFileSync('Map/map.json'));
   const backup = JSON.parse(fs.readFileSync('Map/backup.json'));
 
@@ -105,8 +106,6 @@ function getMap(){
   if(isEmpty('Map/map.json') && isEmpty('Map/backup.json')){
     console.log('Map files are empty.');
   }
-
-  return JSON.parse(fs.readFileSync('Map/map.json'));
 }
 
 function isEmpty(path) {
@@ -134,6 +133,9 @@ async function playAction(username, socket, actionObj){
     return elem.toLowerCase();
   });
 
+  // Get new, untouched map
+  const gameMap = JSON.parse(fs.readFileSync('Map/map.json'));
+  
   if(command == 'move'){
     // Moving system
     const destinationName = gameMap[user.game.location].neighbors[args[0]];
@@ -178,7 +180,7 @@ async function playAction(username, socket, actionObj){
   } else if(command == 'fight'){
     // Fighting system
     const targetEnemy = gameMap[user.game.location].enemies[args[0]];
-
+    
     if(targetEnemy == undefined) return socket.emit('message', 'That is not an available action.');
 
       if(user.game.defeatedEnemies.includes(targetEnemy.name)) return socket.emit('message', 'That is not an available action. (You have already beaten this enemy!)');
