@@ -4,6 +4,9 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs');
+const Filter = require('bad-words');
+filter = new Filter(); // The filter code is slightly modified by me
+const { RateLimiterMemory } = require('rate-limiter-flexible');
 const { QuickDB } = require("quick.db");
 const db = new QuickDB({filePath: "Data/db.sqlite"});
 const connectedPlayers = new Map();
@@ -11,6 +14,9 @@ const busyPlayers = new Map();
 
 // Make sure map is good and present
 validateMap();
+
+// Get leaderboard
+let leaderboard = getLeaderboard();
 
 class Game{
 	constructor(){
@@ -25,6 +31,14 @@ class Game{
     this.defeatedEnemies = [];
   }
 }
+
+
+// Ratelimiter
+
+const sendChatRateLimit = new RateLimiterMemory({
+  points: 4,
+  duration: 2
+});
 
 
 // Server
@@ -57,6 +71,7 @@ io.on('connection', (socket) => {
       connectedPlayers.set(username, user);
   
       socket.emit('loggedIn', user);
+      socket.emit('leaderboard', leaderboard);
     }
   })();
 
@@ -64,6 +79,27 @@ io.on('connection', (socket) => {
     const username = socket.handshake.headers['x-replit-user-name'];
     
     playAction(username, socket, actionObj);
+  });
+
+  socket.on('sendChat', async function(msg) {
+    const username = socket.handshake.headers['x-replit-user-name'];
+    const userid = socket.handshake.headers['x-replit-user-id']
+    
+    try {
+      await sendChatRateLimit.consume(username);
+      
+      sendChat(username, msg, userid);
+    } catch(rejRes) {
+      console.log(rejRes)
+      // Ratelimited
+      const chatObj = {
+        sender: 'System',
+        msg: 'Slow down!',
+        badgeColor: '#F45B69'
+      }
+      
+      socket.emit('chatMsg', chatObj);
+    }
   });
 
   socket.on('disconnect', function() {
@@ -340,3 +376,55 @@ async function playAction(username, socket, actionObj){
     return socket.emit('message', 'That is not an available action.');
   }
 }
+
+
+// Chat
+
+function sendChat(username, msg, userid){
+  if((msg.length < 1) || (msg.length > 99)) return;
+
+  let badgeColor = '#D1D1CD';
+  
+  if((leaderboard.length > 2) && (username == leaderboard[2].username)) badgeColor = '#e59e57';
+  if((leaderboard.length > 1) && (username == leaderboard[1].username)) badgeColor = '#ababab';
+  if((leaderboard.length > 0) && (username == leaderboard[0].username)) badgeColor = '#E9D675';
+  if(username == 'CatR3kd') badgeColor = '#9792E3';
+
+  const msgObj = {
+    sender: username,
+    senderid: userid,
+    msg: filter.clean(msg),
+    badgeColor: badgeColor
+  }
+    
+  io.emit('chatMsg', msgObj);
+}
+
+
+// Leaderboard
+
+async function getLeaderboard(){
+  const all = await db.all();
+  all.sort(function (a, b) {
+    return b.value.game.money - a.value.game.money;
+  });
+  
+  const topTen = all.slice(0, 10);
+  let leaderboard = [];
+
+  for(let user of topTen){
+    const userObj = {
+      username: user.value.username,
+      money: user.value.game.money
+    }
+
+    leaderboard.push(userObj);
+  }
+
+  return leaderboard;
+}
+
+setInterval(async function(){
+  leaderboard = await getLeaderboard();
+  io.emit('leaderboard', leaderboard);
+}, 5000);

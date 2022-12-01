@@ -31,6 +31,19 @@
       sendAction();
     }
   });
+
+  socket.on('chatMsg', function (msgObj){
+    newChat(msgObj);
+  });
+
+  socket.on('leaderboard', function (newLeaderboard){
+    leaderboard = newLeaderboard;
+  
+    console.log('New leaderboard:');
+    console.log(leaderboard);
+    
+    updateLeaderboard();
+  });
   
   function sendAction(){
     const input = document.getElementById('actionInput');
@@ -138,5 +151,70 @@
   function scroll(){
     const terminal = document.getElementById('terminal');
     terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function sendChat(){
+    const input = document.getElementById('chatInput');
+    const msg = input.value;
+    
+    if((msg.length < 1) || (msg.length > 99)) return;
+  
+    socket.emit('sendChat', msg);
+    input.value = '';
+  }
+  
+  function newChat(msgObj){
+    console.log(msgObj)
+    const sender = msgObj.sender;
+    const badgeColor = msgObj.badgeColor;
+    
+    let messages = document.getElementById('chat').children;
+  
+    while(document.getElementById('chat').offsetHeight > 400){
+      messages[0].remove();
+      messages = document.getElementById('chat').children;
+    }
+  
+    let li = document.createElement('li')
+    let badge = document.createElement('span')
+    let msg = document.createElement('msg')
+  
+      
+    badge.innerText = `${sender}: `;
+    badge.style.color = msgObj.badgeColor;
+  
+    msg.innerText = msgObj.msg;
+    li.appendChild(badge);
+    li.appendChild(msg);
+  
+    document.getElementById('chat').appendChild(li);
+  }
+  
+  document.getElementById('chatInput').addEventListener('keyup', function(event) {
+    if(event.keyCode === 13){
+      event.preventDefault();
+      sendChat();
+    }
+  });
+
+  function updateLeaderboard(){
+    if((leaderboard.length < 1) || (!leaderboard)) return;
+    
+    const places = document.getElementById('leaderboard').getElementsByTagName('li');
+    
+    for(let place in places){
+      const player = leaderboard[place];
+      if(player){
+        places[place].innerText = `${player.username}: $${formatNumber(player.money)}`;
+      }
+    }
+  }
+
+  function formatNumber(number){
+    if(number){
+      return(number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+    } else {
+      return(number);
+    }
   }
 })()

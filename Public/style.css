@@ -6,7 +6,7 @@ html, body {
   margin: 0;
   bottom: 0;
   right: 0;
-  background: #1a1a1a;
+  background: #000522;
   overflow: hidden;
 }
 
@@ -20,18 +20,25 @@ html, body {
   top: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: #ffffff;
+  color: #D1D1CD;
   font-size: 24px;
-  border: 2px solid #ffffff;
+  border: 2px solid #cccccc;
   border-radius: 6px;
-  background: #1a1a1a;
+  background: #000522;
   padding: 8px 16px;
-  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
-  text-shadow: 0 0 5px #C8C8C8;
+  text-shadow: none;
+  box-shadow: none;
+  transition: box-shadow 0.3s ease, text-shadow 0.25s ease;
 }
 
 #login:hover{
   cursor: pointer;
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+  text-shadow: 0 0 5px #C8C8C8;
+}
+
+#login:active{
+  box-shadow: none;
 }
 
 #content{
@@ -47,18 +54,18 @@ html, body {
 
 #text{
   margin: 5px;
-  color: #ffffff;
+  color: #D1D1CD;
   font-size: 20px;
-  text-shadow: 0 0 5px #C8C8C8;
+  
 }
 
 #actionInput{
   height: 25px;
   width: calc(75vw - 8px);
   margin: 0 2px;
-  border: 2px solid #ffffff;
-  color: #ffffff;
-  background: #1a1a1a;
+  border: 2px solid #cccccc;
+  color: #D1D1CD;
+  background: #000522;
   outline: none;
   font-size: 18px;
   border-radius: 2px;
@@ -73,14 +80,83 @@ html, body {
 
 #sidebar{
   width: calc(25vw - 3px);
-  height: calc(100vh - 4px);
+  height: calc(100vh - 2px);
   margin: 0;
   bottom: 0;
   right: 0;
   position: absolute;
-  border: 2px solid #ffffff;
+  border: 2px solid #cccccc;
+  border-bottom: none;
   border-radius: 2px;
-  color: #ffffff;
+  color: #D1D1CD;
+}
+
+#leaderboardBox{
+  text-align: center;
+}
+
+#leaderboard{
+  list-style-type: none;
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+}
+
+#leaderboard li{
+  font-size: 16px;
+  margin: 0;
+}
+
+#leaderboard li:nth-of-type(1){
+  color: #E9D675;
+  font-size: 22px;
+  margin-bottom: 2px;
+}
+
+#leaderboard li:nth-of-type(2){
+  color: #ababab;
+  font-size: 18px;
+  margin-bottom: 1px;
+}
+
+#leaderboard li:nth-of-type(3){
+  color: #e59e57;
+}
+
+#chatBox{
+  position: absolute;
+  bottom: 20px;
+  text-align: left;
+  padding: 0px 5px;
+}
+
+#chatInput{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: calc(25vw - 12px);
+  height: 21px;
+  padding: 3px;
+  border: 2px solid #cccccc;
+  background: #000522;
+  outline: none;
+  color: #D1D1CD;
+  font-size: 18px;
+  border-radius: 2px;
+}
+
+#chat{
+  list-style-type: none;
+  padding: 0;
+  line-height: 20px;
+  font-size: 16px;
+  overflow-wrap: break-word;
+  display: inline-block;
+  width: calc(25vw - 12px);
+}
+
+#chat li {
+	width: calc(25vw - 12px);
 }
 
 /* Responsiveness */
