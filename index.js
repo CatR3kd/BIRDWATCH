@@ -68,7 +68,7 @@ io.on('connection', (socket) => {
   
       if(user == undefined) user = await createAccount(username);
 
-      connectedPlayers.set(username, user);
+      connectedPlayers.set(username, socket.id);
   
       socket.emit('loggedIn', user);
       socket.emit('leaderboard', leaderboard);
@@ -88,17 +88,10 @@ io.on('connection', (socket) => {
     try {
       await sendChatRateLimit.consume(username);
       
-      sendChat(username, msg, userid);
+      sendChat(username, msg, socket);
     } catch(rejRes) {
-      console.log(rejRes)
       // Ratelimited
-      const chatObj = {
-        sender: 'System',
-        msg: 'Slow down!',
-        badgeColor: '#F45B69'
-      }
-      
-      socket.emit('chatMsg', chatObj);
+      systemMessage(socket.id, 'Slow down!');
     }
   });
 
@@ -117,7 +110,8 @@ io.on('connection', (socket) => {
 async function createAccount(username){
   const userObj = {
     username: username,
-    game: new Game()
+    game: new Game(),
+    banStatus: false
   }
 
   await db.set(username, userObj);
@@ -380,8 +374,13 @@ async function playAction(username, socket, actionObj){
 
 // Chat
 
-function sendChat(username, msg, userid){
+async function sendChat(username, msg, socket){
+  if((msg.charAt(0) == '/') && (username === 'CatR3kd')) return chatCommand(msg, socket.id);
   if((msg.length < 1) || (msg.length > 99)) return;
+
+  const user = await db.get(username);
+
+  if(user.banStatus == true) return systemMessage(socket.id, 'You are currently banned from using the chat function.');
 
   let badgeColor = '#D1D1CD';
   
@@ -392,12 +391,78 @@ function sendChat(username, msg, userid){
 
   const msgObj = {
     sender: username,
-    senderid: userid,
     msg: filter.clean(msg),
     badgeColor: badgeColor
   }
     
   io.emit('chatMsg', msgObj);
+}
+
+async function chatCommand(msg, socketID){
+  const command = msg.split(' ')[0].substring(1);
+  let args = msg.split(' ');
+  args.shift();
+
+  // Kick
+  if(command == 'kick'){
+    if(args[0] == 'CatR3kd') return systemMessage(socketID, 'Cannot kick this user!');
+    
+    const targetSocket = await connectedPlayers.get(args[0]);
+    if(targetSocket == undefined) return systemMessage(socketID, 'User not found.');
+
+    io.to(targetSocket).emit('kicked');
+    return systemMessage(socketID, `Kicked user ${args[0]}.`);
+  }
+
+  // Ban
+  if(command == 'ban'){
+    if(args[0] == 'CatR3kd') return systemMessage(socketID, 'Cannot ban this user!');
+    
+    const targetUser = await db.get(args[0]);
+    if(targetUser == undefined) return systemMessage(socketID, 'User not found.');
+
+    const newUser = targetUser;
+    newUser.banStatus = true;
+
+    await db.set(args[0], newUser);
+
+    systemMessage(socketID, `Banned user ${args[0]}.`);
+
+    const targetSocket = await connectedPlayers.get(args[0]);
+    if(targetSocket != undefined) systemMessage(targetSocket, 'An admin has banned you from using the chat.');
+    
+    return;
+  }
+
+  // Unban
+  if(command == 'unban'){
+    const targetUser = await db.get(args[0]);
+    if(targetUser == undefined) return systemMessage(socketID, 'User not found.');
+
+    const newUser = targetUser;
+    newUser.banStatus = false;
+
+    await db.set(args[0], newUser);
+
+    systemMessage(socketID, `Unbanned user ${args[0]}.`);
+
+    const targetSocket = await connectedPlayers.get(args[0]);
+    if(targetSocket != undefined) systemMessage(targetSocket, 'An admin has unbanned you from using the chat!');
+    
+    return;
+  }
+
+  return systemMessage(socketID, 'Command not recognized.');
+}
+
+function systemMessage(socketID, msg){
+  const chatObj = {
+    sender: 'System',
+    msg: msg,
+    badgeColor: '#F45B69'
+  }
+      
+  io.to(socketID).emit('chatMsg', chatObj);
 }
 
 

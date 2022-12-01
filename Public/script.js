@@ -36,13 +36,12 @@
     newChat(msgObj);
   });
 
-  socket.on('leaderboard', function (newLeaderboard){
-    leaderboard = newLeaderboard;
-  
-    console.log('New leaderboard:');
-    console.log(leaderboard);
-    
-    updateLeaderboard();
+  socket.on('leaderboard', function (leaderboard){
+    updateLeaderboard(leaderboard);
+  });
+
+  socket.on('kicked', function (){
+    window.location.reload();
   });
   
   function sendAction(){
@@ -197,7 +196,7 @@
     }
   });
 
-  function updateLeaderboard(){
+  function updateLeaderboard(leaderboard){
     if((leaderboard.length < 1) || (!leaderboard)) return;
     
     const places = document.getElementById('leaderboard').getElementsByTagName('li');
