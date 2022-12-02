@@ -399,9 +399,14 @@ async function sendChat(username, msg, socket){
 }
 
 async function chatCommand(msg, socketID){
-  const command = msg.split(' ')[0].substring(1);
+  const command = msg.split(' ')[0].substring(1).toLowerCase();
   let args = msg.split(' ');
   args.shift();
+
+  //Help
+  if(command == 'help'){
+    return systemMessage(socketID, '\n/kick {user}: Refreshes a specified user\'s page\n/warn {user} {message}: Warns a specified user with a given message\n/ban {user}: Bans a specified user from sending chat messages\n/unban {user}: Unbans a specified user from sending chat messages');
+  }
 
   // Kick
   if(command == 'kick'){
@@ -412,6 +417,14 @@ async function chatCommand(msg, socketID){
 
     io.to(targetSocket).emit('kicked');
     return systemMessage(socketID, `Kicked user ${args[0]}.`);
+  }
+
+  if(command == 'warn'){
+    const targetSocket = await connectedPlayers.get(args[0]);
+    if(targetSocket == undefined) return systemMessage(socketID, 'User not found.');
+    if(args[1] == undefined) return systemMessage(socketID, 'You need to provide a warning message');
+
+    return systemMessage(targetSocket, `An admin has warned you: ${args[1]}`);
   }
 
   // Ban
