@@ -300,20 +300,32 @@ async function playAction(username, socket, actionObj){
       newUser.game.health += item.defense;
     }
 
+    if(item.type == 'speed'){
+      newUser.game.speed += item.speed;
+    }
+
     await db.set(username, newUser);
 
     socket.emit('message', `You purchased the ${item.name}!`);
     return socket.emit('gameUpdate', {"user": newUser, "notify": false});
   } else if(command == 'mine'){
     // Mining
-    if(user.game.location != 'mine') return socket.emit('message', 'That is not an available action.');
+    if((user.game.location != 'mine') && (user.game.location != 'platinumMine')) return socket.emit('message', 'That is not an available action.');
 
-    // Change stats based on user items
+    const ore = (user.game.location == 'platinumMine')? 'platinum' : 'gold';
+    const oreValue = (ore == 'platinum')? 75 : 50;
+
+    // Change stats based on user items and ore type
     let mineTime = 1000;
     if(user.game.items.includes('SuperPick')) mineTime = 650;
 
     let multiplier = 10;
     if(user.game.items.includes('SuperDetector')) multiplier = 12.5;
+
+    if(ore == 'platinum'){
+      mineTime += 125;
+      multiplier -= 0.5;
+    }
     
     let counter = 0;
 
@@ -326,15 +338,16 @@ async function playAction(username, socket, actionObj){
 
       // Notify and profit when completed
       if(counter >= 10){
-        const goldFound = Math.floor(Math.random() * Math.random() * multiplier);
-        const punctuation = (goldFound > 0)? '!' : '.';
-        const grams = (goldFound != 1)? 'grams' : 'gram';
+        const oreFound = Math.floor(Math.random() * Math.random() * multiplier);
+        const punctuation = (oreFound > 0)? '!' : '.';
+        const grams = (oreFound != 1)? 'grams' : 'gram';
         
-        socket.emit('message', `Finished${punctuation} Found ${goldFound} ${grams} of gold${punctuation} (Earned: $${goldFound * 50})`);
+        socket.emit('message', `Finished${punctuation} Found ${oreFound} ${grams} of ${ore}${punctuation} (Earned: $${oreFound * oreValue})`);
 
         // Save profit
         let newUser = user;
-        newUser.game.money += (goldFound * 50);
+
+        newUser.game.money += (oreFound * oreValue);
         
         db.set(username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": false});

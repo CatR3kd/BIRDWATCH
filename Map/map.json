@@ -110,6 +110,13 @@
             "type":"weapon",
             "damage":5,
             "description":"A small, shiny dagger. Increases attack damage by 5."
+          },
+          "quickshoes":{
+            "name":"QuickShoes",
+            "price":750,
+            "type":"speed",
+            "speed":2,
+            "description":"Neon pink tennis shoes, ugly but effective. Grants +2 speed."
           }
         }
       },
@@ -211,6 +218,13 @@
             "type":"armor",
             "defense":20,
             "description":"A vest with armored plating to better defend yourself in a fight. Grants 20 extra HP."
+          },
+          "katana":{
+            "name":"Katana",
+            "price":2000,
+            "type":"weapon",
+            "defense":15,
+            "description":"A curved sword built from a metal that is both light and strong. Grants 15 extra damage."
           }
         }
       },
@@ -246,7 +260,8 @@
     "name":"Forested Trail",
     "neededToEnter":[],
     "neighbors":{
-      "south": "forestTrail"
+      "south": "forestTrail",
+      "north": "forestTrailThree"
     },
     "npcs":{},
     "items":{},
@@ -262,6 +277,35 @@
         }
       }
     },
-    "text":"You enter a darker part of the trail. The trees are very dense now, and it's becoming hard to see where you're going. To the south is the entrance to the forested trail."
+    "text":"You enter a darker part of the trail. The trees are very dense now, and it becomes harder to see where you're going. To the north the trail goes on, and to the south is the entrance to the trail."
+  },
+  "forestTrailThree":{
+    "name":"Forested Trail",
+    "neededToEnter":[],
+    "neighbors":{
+      "south": "forestTrailTwo",
+      "west": "platinumMine"
+    },
+    "npcs":{},
+    "items":{},
+    "enemies":{},
+    "text":"You continue on the trail, but it begins to brighten. To the west is what looks like another mine, and to the south is the trail that leads back to the world spawnpoint."
+  },
+  "platinumMine":{
+    "name":"Platinum Mine",
+    "neededToEnter":[],
+    "neighbors":{
+      "east": "forestTrailThree"
+    },
+    "npcs":{
+      "robot":{
+        "name": "Miner Robot",
+        "text":"*beep beep* \"Hello there. You are currently in the platinum mine. Platinum is number 78 on the periodic table. It takes more time to find, and is rarer overall, but is worth 50% more than gold. You can mine it using (\"mine\")\"",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You enter a small cave, dimly lit with shining walls. It looks like nobody has been here for some time, but perhaps that's to your advantage. Then you notice a small, metal figure mining slowly and mechanically. (\"talk robot\")"
   }
 }
