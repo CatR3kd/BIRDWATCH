@@ -376,7 +376,7 @@ async function playAction(username, socket, actionObj){
 
 async function sendChat(username, msg, socket){
   if((msg.charAt(0) == '/') && (username === 'CatR3kd')) return chatCommand(msg, socket.id);
-  if((msg.length < 1) || (msg.length > 99)) return;
+  if((msg.length < 1) || (msg.length > 199)) return;
 
   const user = await db.get(username);
 

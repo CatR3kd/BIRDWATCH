@@ -156,7 +156,7 @@
     const input = document.getElementById('chatInput');
     const msg = input.value;
     
-    if((msg.length < 1) || (msg.length > 99)) return;
+    if((msg.length < 1) || (msg.length > 199)) return;
   
     socket.emit('sendChat', msg);
     input.value = '';
