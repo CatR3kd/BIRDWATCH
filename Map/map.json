@@ -223,7 +223,7 @@
             "name":"Katana",
             "price":2000,
             "type":"weapon",
-            "defense":15,
+            "damag":15,
             "description":"A curved sword built from a metal that is both light and strong. Grants 15 extra damage."
           }
         }
@@ -277,7 +277,7 @@
         }
       }
     },
-    "text":"You enter a darker part of the trail. The trees are very dense now, and it becomes harder to see where you're going. To the north the trail goes on, and to the south is the entrance to the trail."
+    "text":"You enter a darker part of the trail. The trees are very dense now, and it becomes harder to see where you're going. To the south the trail goes on, and to the north is the entrance to the trail."
   },
   "forestTrailThree":{
     "name":"Forested Trail",
