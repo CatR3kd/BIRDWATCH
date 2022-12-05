@@ -8,6 +8,8 @@
       "east": "trail",
       "west":"cliffside"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{
       "girl":{
         "name": "Amelia",
@@ -27,6 +29,8 @@
       "south":"snowyTrail",
       "west": "fountain"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -39,10 +43,12 @@
       "north":"tundra",
       "south":"penguinBase"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
-    "text":"You walk along a snow-covered trail. To the north is the tundra, and to the south is a fort surrounded by small, armed figures. Even though they are clearly protecting the fort, they seem docile enough to let you enter."
+    "text":"You walk along a snow-covered trail. To the north is the tundra, and to the south is a fort surrounded by small, armed figures. Even though they are clearly protecting the fort, they seem docile enough to let you enter as long as you're friendly."
   },
   "penguinBase":{
     "name":"Penguin Base",
@@ -50,6 +56,8 @@
     "neighbors":{
       "north":"snowyTrail"
     },
+    "neededAlliances":[],
+    "bannedAlliances":["Pigeon"],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -64,6 +72,8 @@
       "south": "fountain",
       "west":"rockyTrail"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -76,6 +86,8 @@
       "north":"cliffside",
       "east": "tundra"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{
       "squirrel":{
         "name": "Bizarre Squirrel",
@@ -94,6 +106,8 @@
       "east":"cliffside",
       "west":"pigeonBase"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -105,6 +119,8 @@
     "neighbors":{
       "east":"rockyTrail"
     },
+    "neededAlliances":[],
+    "bannedAlliances":["Penguin"],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -117,6 +133,8 @@
       "south":"spawnpoint",
       "west":"mine"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{
       "merchant":{
         "name":"Strange Merchant",
@@ -166,6 +184,8 @@
       "east":"town",
       "south":"cliffside"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{
       "prospector":{
         "name": "Gold Prospector",
@@ -184,6 +204,8 @@
       "east": "trailTwo",
       "west":"spawnpoint"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -197,6 +219,8 @@
       "west":"trail",
       "east":"fort"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{
@@ -219,6 +243,8 @@
     "neighbors":{
       "west":"trailTwo"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{
       "scientist":{
         "name": "Scientist",
@@ -269,6 +295,8 @@
       "north": "forestTrailTwo",
       "south": "trailTwo"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{
       "guard":{
         "name": "Trail Guard",
@@ -287,6 +315,8 @@
       "south": "forestTrail",
       "north": "forestTrailThree"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{
@@ -310,6 +340,8 @@
       "south": "forestTrailTwo",
       "west": "platinumMine"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -321,6 +353,8 @@
     "neighbors":{
       "east": "forestTrailThree"
     },
+    "neededAlliances":[],
+    "bannedAlliances":[],
     "npcs":{
       "robot":{
         "name": "Miner Robot",

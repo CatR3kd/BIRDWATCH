@@ -181,6 +181,26 @@ async function playAction(username, socket, actionObj){
       }
     }
 
+    if(cannotPass == true) return;
+
+    for(let bannedAlliance of destination.bannedAlliances){
+      if(user.game.alliances.includes(bannedAlliance)){
+        cannotPass = true;
+        return socket.emit('message', `You cannot enter this zone because it does not allow people with the ${bannedAlliance} alliance!`);
+      }
+    }
+    
+    if(cannotPass == true) return;
+
+    for(let neededAlliance of destination.neededAlliances){
+      if(!(user.game.alliances.includes(neededAlliance))){
+        cannotPass = true;
+        return socket.emit('message', `You cannot enter this zone because it only allows people with the ${bannedAlliance} alliance!`);
+      }
+    }
+    
+    if(cannotPass == true) return;
+
     const currentLocation = gameMap[user.game.location];
     
     for(let enemyID in currentLocation.enemies){
@@ -191,7 +211,7 @@ async function playAction(username, socket, actionObj){
         return socket.emit('message', `Before you can move to the ${args[0]}, you must defeat the ${enemyID}! ("fight ${enemyID}")`);
       }
     }
-
+    
     if(cannotPass == true) return;
     
     let newUser = user;
@@ -380,7 +400,7 @@ async function playAction(username, socket, actionObj){
     socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth})\nMoney spent: $${price}`);
   } else {
     // Unrecognized command
-    return socket.emit('message', 'That is not an available action.');
+    return socket.emit('message', 'That is not an available action. (type \"help\" for a list of commands)');
   }
 }
 
