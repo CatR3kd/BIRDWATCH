@@ -3,7 +3,7 @@
     "name":"Spawnpoint",
     "neededToEnter":[],
     "neighbors":{
-      "north":"town",
+      "nortFh":"town",
       "south":"tundra",
       "east": "trail",
       "west":"cliffside"
@@ -24,7 +24,7 @@
     "neededToEnter":[],
     "neighbors":{
       "north":"spawnpoint",
-      "south":"penguinBase",
+      "south":"snowyTrail",
       "west": "fountain"
     },
     "npcs":{},
@@ -32,11 +32,23 @@
     "enemies":{},
     "text":"You walk to the precipice of the snow. The change in temperature is immediate and unnatural, you know you can't pass without some form of higher insulation. Farther to the south, sat in the middle of the snow is an odd building surrounded by unidenifiable figures. Back to the north, you can see the spawnpoint, and to the west, you see a fountain."
   },
+  "snowyTrail":{
+    "name":"Snowy Trail",
+    "neededToEnter":["Coat"],
+    "neighbors":{
+      "north":"tundra",
+      "south":"penguinBase"
+    },
+    "npcs":{},
+    "items":{},
+    "enemies":{},
+    "text":"You walk along a snow-covered trail. To the north is the tundra, and to the south is a fort surrounded by small, armed figures. Even though they are clearly protecting the fort, they seem docile enough to let you enter."
+  },
   "penguinBase":{
     "name":"Penguin Base",
     "neededToEnter":["Coat"],
     "neighbors":{
-      "north":"tundra"
+      "north":"snowyTrail"
     },
     "npcs":{},
     "items":{},
@@ -50,7 +62,7 @@
       "north": "mine",
       "east":"spawnpoint",
       "south": "fountain",
-      "west":"pigeonBase"
+      "west":"rockyTrail"
     },
     "npcs":{},
     "items":{},
@@ -75,11 +87,23 @@
     "enemies":{},
     "text":"You walk into an opening in the trees and in the middle is a hill with a gorgeous marble fountain atop it. It looks centuries old, but has somehow remained untarnished, despite being in the only exposed spot in the forest. You immediately understand that it must be magic, to be so beautiful in the face of adveristy. At that very moment, an unusually large squirrel crawls around the side of the fountain and looks at you. It has an exeptionally long tounge, a queer grin, and an equally odd gaze. (\"talk squirrel\") To the north, you can see the cliffside, and to the east, you can make out the tundra."
   },
+  "rockyTrail":{
+    "name":"Rocky Trail",
+    "neededToEnter":[],
+    "neighbors":{
+      "east":"cliffside",
+      "west":"pigeonBase"
+    },
+    "npcs":{},
+    "items":{},
+    "enemies":{},
+    "text":"You come to a rocky gravel trail on top of the cliff. To the east is the cliffside you climbed to get here, and to the west is a fortress covered in pigeons."
+  },
   "pigeonBase":{
     "name":"Pigeon Base",
     "neededToEnter":["Climbing Gear"],
     "neighbors":{
-      "east":"cliffside"
+      "east":"rockyTrail"
     },
     "npcs":{},
     "items":{},
@@ -300,7 +324,7 @@
     "npcs":{
       "robot":{
         "name": "Miner Robot",
-        "text":"*beep beep* \"Hello there. You are currently in the platinum mine. Platinum is number 78 on the periodic table. It takes more time to find, and is rarer overall, but is worth 50% more than gold. You can mine it using (\"mine\")\"",
+        "text":"*beep beep* \"Hello there. You are currently in the platinum mine. Platinum is number 78 on the periodic table. It takes more time to find, and is rarer, but is worth 50% more than gold. You can mine it using (\"mine\")\"",
         "wares":{}
       }
     },
