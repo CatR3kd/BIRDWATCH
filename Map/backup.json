@@ -66,7 +66,7 @@
     "npcs":{},
     "items":{},
     "enemies":{},
-    "text":""
+    "text":"You enter the main area of the base, and it's filled with penguins busily running from one task to the next. They're working at desks with computers, training small regiments, arming and building weapons, and planning on war boards. To the north is the snowy trail you entered on."
   },
   "cliffside":{
     "name":"Cliffside",

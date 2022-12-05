@@ -204,7 +204,7 @@
     for(let place in places){
       const player = leaderboard[place];
       if(player){
-        places[place].innerText = `${player.username}: $${formatNumber(player.money)}`;
+        places[place].innerText = `${+place + 1}: ${player.username} - $${formatNumber(player.money)}`;
       }
     }
   }
