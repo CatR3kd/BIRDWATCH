@@ -172,6 +172,7 @@ async function playAction(username, socket, actionObj){
     const destination = gameMap[destinationName];
     if(destination == undefined) return socket.emit('message', 'That is not an available action.');
 
+    // Check if the user is allowed in the target destination based on items, alliances, and enemies
     let cannotPass = false;
     
     for(let item of destination.neededToEnter){

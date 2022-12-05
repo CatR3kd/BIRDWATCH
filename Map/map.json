@@ -15,11 +15,16 @@
         "name": "Amelia",
         "text":"\"Hey there! My name's Amelia! I see you're another newcomer, if you want to find anyone else, I'd advise that you go check out the town up north, or the fort to the east. Oh! If you ever need to be healed, I've heard there's a magic fountain around here somewhere... It's a dangerous world out there. See ya!\"",
         "wares":{}
+      },
+      "guard":{
+        "name": "Guard",
+        "text":"\"Protect and serve... Gotta make sure that everything is safe for the newcomers, ever since the war started, we've been in the crossfire, seeing as the opposing sides are directly south and west of here...\"",
+        "wares":{}
       }
     },
     "items":{},
     "enemies":{},
-    "text":"You arrive at the world spawnpoint. It's a well-forested area, and the ground is scattered with rocks and leaves. On a particularly large bolder, a little girl is sitting and looking at the trees. (\"talk girl\") To the north, you see a small town area, and to the east you see a dirt trail leading into the trees. To the south, you see a snowy area to which a trail of small, tri-pointed tracks lead. To the west, you see a soaring cliff flocked by pigeons."
+    "text":"You arrive at the world spawnpoint. It's a well-forested area, and the ground is scattered with rocks and leaves. On a particularly large bolder, a little girl is sitting and looking at the trees, (\"talk girl\") and by the entrance to a trail stands a guard. (\"talk guard\") To the north, you see a small town area, and to the east you see a dirt trail leading into the trees. To the south, you see a snowy area to which a trail of small, tri-pointed tracks lead. To the west, you see a soaring cliff flocked by pigeons."
   },
   "tundra":{
     "name":"Tundra",
@@ -280,7 +285,7 @@
       },
       "guard":{
         "name": "Fortress Guard",
-        "text":"*grunt* \"Five minutes 'till my shift is over...\"",
+        "text":"*grunt* \"Five minutes 'till my shift is over... I can't see a reason to guard this place, but I gotta get paid somehow. I wish I was guarding the trail to the platinum mines from bandits instead, it wouldn't be too bad to have some exitement for a change...\"",
         "wares":{}
       }
     },
