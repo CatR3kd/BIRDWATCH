@@ -62,6 +62,7 @@
     if(command.toLowerCase() == 'balance') return balance();
     if(command.toLowerCase() == 'inventory') return inventory();
     if(command.toLowerCase() == 'stats') return stats();
+    if(command.toLowerCase() == 'alliances') return alliances();
     
     socket.emit('action', actionObj);
   }
@@ -76,6 +77,7 @@
     "balance" Tells you how much money you have.
     "inventory" Shows you what items you own.
     "move {direction}" Moves you in a given direction. (North, South, East, West)
+    "alliances" Lists your alliances.
     NOTE: There are other location-specific commands that will be explained by other characters.\n\n`;
     
     scroll();
@@ -129,6 +131,26 @@
       textToDisplay = 'Your items:';
       for(let item of inventory){
         textToDisplay += `\n${item}`;
+      }
+    }
+    
+    const text = document.getElementById('text');
+    
+    text.innerText = `${text.innerText}${textToDisplay}\n\n`;
+    
+    scroll();
+  }
+
+  function alliances(){
+    const inventory = savedUser.game.alliances;
+    let textToDisplay = '';
+
+    if(inventory.length <= 0){
+      textToDisplay = 'You have no alliances!';
+    } else {
+      textToDisplay = 'Your alliances:';
+      for(let alliance of inventory){
+        textToDisplay += `\n${alliance}`;
       }
     }
     
