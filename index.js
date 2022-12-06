@@ -399,9 +399,37 @@ async function playAction(username, socket, actionObj){
 
     // Emit message
     socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth})\nMoney spent: $${price}`);
+  } else if(command == 'ally'){
+    // Ally system
+    if(!user.game.location.availableAlliances.includes(args[0])) return socket.emit('message', 'That is not an available action.');
+    
+    const targetAlly = args[0];
+
+    if(user.game.alliances.includes(targetAlly)) return socket.emit('message', 'You are already in this alliance!');
+
+    const allianceEnemies = {
+      "penguin": ["pigeon"],
+      "pigeon": ["penguin"]
+    }
+
+    let enemy = false;
+
+    for(let alliance of user.game.alliances){
+      if(allianceEnemies[targetAlly].includes(alliance)) return enemy = true;
+    }
+
+    if(enemy == true) return socket.emit('message', 'You are already in an opposing alliance!');
+
+    let newUser = user;
+    newUser.game.alliances.push('targetAlliance');
+
+    socket.emit('gameUpdate', {"user": newUser, "notify": false});
+    socket.emit('message', `Joined the ${targetAlliance} alliance!`);
+    await db.set(username, newUser);
+    
   } else {
     // Unrecognized command
-    return socket.emit('message', 'That is not an available action. (type \"help\" for a list of commands)');
+    return socket.emit('message', 'That is not an available action.');
   }
 }
 

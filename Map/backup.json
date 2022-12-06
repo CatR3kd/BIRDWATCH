@@ -10,6 +10,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{
       "girl":{
         "name": "Amelia",
@@ -36,6 +37,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -50,6 +52,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -62,11 +65,18 @@
       "north":"snowyTrail"
     },
     "neededAlliances":[],
-    "bannedAlliances":["Pigeon"],
-    "npcs":{},
+    "bannedAlliances":["pigeon"],
+    "availableAlliances":["penguin"],
+    "npcs":{
+      "commander":{
+        "name": "Penguin Commander",
+        "text":"\"Welcome to the penguin army headquarters! Here we have some of the most technologically advanced weaponry, armor, and other items, as well as some other top secret assets and services that I can't tell you about because they're top secret. Did I mention that? They're top secret. The only way you can know about and use our resources is by allying yourself to the penguins! (\"ally penguin\") Be warned, though, once you ally with us, you won't be able to go back, and you'll never be able to ally yourself with our enemies...\"",
+        "wares":{}
+      }
+    },
     "items":{},
     "enemies":{},
-    "text":"You enter the main area of the base, and it's filled with penguins busily running from one task to the next. They're working at desks with computers, training small regiments, arming and building weapons, and planning on war boards. To the north is the snowy trail you entered on."
+    "text":"You enter the main area of the base, and it's filled with penguins busily running from one task to the next. They're working at desks with computers, training small regiments, arming and building weapons, and planning on war boards. In the middle of the commotion stands a penguin wearing a healment and holding a clipboard and pen. (\"talk commander\") To the north is the snowy trail you entered on."
   },
   "cliffside":{
     "name":"Cliffside",
@@ -79,6 +89,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -93,6 +104,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{
       "squirrel":{
         "name": "Bizarre Squirrel",
@@ -113,6 +125,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -125,7 +138,8 @@
       "east":"rockyTrail"
     },
     "neededAlliances":[],
-    "bannedAlliances":["Penguin"],
+    "bannedAlliances":["penguin"],
+    "availableAlliances":["pigeon"],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -140,6 +154,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{
       "merchant":{
         "name":"Strange Merchant",
@@ -191,6 +206,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{
       "prospector":{
         "name": "Gold Prospector",
@@ -211,6 +227,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -226,6 +243,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{
@@ -250,6 +268,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{
       "scientist":{
         "name": "Scientist",
@@ -302,6 +321,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{
       "guard":{
         "name": "Trail Guard",
@@ -322,6 +342,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{
@@ -347,6 +368,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{},
     "items":{},
     "enemies":{},
@@ -360,6 +382,7 @@
     },
     "neededAlliances":[],
     "bannedAlliances":[],
+    "availableAlliances":[],
     "npcs":{
       "robot":{
         "name": "Miner Robot",
