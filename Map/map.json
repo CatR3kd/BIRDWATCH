@@ -3,7 +3,7 @@
     "name":"Spawnpoint",
     "neededToEnter":[],
     "neighbors":{
-      "nortFh":"town",
+      "north":"town",
       "south":"tundra",
       "east": "trail",
       "west":"cliffside"
@@ -62,7 +62,8 @@
     "name":"Penguin Base",
     "neededToEnter":["Coat"],
     "neighbors":{
-      "north":"snowyTrail"
+      "north":"snowyTrail",
+      "west":"penguinArmory"
     },
     "neededAlliances":[],
     "bannedAlliances":["pigeon"],
@@ -76,7 +77,34 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You enter the main area of the base, and it's filled with penguins busily running from one task to the next. They're working at desks with computers, training small regiments, arming and building weapons, and planning on war boards. In the middle of the commotion stands a penguin wearing a healment and holding a clipboard and pen. (\"talk commander\") To the north is the snowy trail you entered on."
+    "text":"You enter the main area of the base, and it's filled with penguins busily running from one task to the next. They're working at desks with computers, training small regiments, arming and building weapons, and planning on war boards. In the middle of the commotion stands a penguin wearing a healment and holding a clipboard and pen. (\"talk commander\") To the west is a building labeled \"armory\". To the north is the snowy trail you entered on."
+  },
+  "penguinArmory":{
+    "name":"Penguin Armory",
+    "neededToEnter":["Coat"],
+    "neighbors":{
+      "east":"penguinBase"
+    },
+    "neededAlliances":["penguin"],
+    "bannedAlliances":["pigeon"],
+    "availableAlliances":[],
+    "npcs":{
+      "clerk":{
+        "name":"Penguin Clerk",
+        "text":"\"Welcome the armory, here you can get kitted up for official battles, or for personal expeditions.\"\nWares:\n\nPorter - $750\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "wares":{
+          "porter":{
+            "name":"Porter",
+            "price":750,
+            "type":"other",
+            "description":"Allows you to use the \"spawn\" command to teleport back to the world spawn."
+          }
+        }
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You enter the armory, and see a penguin standing behind a desk and in front of a wall mounted with equipment. (\"talk clerk\")"
   },
   "cliffside":{
     "name":"Cliffside",

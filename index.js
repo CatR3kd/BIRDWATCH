@@ -196,7 +196,7 @@ async function playAction(username, socket, actionObj){
     for(let neededAlliance of destination.neededAlliances){
       if(!(user.game.alliances.includes(neededAlliance))){
         cannotPass = true;
-        return socket.emit('message', `You cannot enter this zone because it only allows people with the ${bannedAlliance} alliance!`);
+        return socket.emit('message', `You cannot enter this zone because it only allows people with the ${neededAlliance} alliance!`);
       }
     }
     
@@ -394,8 +394,9 @@ async function playAction(username, socket, actionObj){
     newUser.game.health += HPToHeal;
     
     // Save user and update the client
-    socket.emit('gameUpdate', {"user": newUser, "notify": false});
     await db.set(username, newUser);
+    
+    socket.emit('gameUpdate', {"user": newUser, "notify": false});
 
     // Emit message
     socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth})\nMoney spent: $${price}`);
@@ -421,12 +422,21 @@ async function playAction(username, socket, actionObj){
     if(enemy == true) return socket.emit('message', 'You are already in an opposing alliance!');
 
     let newUser = user;
-    newUser.game.alliances.push(targetAlliance);
+    newUser.game.alliances.push(targetAlly);
+
+    await db.set(username, newUser);
 
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
     socket.emit('message', `Joined the ${targetAlly} alliance!`);
+  } else if(command == 'spawn'){
+    if(!user.game.items.includes('Porter')) return socket.emit('message', 'That is not an available action.');
+
+    let newUser = user;
+    newUser.game.location = 'spawnpoint';
+
     await db.set(username, newUser);
     
+    socket.emit('gameUpdate', {"user": newUser, "notify": true});
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
