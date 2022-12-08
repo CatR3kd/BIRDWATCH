@@ -157,13 +157,14 @@
     "npcs":{},
     "items":{},
     "enemies":{},
-    "text":"You come to a rocky gravel trail on top of the cliff. To the east is the cliffside you climbed to get here, and to the west is a fortress covered in pigeons."
+    "text":"You come to a rocky gravel trail on top of the cliff. To the east is the cliffside you climbed to get here, and to the west is a building covered in pigeons."
   },
   "pigeonBase":{
     "name":"Pigeon Base",
-    "neededToEnter":["Climbing Gear"],
+    "neededToEnter":[],
     "neighbors":{
-      "east":"rockyTrail"
+      "east":"rockyTrail",
+      "west":"pigeonHall"
     },
     "neededAlliances":[],
     "bannedAlliances":["penguin"],
@@ -171,7 +172,21 @@
     "npcs":{},
     "items":{},
     "enemies":{},
-    "text":""
+    "text":"The pigeons' base is a towering gothic building made from marble. The door is a massive archway, and inside the building is a hall filled with pigeons seated far above you on the various ledges dotting the walls. On a wall near the entrance, there is a pigeon propaganda poster that says to join the pigeon army. (\"ally pigeon\") To the west is a grand hall, and to the east is the trail you came on."
+  },
+  "pigeonHall":{
+    "name":"Pigeon Hall",
+    "neededToEnter":[],
+    "neighbors":{
+      "east":"pigeonBase"
+    },
+    "neededAlliances":["pigeon"],
+    "bannedAlliances":["penguin"],
+    "availableAlliances":[],
+    "npcs":{},
+    "items":{},
+    "enemies":{},
+    "text":"In the middle of the otherwise empty hall is a pedestal with a computer monitor on top of it. The monitor is connected to its source by a multitude of snaking cables of varying thickness and color, all leading outwards towards the walls. The screen is red with a single eye in the middle, flitting about nervously until it notices you and the screen goes black. Without the light of the monitor, you can only see enough to walk up to it (\"talk computer\") or turn around. Back to the east is the entrance to the hall."
   },
   "town":{
     "name":"Town Center",

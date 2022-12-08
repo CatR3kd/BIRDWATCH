@@ -455,11 +455,27 @@ async function sendChat(username, msg, socket){
   if(user.banStatus == true) return systemMessage(socket.id, 'You are currently banned from using the chat function.');
 
   let badgeColor = '#D1D1CD';
+  let title = '';
   
-  if((leaderboard.length > 2) && (username == leaderboard[2].username)) badgeColor = '#e59e57';
-  if((leaderboard.length > 1) && (username == leaderboard[1].username)) badgeColor = '#ababab';
-  if((leaderboard.length > 0) && (username == leaderboard[0].username)) badgeColor = '#E9D675';
-  if(username == 'CatR3kd') badgeColor = '#9792E3';
+  if((leaderboard.length > 2) && (username == leaderboard[2].username)){
+    badgeColor = '#e59e57';
+    title += '[#3] ';
+  }
+  
+  if((leaderboard.length > 1) && (username == leaderboard[1].username)){
+    badgeColor = '#ababab';
+    title += '[#2] ';
+  }
+  
+  if((leaderboard.length > 0) && (username == leaderboard[0].username)){
+    badgeColor = '#E9D675';
+    title += '[#1] ';
+  }
+  
+  if(username == 'CatR3kd'){
+    badgeColor = '#9792E3';
+    title += '[Dev] ';
+  }
 
   const msgObj = {
     sender: username,
