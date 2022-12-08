@@ -478,7 +478,7 @@ async function sendChat(username, msg, socket){
   }
 
   const msgObj = {
-    sender: username,
+    sender: `${title}${username}`,
     msg: filter.clean(msg),
     badgeColor: badgeColor
   }

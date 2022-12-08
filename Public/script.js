@@ -142,15 +142,15 @@
   }
 
   function alliances(){
-    const inventory = savedUser.game.alliances;
+    const list = savedUser.game.alliances;
     let textToDisplay = '';
 
-    if(inventory.length <= 0){
+    if(list.length <= 0){
       textToDisplay = 'You have no alliances!';
     } else {
       textToDisplay = 'Your alliances:';
-      for(let alliance of inventory){
-        textToDisplay += `\n${alliance}`;
+      for(let alliance of list){
+        textToDisplay += `\n${alliance.charAt(0).toUpperCase() + alliance.slice(1)}`;
       }
     }
     
