@@ -224,7 +224,7 @@ async function playAction(username, socket, actionObj){
   } else if(command == 'talk'){
     // NPC Interaction system
     const availableNPCs = gameMap[user.game.location].npcs;
-    const targetNPC= availableNPCs[args[0]];
+    const targetNPC = availableNPCs[args[0]];
 
     if(targetNPC == undefined) return socket.emit('message', 'That is not an available action.');
 
@@ -429,7 +429,31 @@ async function playAction(username, socket, actionObj){
 
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
     socket.emit('message', `Joined the ${targetAlly} alliance!`);
+  } else if(command == 'eat'){
+    // Eating system
+    if(!user.game.items.includes(capitalizeFirstLetter(args[0]))) return socket.emit('message', 'That is not an available action.');
+    
+    const food = {
+      "sandwich":50,
+      "cake":200
+    }
+    const healAmount = food[args[0]];
+    
+    if(healAmount == undefined) return socket.emit('message', 'That is not an available action.');
+
+    if(user.health <= user.maxHealth) return socket.emit('message', 'You are already at full health!');
+
+    let oldHealth = user.health;
+    let newUser = user;
+    newUser.health += healAmount;
+    if(newUser.health > newUser.maxHealth) newUser.health = newUser.maxHealth;
+
+    await db.set(username, newUser);
+    
+    socket.emit('gameUpdate', {"user": newUser, "notify": false});
+    return socket.emit('message', `Healed ${newUser.health - oldHealth} HP by eating the ${capitalizeFirstLetter(args[0])}!`);
   } else if(command == 'spawn'){
+    // Porter
     if(!user.game.items.includes('Porter')) return socket.emit('message', 'That is not an available action.');
 
     let newUser = user;
@@ -604,6 +628,12 @@ setInterval(async function(){
   io.emit('leaderboard', leaderboard);
 }, 5000);
 
+// Misc.
+
+
+function capitalizeFirstLetter(word){
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
 
 // Replit tip system
 // NOTE TO SELF: If I ever want to remove this, just remove the code in the chat badge function, the tipping code below, and uninstall and remove the declration for undici/fetch

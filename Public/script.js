@@ -72,12 +72,13 @@
     
     text.innerText = text.innerText + `Use commands to navigate and interact with the game!
     Global commands:
-    "location" Reminds you of your surroundings.
+    "location": Reminds you of your surroundings.
     "stats": List your current stats. (Health, strength, speed, etc.)
-    "balance" Tells you how much money you have.
-    "inventory" Shows you what items you own.
-    "move {direction}" Moves you in a given direction. (North, South, East, West)
-    "alliances" Lists your alliances.
+    "balance": Tells you how much money you have.
+    "inventory": Shows you what items you own.
+    "move {direction}": Moves you in a given direction. (North, South, East, West)
+    "alliances": Lists your alliances.
+    "eat {item}": Consume a food item to heal. Must have item in inventory
     NOTE: There are other location-specific commands that will be explained by other characters.\n\n`;
     
     scroll();
@@ -91,13 +92,13 @@
 
       Object.keys(location.neighbors).forEach(function(key){
         const neighbor = map[location.neighbors[key]];
-        addedMessage +=`\n${key.charAt(0).toUpperCase() + key.slice(1)}: ${neighbor.name}`;
+        addedMessage +=`\n${capitalizeFirstLetter(key)}: ${neighbor.name}`;
       });
     
       for(let enemyID in location.enemies){
         const enemy = location.enemies[enemyID];
         
-        if(!(savedUser.game.defeatedEnemies.includes(enemy.name))) addedMessage += `\n${enemyID.charAt(0).toUpperCase() + enemyID.slice(1)} blocks travel to the ${enemy.blockedDirection}! ("fight ${enemyID}")`;
+        if(!(savedUser.game.defeatedEnemies.includes(enemy.name))) addedMessage += `\n${capitalizeFirstLetter(enemyID)} blocks travel to the ${enemy.blockedDirection}! ("fight ${enemyID}")`;
       }
       
       text.innerText = `${text.innerText}Entered ${map[savedUser.game.location].name}.\n${map[savedUser.game.location].text}${addedMessage}\n\n`;
@@ -150,7 +151,7 @@
     } else {
       textToDisplay = 'Your alliances:';
       for(let alliance of list){
-        textToDisplay += `\n${alliance.charAt(0).toUpperCase() + alliance.slice(1)}`;
+        textToDisplay += `\n${capitalizeFirstLetter(alliance)}`;
       }
     }
     
@@ -237,5 +238,9 @@
     } else {
       return(number);
     }
+  }
+
+  function capitalizeFirstLetter(word){
+    return word.charAt(0).toUpperCase() + word.slice(1);
   }
 })();

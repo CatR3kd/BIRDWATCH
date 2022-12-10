@@ -14,7 +14,7 @@
     "npcs":{
       "girl":{
         "name": "Amelia",
-        "text":"\"Hey there! My name's Amelia! I see you're another newcomer, if you want to find anyone else, I'd advise that you go check out the town up north, or the fort to the east. Oh! If you ever need to be healed, I've heard there's a magic fountain around here somewhere... It's a dangerous world out there. See ya!\"",
+        "text":"\"Hey there! My name's Amelia! I see you're another newcomer, if you want to find anyone else, I'd advise that you go check out the town up north, or the Birdwatch Fort to the east. Speaking of Birdwatch, if you'd like to know anything more about them, I would tell you to head over to the Birdwatch Diner, it's just north of the town. Oh! If you ever need to be healed, I've heard there's a magic fountain around here somewhere... It's a dangerous world out there. See ya!\"",
         "wares":{}
       },
       "guard":{
@@ -146,7 +146,7 @@
   },
   "rockyTrail":{
     "name":"Rocky Trail",
-    "neededToEnter":["Climbing gear"],
+    "neededToEnter":["Rope"],
     "neighbors":{
       "east":"cliffside",
       "west":"pigeonBase"
@@ -192,6 +192,7 @@
     "name":"Town Center",
     "neededToEnter":[],
     "neighbors":{
+      "north":"diner",
       "south":"spawnpoint",
       "west":"mine"
     },
@@ -227,7 +228,7 @@
       },
       "governor":{
         "name": "Governor Humdrum",
-        "text":"\"Hello there, commoner. I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.)\"",
+        "text":"\"Hello there, commoner. I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.) The Birdwatch has taken pretty good care of us, but I'm not as fond of them as the people in the Diner to the north. Their obesession with the Birdwatch has become something of an... Oh, well never mind that.\"",
         "wares":{}
       },
       "prospector":{
@@ -238,7 +239,52 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You walk to the center of the town and look around. In a corner stands a skinny man with strange eyes and a small table of wares, attached to which is a sign that proclaims it to be a \"Shoppe\". (\"talk merchant\") In the center of the square, a man in a tweed suit and tophat is standing by himself. (\"talk governor\") Back to the south, you can see the spawnpoint, and to the west, you see what looks like a mineshaft. A man with a pickaxe and candle with a reflector strapped to his forehead is standing by the entrance trail to the mineshaft. (\"talk prospector\")"
+    "text":"You walk to the center of the town and look around. In a corner stands a skinny man with strange eyes and a small table of wares, attached to which is a sign that proclaims it to be a \"Shoppe\". (\"talk merchant\") In the center of the square, a man in a tweed suit and tophat is standing by himself. (\"talk governor\") Back to the south, you can see the spawnpoint, and to the north is a building with a red and white awning, with a sign labeled \"BW's Diner\".To the west, you see what looks like a mineshaft. A man with a pickaxe and candle with a reflector strapped to his forehead is standing by the entrance trail to the mineshaft. (\"talk prospector\")"
+  },
+  "diner":{
+    "name":"Birdwatch Diner",
+    "neededToEnter":["Coupon"],
+    "neighbors":{
+      "south":"town"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{
+      "man":{
+        "name":"Retired Birdwatch Guard",
+        "text":"\"Hey. I've seen you new folks roamin' around spawn, but you're the first I seen in here. Hopefully you're wantin' to investigate them pigeons? If ya'd like, I can sell you my old climbing rope for a few bucks, so ya can get up to their sanctuary on top of that old cliff. A warnin', though: Both sides of the war are no good. Don't get any ideas of conspirin' with any of them shady bunch.\"\nWares:\n\nRope - $50\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "wares":{
+          "superpick":{
+            "name":"Rope",
+            "price":50,
+            "type":"other",
+            "description":"Birdwatch standard issue. Old, but strong enough."
+          }
+        }
+      },
+      "man":{
+        "name":"Cook",
+        "text":"\"How're you doing? I've been the cook here for awhile, gotta keep our troops strong. What can I get for you?\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "wares":{
+          "sandwich":{
+            "name":"Sandwich",
+            "price":20,
+            "type":"other",
+            "description":"An absolutely massive chicken sandwich. (looks like it used the entire thing) Eat the birds, beat the birds, I guess. Heals 50 HP. (\"eat sandwich\")"
+          },
+          "cake":{
+            "name":"Cake",
+            "price":200,
+            "type":"other",
+            "description":"What appears to be an entire wedding cake. Heals a whopping 200HP. (\"eat cake\")"
+          }
+        }
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You enter the Diner, and notice there are only a few people present, few of them eating. One man sits alone at a table with a drink in hand. He looks older, probably in his late fities. (\"talk man\") There's only one cook, standing bored behind the counter, waiting for business. (\"talk cook\") Back to the south is the town."
   },
   "mine":{
     "name":"Gold Mine",
@@ -340,8 +386,14 @@
             "name":"Katana",
             "price":2000,
             "type":"weapon",
-            "damag":15,
+            "damage":15,
             "description":"A curved sword built from a metal that is both light and strong. Grants 15 extra damage."
+          },
+          "coupon":{
+            "name":"Coupn",
+            "price":15,
+            "type":"other",
+            "description":"A coupon for a free meal at the Birdwatch Diner. Maybe the Diner is the key to figure out what's going on..."
           }
         }
       },
