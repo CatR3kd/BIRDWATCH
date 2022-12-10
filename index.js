@@ -4,6 +4,7 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const path = require('path');
 const fs = require('fs');
+const { fetch } = require('undici');
 const Filter = require('bad-words');
 filter = new Filter(); // The filter code is slightly modified by me
 const { RateLimiterMemory } = require('rate-limiter-flexible');
@@ -456,6 +457,14 @@ async function sendChat(username, msg, socket){
 
   let badgeColor = '#D1D1CD';
   let title = '';
+
+  if(username == topTipper){
+    badgeColor = '#0fa7ff';
+    title += '[#1 Supporter] ';
+  } else if(tippers.includes(username)){
+    badgeColor = '#5b8dd9';
+    title += '[Supporter] ';
+  }
   
   if((leaderboard.length > 2) && (username == leaderboard[2].username)){
     badgeColor = '#e59e57';
@@ -594,3 +603,24 @@ setInterval(async function(){
   leaderboard = await getLeaderboard();
   io.emit('leaderboard', leaderboard);
 }, 5000);
+
+
+// Replit tip system
+// NOTE TO SELF: If I ever want to remove this, just remove the code in the chat badge function, the tipping code below, and uninstall and remove the declration for undici/fetch
+
+let tippers = [];
+let topTipper = '';
+
+async function updateTips(){
+  await fetch('https://catr3kd-tip-api.catr3kd.repl.co/all?replId=64cefdf4-f0a7-4643-a002-1423cf53324a', {method: 'GET'})
+  .then(r => r.json().then(res => {
+  	tippers = (res.users || []);
+  }));
+  await fetch('https://catr3kd-tip-api.catr3kd.repl.co/top?replId=64cefdf4-f0a7-4643-a002-1423cf53324a', {method: 'GET'})
+  .then(r => r.json().then(res => {
+  	topTipper = (res.topTipper || '');
+  }));
+}
+
+updateTips();
+setInterval(updateTips, 10_000);

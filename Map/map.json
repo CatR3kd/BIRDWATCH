@@ -18,7 +18,7 @@
         "wares":{}
       },
       "guard":{
-        "name": "Guard",
+        "name": "Birdwatch Guard",
         "text":"\"Protect and serve... Gotta make sure that everything is safe for the newcomers, ever since the war started, we've been in the crossfire, seeing as the opposing sides are directly south and west of here...\"",
         "wares":{}
       }
@@ -146,7 +146,7 @@
   },
   "rockyTrail":{
     "name":"Rocky Trail",
-    "neededToEnter":[],
+    "neededToEnter":["Climbing gear"],
     "neighbors":{
       "east":"cliffside",
       "west":"pigeonBase"
@@ -172,7 +172,7 @@
     "npcs":{},
     "items":{},
     "enemies":{},
-    "text":"The pigeons' base is a towering gothic building made from marble. The door is a massive archway, and inside the building is a hall filled with pigeons seated far above you on the various ledges dotting the walls. On a wall near the entrance, there is a pigeon propaganda poster that says to join the pigeon army. (\"ally pigeon\") To the west is a grand hall, and to the east is the trail you came on."
+    "text":"The pigeons' base is a towering gothic building made of marble. The door is a massive archway, and inside the building is a hall filled with pigeons seated far above you on the various ledges dotting the walls. On a wall near the entrance, there is a pigeon propaganda poster that says to join the pigeon army. (\"ally pigeon\") To the west is a grand hall, and to the east is the trail you came on."
   },
   "pigeonHall":{
     "name":"Pigeon Hall",
@@ -304,7 +304,7 @@
     "text":"You continue on the trail. It goes on to the east towards a towering fortress, and westward, towards the world spawnpoint. To the north, the trail continues through a more heavily forested area."
   },
   "fort":{
-    "name":"Fort",
+    "name":"Birdwatch Fort",
     "neededToEnter":[],
     "neighbors":{
       "west":"trailTwo"
@@ -314,7 +314,7 @@
     "availableAlliances":[],
     "npcs":{
       "scientist":{
-        "name": "Scientist",
+        "name": "Birdwatch Scientist",
         "text":"\"Hello there. I'm the scientist that runs this place, and even if nobody else will admit it, I'm the only reason it's still around... Anything you'd like to purchase?\"\nWares:\n\nCoat - $1500\nSuperDetector - $2000\nArmorplates - $1500\nKatana - $2000\n\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "coat":{
@@ -346,7 +346,7 @@
         }
       },
       "guard":{
-        "name": "Fortress Guard",
+        "name": "Birdwatch Guard",
         "text":"*grunt* \"Five minutes 'till my shift is over... I can't see a reason to guard this place, but I gotta get paid somehow. I wish I was guarding the trail to the platinum mines from bandits instead, it wouldn't be too bad to have some exitement for a change...\"",
         "wares":{}
       }
@@ -367,7 +367,7 @@
     "availableAlliances":[],
     "npcs":{
       "guard":{
-        "name": "Trail Guard",
+        "name": "Birdwatch Guard",
         "text":"\"I wouldn't go any farther if I were you, there's a notorious bandit nest farther up north...\"",
         "wares":{}
       }

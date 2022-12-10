@@ -4,3 +4,7 @@ todo before publish
 3: build hype
 4: get bug testers
 5: perhaps add supporter role
+
+name ideas: 
+birdwatch.io
+aviary.io
