@@ -445,6 +445,12 @@ async function playAction(username, socket, actionObj){
 
     let oldHealth = user.health;
     let newUser = user;
+
+    const foodIndex = newUser.game.inventory.indexOf(capitalizeFirstLetter(args[0]));
+    
+    if(foodIndex == -1) return socket.emit('message', 'That is not an available action.');
+    
+    newUser.game.inventory.splice(foodIndex, 1);
     newUser.health += healAmount;
     if(newUser.health > newUser.maxHealth) newUser.health = newUser.maxHealth;
 
