@@ -361,7 +361,7 @@
     "npcs":{
       "scientist":{
         "name": "Birdwatch Scientist",
-        "text":"\"Hello there. I'm the scientist that runs this place, and even if nobody else will admit it, I'm the only reason it's still around... Anything you'd like to purchase?\"\nWares:\n\nCoat - $1500\nSuperDetector - $2000\nArmorplates - $1500\nKatana - $2000\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "text":"\"Hello there. I'm the scientist that runs this place, and even if nobody else will admit it, I'm the only reason it's still around... Anything you'd like to purchase?\"\nWares:\n\nCoat - $1500\nSuperDetector - $2000\nArmorplates - $1500\nKatana - $2000\nCoupon - $15\n\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "coat":{
             "name":"Coat",
@@ -390,7 +390,7 @@
             "description":"A curved sword built from a metal that is both light and strong. Grants 15 extra damage."
           },
           "coupon":{
-            "name":"Coupn",
+            "name":"Coupon",
             "price":15,
             "type":"other",
             "description":"A coupon for a free meal at the Birdwatch Diner. Maybe the Diner is the key to figure out what's going on..."
