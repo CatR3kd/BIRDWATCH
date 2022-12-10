@@ -228,7 +228,7 @@
       },
       "governor":{
         "name": "Governor Humdrum",
-        "text":"\"Hello there, commoner. I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.) The Birdwatch has taken pretty good care of us, but I'm not as fond of them as the people in the Diner to the north. Their obesession with the Birdwatch has become something of an... Oh, well never mind that.\"",
+        "text":"\"Hello there, commoner. I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.) The Birdwatch has taken pretty good care of us, but I'm not as fond of them as the people in the Diner to the north. Their obesession with the Birdwatch has become something of an... Oh- well, never mind that.\"",
         "wares":{}
       },
       "prospector":{
