@@ -98,6 +98,12 @@
             "price":750,
             "type":"other",
             "description":"Allows you to use the \"spawn\" command to teleport back to the world spawn."
+          },
+          "supplements":{
+            "name":"Supplements",
+            "price":1500,
+            "type":"other",
+            "description":"Allows you to train 10% faster and 25% harder! "
           }
         }
       }
@@ -265,7 +271,7 @@
       },
       "cook":{
         "name":"Cook",
-        "text":"\"How're you doing? I've been the cook here for awhile, gotta keep our troops strong. What can I get for you?\nSandwich - $20\nCake - $200\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "text":"\"How're you doing? I've been the cook here for awhile, gotta keep our troops strong. What can I get for you?\"\nWares:\n\nSandwich - $20\nCake - $200\n\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "sandwich":{
             "name":"Sandwich",
@@ -353,6 +359,7 @@
     "name":"Birdwatch Fort",
     "neededToEnter":[],
     "neighbors":{
+      "south":"gym",
       "west":"trailTwo"
     },
     "neededAlliances":[],
@@ -399,13 +406,33 @@
       },
       "guard":{
         "name": "Birdwatch Guard",
-        "text":"*grunt* \"Five minutes 'till my shift is over... I can't see a reason to guard this place, but I gotta get paid somehow. I wish I was guarding the trail to the platinum mines from bandits instead, it wouldn't be too bad to have some exitement for a change...\"",
+        "text":"*grunt* \"Five minutes 'till my shift is over... I can't see a reason to guard this place, but I gotta get paid somehow. I wish I was guarding the trail to the platinum mines from bandits instead, it wouldn't be too bad to have some exitement for a change... I'm probably going to go to the gym after my shift, gotta stay fit after all.\"",
         "wares":{}
       }
     },
     "items":{},
     "enemies":{},
-    "text":"You walk into the fort, through the opened gates. Even though it looked old outside, it's modern and sleek on the inside. In the middle of the room stands a man next to a few desks covered in computers and other trinkets and gadgets (\"talk scientist\"), and by the entrance is a lone guard. (\"talk guard\") Back to the west, you see the trail you came from."
+    "text":"You walk into the fort, through the opened gates. Even though it looked old outside, it's modern and sleek on the inside. In the middle of the room stands a man next to a few desks covered in computers and other trinkets and gadgets (\"talk scientist\"), and by the entrance is a lone guard. (\"talk guard\") Back to the west, you see the trail you came from, and to the south is a giant building with a running track."
+  },
+  "gym":{
+    "name":"Birdwatch Training Gym",
+    "neededToEnter":[],
+    "neighbors":{
+      "north": "fort"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{
+      "guard":{
+        "name": "Trainer",
+        "text":"\"Hey there! Welcome to my gym, the only place where you can enhance your skills for a small price and a bit of time. If you'd like to begin training, use \"train\". Please note that we do require a small fee of $20...\"",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You enter the gym. It's a large open area with plenty of equipment, including weights and stationary bikes. Outisde, there's also an entire running track surrounding the building. An extremely beefy man stands next to a bench press with a protein shake in hand. (\"talk trainer\") Back to the north is the Birdwatch Fort."
   },
   "forestTrail":{
     "name":"Forested Trail",

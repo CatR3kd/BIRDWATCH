@@ -378,6 +378,42 @@ async function playAction(username, socket, actionObj){
         clearInterval(mineInterval);
       }
     }, mineTime);
+  } else if(commaned == 'train'){
+    // Training
+    if(user.game.location != 'gym') return socket.emit('message', 'That is not an available action.');
+    if(user.game.money < 20) return socket.emit('message', 'You don\'t have enough money!');
+
+    let newUser = user;
+    newUser.game.money -= 20;
+
+    let counter = 0;
+    const trainTime = (user.game.items.includes('Supplements'))? 450 : 500;
+    
+    socket.emit('message', `Training... (${counter * 10}%)`);
+    busyPlayers.set(user.username, 'training');
+    
+    const trainInterval = setInterval(function(){
+      counter++;
+      socket.emit('message', `Training... (${counter * 10}%)`);
+      if(counter >= 10){
+        const multiplier = (user.game.items.includes('Supplements'))? 5 : 4; 
+        const damageGained = Math.floor(Math.random() * multiplier);
+        const speedGained = Math.floor(Math.random() * multiplier);
+        const punctuation = ((damageGained + speedGained) > 0)? '!' : '.';
+        
+        socket.emit('message', `Finished${punctuation} Damage stat increased by ${damageGained}, speed stats increase by ${speedGained}${punctuation}`);
+
+        // Save gainz
+        newUser.game.damage += damageGained;
+        newUser.game.speed += speedGained;
+        
+        db.set(username, newUser);
+        socket.emit('gameUpdate', {"user": newUser, "notify": false});
+
+        busyPlayers.delete(user.username);
+        clearInterval(trainInterval);
+      }
+    }, trainTime);
   } else if(command == 'heal'){
     // Healing
     if(user.game.location != 'fountain') return socket.emit('message', 'That is not an available action.');
@@ -434,30 +470,30 @@ async function playAction(username, socket, actionObj){
     if(!user.game.items.includes(capitalizeFirstLetter(args[0]))) return socket.emit('message', 'That is not an available action.');
     
     const food = {
-      "sandwich":50,
+      "sandwich":30,
       "cake":200
     }
     const healAmount = food[args[0]];
     
     if(healAmount == undefined) return socket.emit('message', 'That is not an available action.');
 
-    if(user.health <= user.maxHealth) return socket.emit('message', 'You are already at full health!');
+    if(user.game.health <= user.game.maxHealth) return socket.emit('message', 'You are already at full health!');
 
     let oldHealth = user.health;
     let newUser = user;
-
-    const foodIndex = newUser.game.inventory.indexOf(capitalizeFirstLetter(args[0]));
+    
+    const foodIndex = newUser.game.items.indexOf(capitalizeFirstLetter(args[0]));
     
     if(foodIndex == -1) return socket.emit('message', 'That is not an available action.');
     
-    newUser.game.inventory.splice(foodIndex, 1);
-    newUser.health += healAmount;
-    if(newUser.health > newUser.maxHealth) newUser.health = newUser.maxHealth;
-
+    newUser.game.items.splice(foodIndex, 1);
+    newUser.game.health += healAmount;
+    if(newUser.game.health > newUser.game.maxHealth) newUser.game.health = newUser.game.maxHealth;
+    
     await db.set(username, newUser);
     
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
-    return socket.emit('message', `Healed ${newUser.health - oldHealth} HP by eating the ${capitalizeFirstLetter(args[0])}!`);
+    return socket.emit('message', `Healed ${newUser.game.health - oldHealth} HP by eating the ${capitalizeFirstLetter(args[0])}!`);
   } else if(command == 'spawn'){
     // Porter
     if(!user.game.items.includes('Porter')) return socket.emit('message', 'That is not an available action.');
