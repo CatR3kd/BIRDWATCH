@@ -453,7 +453,7 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You walk through the trees and enter the boot camp, and in the middle of a large obstacle course of ropes is what looks to be a wrestling ring. Next to it stands a referee. (\"talk referee\") Back to the north is the fort."
+    "text":"You walk through the trees and enter the boot camp. It's a huge obstacle course made of ropes hung between the tall pine trees, over the mud pit that makes up the floor of the area. In the middle is what looks to be a wrestling ring. Next to it stands a referee. (\"talk referee\") Back to the north is the fort."
   },
   "forestTrail":{
     "name":"Forested Trail",

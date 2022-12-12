@@ -455,7 +455,9 @@ async function playAction(username, socket, actionObj){
           // Fight lost
           socket.emit('message', `You lost to the ${enemy.name}.`);
         }
-
+        
+        newUser.game.health = newUser.game.maxHealth;
+        
         db.set(username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": true});
         busyPlayers.delete(user.username);
@@ -463,7 +465,6 @@ async function playAction(username, socket, actionObj){
         clearInterval(fightInterval);
       }
     }, 500);
-    
   } else if(command == 'heal'){
     // Healing
     if(user.game.location != 'fountain') return socket.emit('message', 'That is not an available action.');
