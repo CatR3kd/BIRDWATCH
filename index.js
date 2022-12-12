@@ -73,6 +73,7 @@ io.on('connection', (socket) => {
   
       socket.emit('loggedIn', user);
       socket.emit('leaderboard', leaderboard);
+      io.emit('playerCount', connectedPlayers.size);
     }
   })();
 
@@ -101,6 +102,7 @@ io.on('connection', (socket) => {
     
     if(connectedPlayers.has(username)){
       connectedPlayers.delete(username);
+      io.emit('playerCount', connectedPlayers.size);
     }
   });
 });

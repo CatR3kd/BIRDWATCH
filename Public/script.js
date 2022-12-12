@@ -40,6 +40,10 @@
     updateLeaderboard(leaderboard);
   });
 
+  socket.on('playerCount', function (count){
+    document.getElementById('chatInput').placeholder = `Players online: ${count}`;
+  });
+
   socket.on('kicked', function (){
     window.location.reload();
   });
