@@ -5,3 +5,4 @@ todo before publish
 4: get bug testers and bug test a lot and fix every bug
 5: finish pigeon base for now and add pigeon lore, and reason to team with the pigeons
 6: test training
+7: tip api is a little weird

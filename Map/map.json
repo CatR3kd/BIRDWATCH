@@ -359,7 +359,7 @@
     "name":"Birdwatch Fort",
     "neededToEnter":[],
     "neighbors":{
-      "south":"gym",
+      "east":"gym",
       "west":"trailTwo"
     },
     "neededAlliances":[],
@@ -412,13 +412,13 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You walk into the fort, through the opened gates. Even though it looked old outside, it's modern and sleek on the inside. In the middle of the room stands a man next to a few desks covered in computers and other trinkets and gadgets (\"talk scientist\"), and by the entrance is a lone guard. (\"talk guard\") Back to the west, you see the trail you came from, and to the south is a giant building with a running track."
+    "text":"You walk into the fort, through the opened gates. Even though it looked old outside, it's modern and sleek on the inside. In the middle of the room stands a man next to a few desks covered in computers and other trinkets and gadgets (\"talk scientist\"), and by the entrance is a lone guard. (\"talk guard\") Back to the west, you see the trail you came from, and to the east is a giant building with a running track."
   },
   "gym":{
     "name":"Birdwatch Training Gym",
     "neededToEnter":[],
     "neighbors":{
-      "north": "fort"
+      "west": "fort"
     },
     "neededAlliances":[],
     "bannedAlliances":[],
@@ -432,7 +432,7 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You enter the gym. It's a large open area with plenty of equipment, including weights and stationary bikes. Outisde, there's also an entire running track surrounding the building. An extremely beefy man stands next to a bench press with a protein shake in hand. (\"talk trainer\") Back to the north is the Birdwatch Fort."
+    "text":"You enter the gym. It's a large open area with plenty of equipment, including weights and stationary bikes. Outisde, there's also an entire running track surrounding the building. An extremely beefy man stands next to a bench press with a protein shake in hand. (\"talk trainer\") Back to the west is the Birdwatch Fort."
   },
   "forestTrail":{
     "name":"Forested Trail",
