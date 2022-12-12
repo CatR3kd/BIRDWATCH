@@ -414,6 +414,56 @@ async function playAction(username, socket, actionObj){
         clearInterval(trainInterval);
       }
     }, trainTime);
+  } else if(commaned == 'battle'){
+    // Battling
+    if(user.game.location != 'camp') return socket.emit('message', 'That is not an available action.');
+
+    const enemy = {
+      name: "Opposing Brawler",
+      stats: {
+        speed: (Math.floor(Math.random() * 3) + 1),
+        health: ((Math.floor(Math.random() * 2) + 1) * 50),
+        damage: ((Math.floor(Math.random() * 5) + 1) * 5)
+      }
+    }
+    
+    busyPlayers.set(user.username, 'fighting');
+    let nextTurn = (user.game.speed >= enemy.stats.speed)? 'user' : 'enemy';
+
+    const fightInterval = setInterval(function(){
+      if(nextTurn == 'user'){
+        enemy.stats.health -= user.game.damage;
+        socket.emit('message', `You attacked the ${enemy.name} and dealt ${user.game.damage} damage.`);
+        nextTurn = 'enemy';
+      } else { // else instead of elseif is lost redundancy and potentially bad
+        user.game.health -= enemy.stats.damage;
+        socket.emit('message', `The ${enemy.name} attacked you and dealt ${enemy.stats.damage} damage.`);
+        nextTurn = 'user';
+      }
+
+      socket.emit('gameUpdate', {"user": user, "notify": false});
+      socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health:${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
+      
+      if((user.game.health <= 0) || (enemy.stats.health <= 0)){
+        let newUser = user;
+        
+        if(user.game.health > 0){
+          // Fight won
+          socket.emit('message', `You beat the ${enemy.name} and gained $75!`);
+          newUser.game.money += 75;
+        } else {
+          // Fight lost
+          socket.emit('message', `You lost to the ${enemy.name}.`);
+        }
+
+        db.set(username, newUser);
+        socket.emit('gameUpdate', {"user": newUser, "notify": true});
+        busyPlayers.delete(user.username);
+        
+        clearInterval(fightInterval);
+      }
+    }, 500);
+    
   } else if(command == 'heal'){
     // Healing
     if(user.game.location != 'fountain') return socket.emit('message', 'That is not an available action.');

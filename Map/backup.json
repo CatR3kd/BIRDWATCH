@@ -359,6 +359,7 @@
     "name":"Birdwatch Fort",
     "neededToEnter":[],
     "neighbors":{
+      "south":"camp",
       "east":"gym",
       "west":"trailTwo"
     },
@@ -406,13 +407,13 @@
       },
       "guard":{
         "name": "Birdwatch Guard",
-        "text":"*grunt* \"Five minutes 'till my shift is over... I can't see a reason to guard this place, but I gotta get paid somehow. I wish I was guarding the trail to the platinum mines from bandits instead, it wouldn't be too bad to have some exitement for a change... I'm probably going to go to the gym after my shift, gotta stay fit after all.\"",
+        "text":"*grunt* \"Five minutes 'till my shift is over... I can't see a reason to guard this place, but I gotta get paid somehow. Maybe I';; go over to the boot camp to get some money. I wish I was guarding the trail to the platinum mines from bandits instead, it wouldn't be too bad to have some exitement for a change... I'm probably going to go to the gym after my shift, gotta stay fit after all.\"",
         "wares":{}
       }
     },
     "items":{},
     "enemies":{},
-    "text":"You walk into the fort, through the opened gates. Even though it looked old outside, it's modern and sleek on the inside. In the middle of the room stands a man next to a few desks covered in computers and other trinkets and gadgets (\"talk scientist\"), and by the entrance is a lone guard. (\"talk guard\") Back to the west, you see the trail you came from, and to the east is a giant building with a running track."
+    "text":"You walk into the fort, through the opened gates. Even though it looked old outside, it's modern and sleek on the inside. In the middle of the room stands a man next to a few desks covered in computers and other trinkets and gadgets (\"talk scientist\"), and by the entrance is a lone guard. (\"talk guard\") Back to the west, you see the trail you came from, and to the east is a giant building with a running track. To the south is what looks like a training grounds."
   },
   "gym":{
     "name":"Birdwatch Training Gym",
@@ -433,6 +434,26 @@
     "items":{},
     "enemies":{},
     "text":"You enter the gym. It's a large open area with plenty of equipment, including weights and stationary bikes. Outisde, there's also an entire running track surrounding the building. An extremely beefy man stands next to a bench press with a protein shake in hand. (\"talk trainer\") Back to the west is the Birdwatch Fort."
+  },
+  "camp":{
+    "name":"Birdwatch Boot Camp",
+    "neededToEnter":[],
+    "neighbors":{
+      "north": "fort"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{
+      "guard":{
+        "name": "Referee",
+        "text":"\"Welcome to the ring! If you want to make a quick buck, you can use the command \"battle\", every enemy you beat will reward you $75! After beating an enemy, I'll patch you up to be at full health again.\"",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You walk through the trees and enter the boot camp, and in the middle of a large obstacle course of ropes is what looks to be a wrestling ring. Next to it stands a referee. (\"talk referee\") Back to the north is the fort."
   },
   "forestTrail":{
     "name":"Forested Trail",
