@@ -193,7 +193,6 @@
   }
   
   function newChat(msgObj){
-    console.log(msgObj)
     const sender = msgObj.sender;
     const badgeColor = msgObj.badgeColor;
     
