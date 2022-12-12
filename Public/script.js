@@ -63,6 +63,7 @@
     if(command.toLowerCase() == 'inventory') return inventory();
     if(command.toLowerCase() == 'stats') return stats();
     if(command.toLowerCase() == 'alliances') return alliances();
+    if(command.toLowerCase() == 'clear') return clear();
     
     socket.emit('action', actionObj);
   }
@@ -79,6 +80,7 @@
     "move {direction}": Moves you in a given direction. (North, South, East, West)
     "alliances": Lists your alliances.
     "eat {item}": Consume a food item to heal. Must have item in inventory
+    "clear": Clears the output.
     NOTE: There are other location-specific commands that will be explained by other characters.\n\n`;
     
     scroll();
@@ -159,6 +161,11 @@
     
     text.innerText = `${text.innerText}${textToDisplay}\n\n`;
     
+    scroll();
+  }
+
+  function clear(){
+    document.getElementById('text').innerText = '';
     scroll();
   }
 

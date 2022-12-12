@@ -1,8 +1,6 @@
 todo before publish
-1: make new way of getting money by fighting
+1: find a way to plug/credit myself
 2: add burner reference
 3: build hype
 4: get bug testers and bug test a lot and fix every bug
-5: finish pigeon base for now and add pigeon lore, and reason to team with the pigeons
-6: test training
 7: tip api is a little weird

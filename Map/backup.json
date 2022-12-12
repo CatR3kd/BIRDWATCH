@@ -91,7 +91,7 @@
     "npcs":{
       "clerk":{
         "name":"Penguin Clerk",
-        "text":"\"Welcome the armory, here you can get kitted up for official battles, or for personal expeditions.\"\nWares:\n\nPorter - $750\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "text":"\"Welcome the armory, here you can get kitted up for official battles, or for personal expeditions.\"\nWares:\n\nPorter - $750\nSupplements - $1500\nRPG - $1000\n\nNOTE: Discounts applied at purchase.\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "porter":{
             "name":"Porter",
@@ -104,6 +104,13 @@
             "price":1500,
             "type":"other",
             "description":"Allows you to train 10% faster and 25% harder! "
+          },
+          "rpg":{
+            "name":"RPG",
+            "price":1000,
+            "type":"weapon",
+            "damage":20,
+            "description":"A rocket-propelled grenade launcher developed by the penguin army. 20 attack damage. (Would probably be more if it wasn't sized for a three foot tall penguin)"
           }
         }
       }
@@ -189,7 +196,27 @@
     "neededAlliances":["pigeon"],
     "bannedAlliances":["penguin"],
     "availableAlliances":[],
-    "npcs":{},
+    "npcs":{
+      "computer":{
+        "name": "Penguin Computer",
+        "text":"[The computer navigates to a small shop page.]\nWares:\n\nCompanion - $2000\nKunai - $1000\n\nNOTE: Discounts applied at purchase.\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "wares":{
+          "companion":{
+            "name":"Companion",
+            "price":2000,
+            "type":"other",
+            "description":"A robotic pigeon companion. Flies behind you, always watching. Prevents you from losing money on death, and gives a 10% discount on all purchasable items."
+          },
+          "kunai":{
+            "name":"Kunai",
+            "price":1000,
+            "type":"weapon",
+            "damage":20,
+            "description":"A sleek, tapered knife with a case that slides over top perfectly. Masterfully crafted, and anodized to be matte black. Deals 20 damage."
+          }
+        }
+      }
+    },
     "items":{},
     "enemies":{},
     "text":"In the middle of the otherwise empty hall is a pedestal with a computer monitor on top of it. The monitor is connected to its source by a multitude of snaking cables of varying thickness and color, all leading outwards towards the walls. The screen is red with a single eye in the middle, flitting about nervously until it notices you and the screen goes black. Without the light of the monitor, you can only see enough to walk up to it (\"talk computer\") or turn around. Back to the east is the entrance to the hall."
@@ -208,7 +235,7 @@
     "npcs":{
       "merchant":{
         "name":"Strange Merchant",
-        "text":"\"Welcome to my shoppe! Here you can purchase from my endless stock of seemingly random products, ha!\"\nWares:\n\nSuperPick - $1000\nDagger - $250\nQuickShoes - $750\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "text":"\"Welcome to my shoppe! Here you can purchase from my endless stock of seemingly random products, ha!\"\nWares:\n\nSuperPick - $1000\nDagger - $250\nQuickShoes - $750\n\nNOTE: Discounts applied at purchase.\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "superpick":{
             "name":"SuperPick",
@@ -259,7 +286,7 @@
     "npcs":{
       "man":{
         "name":"Retired Birdwatch Guard",
-        "text":"\"Hey. I've seen you new folks roamin' around spawn, but you're the first I seen in here. Hopefully you're wantin' to investigate them pigeons? If ya'd like, I can sell you my old climbing rope for a few bucks, so ya can get up to their sanctuary on top of that old cliff. A warnin', though: Both sides of the war are no good. Don't get any ideas of conspirin' with any of them shady bunch.\"\nWares:\n\nRope - $50\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "text":"\"Hey. I've seen you new folks roamin' around spawn, but you're the first I seen in here. Hopefully you're wantin' to investigate them pigeons? If ya'd like, I can sell you my old climbing rope for a few bucks, so ya can get up to their sanctuary on top of that old cliff. A warnin', though: Both sides of the war are no good. Don't get any ideas of conspirin' with any of them shady bunch.\"\nWares:\n\nRope - $50\n\nNOTE: Discounts applied at purchase.\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "superpick":{
             "name":"Rope",
@@ -271,7 +298,7 @@
       },
       "cook":{
         "name":"Cook",
-        "text":"\"How're you doing? I've been the cook here for awhile, gotta keep our troops strong. What can I get for you?\"\nWares:\n\nSandwich - $20\nCake - $200\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "text":"\"How're you doing? I've been the cook here for awhile, gotta keep our troops strong. What can I get for you?\"\nWares:\n\nSandwich - $20\nCake - $200\n\nNOTE: Discounts applied at purchase.\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "sandwich":{
             "name":"Sandwich",
@@ -369,7 +396,7 @@
     "npcs":{
       "scientist":{
         "name": "Birdwatch Scientist",
-        "text":"\"Hello there. I'm the scientist that runs this place, and even if nobody else will admit it, I'm the only reason it's still around... Anything you'd like to purchase?\"\nWares:\n\nCoat - $1500\nSuperDetector - $2000\nArmorplates - $1500\nKatana - $2000\nCoupon - $15\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "text":"\"Hello there. I'm the scientist that runs this place, and even if nobody else will admit it, I'm the only reason it's still around... Anything you'd like to purchase?\"\nWares:\n\nCoat - $1500\nSuperDetector - $2000\nArmorplates - $1500\nKatana - $2000\nCoupon - $15\n\nNOTE: Discounts applied at purchase.\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "coat":{
             "name":"Coat",
@@ -425,9 +452,9 @@
     "bannedAlliances":[],
     "availableAlliances":[],
     "npcs":{
-      "guard":{
+      "trainer":{
         "name": "Trainer",
-        "text":"\"Hey there! Welcome to my gym, the only place where you can enhance your skills for a small price and a bit of time. If you'd like to begin training, use \"train\". Please note that we do require a small fee of $20...\"",
+        "text":"\"Hey there! Welcome to my gym, the only place where you can enhance your skills for a small price and a bit of time. If you'd like to begin training, use the command \"train\". Please note that we do require a small fee of $50...\"",
         "wares":{}
       }
     },
@@ -445,9 +472,9 @@
     "bannedAlliances":[],
     "availableAlliances":[],
     "npcs":{
-      "guard":{
+      "referee":{
         "name": "Referee",
-        "text":"\"Welcome to the ring! If you want to make a quick buck, you can use the command \"battle\", every enemy you beat will reward you $75! After beating an enemy, I'll patch you up to be at full health again.\"",
+        "text":"\"Welcome to the ring! If you want to make a quick buck, you can use the command \"battle\", every enemy you beat will reward you $75! After beating an enemy, I'll patch you up to be at the health you came here at.\"",
         "wares":{}
       }
     },

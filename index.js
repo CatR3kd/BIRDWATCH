@@ -265,10 +265,11 @@ async function playAction(username, socket, actionObj){
         } else {
           // Fight lost
           newUser.game.location = 'spawnpoint';
-          newUser.game.money = Math.floor(user.game.money / 2);
+          const moneyLost = (user.game.items.includes('Companion'))? 0 : Math.floor(user.game.money / 2);
+          newUser.game.money -= moneyLost;
           newUser.game.health = user.game.maxHealth;
 
-          socket.emit('message', 'You died and lost half of your money. You\'ve respawned at the world spawnpoint.');
+          socket.emit('message', `You died and lost $${moneyLost}. You've respawned at the world spawnpoint.`);
         }
 
         db.set(username, newUser);
@@ -306,10 +307,11 @@ async function playAction(username, socket, actionObj){
     if(user.game.items.includes(item.name)) return socket.emit('message', 'You already own this item!');
     
     // Make sure user has enough money
-    if(user.game.money < item.price) return socket.emit('message', 'You don\'t have enough money to buy this item.');
+    const price = (user.game.items.includes('Companion'))? (item.price * 9 / 10) : item.price;
+    if(user.game.money < price) return socket.emit('message', 'You don\'t have enough money to buy this item.');
 
     let newUser = user;
-    newUser.game.money -= item.price;
+    newUser.game.money -= price;
     newUser.game.items.push(item.name);
 
     // Change player stats
@@ -378,13 +380,13 @@ async function playAction(username, socket, actionObj){
         clearInterval(mineInterval);
       }
     }, mineTime);
-  } else if(commaned == 'train'){
+  } else if(command == 'train'){
     // Training
     if(user.game.location != 'gym') return socket.emit('message', 'That is not an available action.');
-    if(user.game.money < 20) return socket.emit('message', 'You don\'t have enough money!');
+    if(user.game.money < 50) return socket.emit('message', 'You don\'t have enough money!');
 
     let newUser = user;
-    newUser.game.money -= 20;
+    newUser.game.money -= 50;
 
     let counter = 0;
     const trainTime = (user.game.items.includes('Supplements'))? 450 : 500;
@@ -401,7 +403,7 @@ async function playAction(username, socket, actionObj){
         const speedGained = Math.floor(Math.random() * multiplier);
         const punctuation = ((damageGained + speedGained) > 0)? '!' : '.';
         
-        socket.emit('message', `Finished${punctuation} Damage stat increased by ${damageGained}, speed stats increase by ${speedGained}${punctuation}`);
+        socket.emit('message', `Finished${punctuation} Damage stat increased by ${damageGained}, speed stat increased by ${speedGained}${punctuation}`);
 
         // Save gainz
         newUser.game.damage += damageGained;
@@ -414,22 +416,25 @@ async function playAction(username, socket, actionObj){
         clearInterval(trainInterval);
       }
     }, trainTime);
-  } else if(commaned == 'battle'){
+  } else if(command == 'battle'){
     // Battling
     if(user.game.location != 'camp') return socket.emit('message', 'That is not an available action.');
 
+    const enemyHealth = ((Math.floor(Math.random() * 2) + 2) * 50);
     const enemy = {
       name: "Opposing Brawler",
       stats: {
-        speed: (Math.floor(Math.random() * 3) + 1),
-        health: ((Math.floor(Math.random() * 2) + 1) * 50),
+        speed: (Math.floor(Math.random() * Math.random() * 9) + 1),
+        health: enemyHealth,
+        maxHealth: enemyHealth,
         damage: ((Math.floor(Math.random() * 5) + 1) * 5)
       }
     }
     
     busyPlayers.set(user.username, 'fighting');
     let nextTurn = (user.game.speed >= enemy.stats.speed)? 'user' : 'enemy';
-
+    const startingHP = user.game.health;
+    
     const fightInterval = setInterval(function(){
       if(nextTurn == 'user'){
         enemy.stats.health -= user.game.damage;
@@ -456,10 +461,10 @@ async function playAction(username, socket, actionObj){
           socket.emit('message', `You lost to the ${enemy.name}.`);
         }
         
-        newUser.game.health = newUser.game.maxHealth;
+        newUser.game.health = startingHP;
         
         db.set(username, newUser);
-        socket.emit('gameUpdate', {"user": newUser, "notify": true});
+        socket.emit('gameUpdate', {"user": newUser, "notify": false});
         busyPlayers.delete(user.username);
         
         clearInterval(fightInterval);
