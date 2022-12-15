@@ -3,7 +3,7 @@
   let map;
   let savedUser;
 
-  fetch('https://ta.catr3kd.repl.co/map')
+  fetch('./map')
   .then((response) => response.json())
   .then((data) => {
   	map = data;
@@ -92,24 +92,24 @@
 
   function location(){
     const text = document.getElementById('text');
-      const location = map[savedUser.game.location];
+    const location = map[savedUser.game.location];
 
-      let addedMessage = '\n';
+    let addedMessage = '\n';
 
-      Object.keys(location.neighbors).forEach(function(key){
-        const neighbor = map[location.neighbors[key]];
-        addedMessage +=`\n${capitalizeFirstLetter(key)}: ${neighbor.name}`;
-      });
+    Object.keys(location.neighbors).forEach(function(key){
+      const neighbor = map[location.neighbors[key]];
+      addedMessage +=`\n${capitalizeFirstLetter(key)}: ${neighbor.name}`;
+    });
     
-      for(let enemyID in location.enemies){
-        const enemy = location.enemies[enemyID];
-        
-        if(!(savedUser.game.defeatedEnemies.includes(enemy.name))) addedMessage += `\n${capitalizeFirstLetter(enemyID)} blocks travel to the ${enemy.blockedDirection}! ("fight ${enemyID}")`;
-      }
+    for(let enemyID in location.enemies){
+      const enemy = location.enemies[enemyID];
       
-      text.innerText = `${text.innerText}Entered ${map[savedUser.game.location].name}.\n${map[savedUser.game.location].text}${addedMessage}\n\n`;
+      if(!(savedUser.game.defeatedEnemies.includes(enemy.name))) addedMessage += `\n${capitalizeFirstLetter(enemyID)} blocks travel to the ${enemy.blockedDirection}! ("fight ${enemyID}")`;
+    }
       
-      scroll();
+    text.innerText = `${text.innerText}Entered ${map[savedUser.game.location].name}.\n${map[savedUser.game.location].text}${addedMessage}\n\n`;
+      
+    scroll();
   }
 
   function balance(){
