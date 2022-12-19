@@ -736,7 +736,6 @@ function capitalizeFirstLetter(word){
 }
 
 // Replit tip system
-// NOTE TO SELF: If I ever want to remove this, just remove the code in the chat badge function, the tipping code below, and uninstall and remove the declration for undici/fetch
 
 let tippers = [];
 let topTipper = '';
