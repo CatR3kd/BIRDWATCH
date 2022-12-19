@@ -343,7 +343,9 @@ async function playAction(username, socket, actionObj){
 
     // Change stats based on user items and ore type
     let mineTime = 1000;
-    if(user.game.items.includes('SuperPick')) mineTime = 650;
+    const speedReduction = (user.game.speed > 150)? 150 : user.game.speed;
+    mineTime -= speedReduction;
+    if(user.game.items.includes('SuperPick')) mineTime -= 350;
 
     let multiplier = 10;
     if(user.game.items.includes('SuperDetector')) multiplier = 12.5;
