@@ -288,7 +288,7 @@
         "name":"Retired Birdwatch Guard",
         "text":"\"Hey. I've seen you new folks roamin' around spawn, but you're the first I seen in here. Hopefully you're wantin' to investigate them pigeons? If ya'd like, I can sell you my old climbing rope for a few bucks, so ya can get up to their sanctuary on top of that old cliff. A warnin', though: Both sides of the war are no good. Don't get any ideas of conspirin' with any of them shady bunch.\"\nWares:\n\nRope - $50\n\nNOTE: Discounts applied at purchase.\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
-          "superpick":{
+          "rope":{
             "name":"Rope",
             "price":50,
             "type":"other",
