@@ -636,6 +636,7 @@ async function chatCommand(msg, socketID){
     const targetSocket = await connectedPlayers.get(args[0]);
     if(targetSocket == undefined) return systemMessage(socketID, 'User not found.');
 
+    io.sockets.connected[socketID].disconnect();
     io.to(targetSocket).emit('kicked');
     return systemMessage(socketID, `Kicked user ${args[0]}.`);
   }
