@@ -341,10 +341,12 @@ async function playAction(username, socket, actionObj){
     const ore = (user.game.location == 'platinumMine')? 'platinum' : 'gold';
     const oreValue = (ore == 'platinum')? 75 : 50;
 
-    // Change stats based on user items and ore type
+    // Change stats based on user items, stats, and ore type
     let mineTime = 1000;
+    
     const speedReduction = (user.game.speed > 150)? 150 : user.game.speed;
     mineTime -= speedReduction;
+    
     if(user.game.items.includes('SuperPick')) mineTime -= 350;
 
     let multiplier = 10;

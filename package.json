@@ -1,14 +1,14 @@
 {
   "name": "nodejs",
   "version": "1.0.0",
-  "description": "",
+  "description": "UNLICENSED",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "",
   "dependencies": {
     "@types/node": "^18.0.6",
     "bad-words": "^3.0.4",

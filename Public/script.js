@@ -202,7 +202,7 @@
     
     let messages = document.getElementById('chat').children;
   
-    while(document.getElementById('chat').offsetHeight > 400){
+    while(document.getElementById('chat').offsetHeight > 390){
       messages[0].remove();
       messages = document.getElementById('chat').children;
     }

@@ -14,7 +14,7 @@ html, body {
   font-family: Inconsolata, monospace;
 }
 
-#login{
+#loginBttn{
   position: absolute;
   left: 50%;
   top: 50%;
@@ -31,14 +31,26 @@ html, body {
   transition: box-shadow 0.3s ease, text-shadow 0.25s ease;
 }
 
-#login:hover{
+#loginBttn:hover{
   cursor: pointer;
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
   text-shadow: 0 0 5px #C8C8C8;
 }
 
-#login:active{
+#loginBttn:active{
   box-shadow: none;
+}
+
+#plug{
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  margin: 5px;
+  color: #D1D1CD;
+}
+
+#plug a{
+  color: #D1D1CD;
 }
 
 #content{
