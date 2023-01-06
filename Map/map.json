@@ -25,7 +25,7 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You arrive at the world spawnpoint. It's a well-forested area, and the ground is scattered with rocks and leaves. On a particularly large bolder, a little girl is sitting and looking at the trees, (\"talk girl\") and by the entrance to a trail stands a guard. (\"talk guard\") To the north, you see a small town area, and to the east you see a dirt trail leading into the trees. To the south, you see a snowy area to which a trail of small, tri-pointed tracks lead. To the west, you see a soaring cliff flocked by pigeons."
+    "text":"You arrive at the world spawnpoint. It's a well-forested area, and the ground is scattered with rocks and leaves. On a particularly large boulder, a little girl is sitting and looking at the trees, (\"talk girl\") and by the entrance to a trail stands a guard. (\"talk guard\") To the north, you see a small town area, and to the east you see a dirt trail leading into the trees. To the south, you see a snowy area to which a trail of small, tri-pointed tracks lead. To the west, you see a soaring cliff flocked by pigeons."
   },
   "tundra":{
     "name":"Tundra",

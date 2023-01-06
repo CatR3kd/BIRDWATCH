@@ -749,13 +749,13 @@ async function updateTips(){
   .then(r => r.json().then(res => {
   	tippers = (res.users || []);
   })).catch((error) => {
-    console.error(error);
+    //console.error(error);
   });
   await fetch('https://catr3kd-tip-api.catr3kd.repl.co/top?replId=64cefdf4-f0a7-4643-a002-1423cf53324a', {method: 'GET'})
   .then(r => r.json().then(res => {
   	topTipper = (res.topTipper || '');
   })).catch((error) => {
-    console.error(error);
+    //console.error(error);
   });
 }
 
