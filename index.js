@@ -37,7 +37,7 @@ class Game{
 // Ratelimiter
 
 const sendChatRateLimit = new RateLimiterMemory({
-  points: 4,
+  points: 3,
   duration: 2
 });
 
@@ -58,6 +58,9 @@ app.use(express.static(path.join(__dirname + '/Public')));
 // Socket.io
 
 io.on('connection', (socket) => {
+  // Emit supporter list
+  socket.emit('supporters', tippers);
+  
   // Set up and login/create account
   (async function(){
     const username = socket.handshake.headers['x-replit-user-name'];
@@ -254,7 +257,7 @@ async function playAction(username, socket, actionObj){
       }
 
       socket.emit('gameUpdate', {"user": user, "notify": false});
-      socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health:${(targetEnemy.stats.health > 0)? targetEnemy.stats.health : 0}/${targetEnemy.stats.maxHealth}`);
+      socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health: ${(targetEnemy.stats.health > 0)? targetEnemy.stats.health : 0}/${targetEnemy.stats.maxHealth}`);
       
       if((user.game.health <= 0) || (targetEnemy.stats.health <= 0)){
         let newUser = user;
@@ -453,7 +456,7 @@ async function playAction(username, socket, actionObj){
       }
 
       socket.emit('gameUpdate', {"user": user, "notify": false});
-      socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health:${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
+      socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health: ${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
       
       if((user.game.health <= 0) || (enemy.stats.health <= 0)){
         let newUser = user;
@@ -539,7 +542,7 @@ async function playAction(username, socket, actionObj){
     
     if(healAmount == undefined) return socket.emit('message', 'That is not an available action.');
 
-    if(user.game.health <= user.game.maxHealth) return socket.emit('message', 'You are already at full health!');
+    if(user.game.health >= user.game.maxHealth) return socket.emit('message', 'You are already at full health!');
 
     let oldHealth = user.health;
     let newUser = user;

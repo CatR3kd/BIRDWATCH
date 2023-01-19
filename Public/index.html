@@ -14,15 +14,36 @@
     <meta name="publisher" content="CatR3kd">
     <meta name="copyright" content="CatR3kd">
     <meta name="keywords" content="birdwatch, catr3kd, bw, game, mmo, text, adventure, fun, io, bird, penguin, pigeon">
-    <link rel="icon" href="/Assets/favicon.jpg" type="image/jpeg">
+    <link rel="icon" href="/Assets/favicon.png" type="image/jpeg">
     <title>Birdwatch</title>
     <link href="style.css" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <body>
-    <div id="login">
-      <button onclick="LoginWithReplit()" id="loginBttn">Login with Replit</button>
-      <p id="plug"><b>Game by <a href="https://catr3kd.repl.co" target="_blank">CatR3kd</a> - Join the <a href="https://discord.gg/ppPZX4D7Wf" target="_blank">Discord</a> - &copy; <script>document.write(new Date().getFullYear())</script></b></p>
+    <div id="startMenu">
+      <!--
+      <button id="settingsButton"><span class="material-symbols-outlined">settings</span></button>
+      -->
+      <div id="sidebars">
+        <div class="sidebar">
+          <h2>Supporters</h2>
+          <hr>
+          <ul id="supporters">
+          </ul>
+          <p id="supportPlug"><i>All tips are appreciated and go directly into keeping this game boosted (:</i></p>
+        </div>
+        <div>
+          <button onclick="LoginWithReplit()" id="login">Login with Replit</button>
+        </div>
+        <div class="sidebar">
+          <h2>Changelog</h2>
+          <hr>
+          <h3>v1.0.0 - Dec 19, 2022</h3>
+          <p>First public version of Birdwatch!</p>
+        </div>
+      </div>
+      <p id="plug">Game by <a href="https://catr3kd.repl.co" target="_blank">CatR3kd</a> - Join the <a href="https://discord.gg/ppPZX4D7Wf" target="_blank">Discord</a></p>
     </div>
-    <div id="content">
+    <div id="game">
       <div id="terminal">
         <p id="text">
         </p>

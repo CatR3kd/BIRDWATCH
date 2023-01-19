@@ -8,11 +8,25 @@
   .then((data) => {
   	map = data;
   });
+
+  socket.on('supporters', function (supporters){
+    for(let supporter of supporters){
+      let ul = document.getElementById('supporters');
+      ul.innerHTML = '';
+      let li = document.createElement('li');
+      li.appendChild(document.createTextNode(supporter));
+      ul.appendChild(li);
+    }
+  });
   
   socket.on('loggedIn', function(user){
-    document.getElementById('login').style.visibility = 'hidden';
-    document.getElementById('content').style.visibility = 'visible';
-    updateGame({"user": user, "notify": true});
+    savedUser = user;
+    
+    const button = document.getElementById('login');
+    
+    button.innerText = 'Play Birdwatch';
+    button.removeAttribute('onclick');
+    button.addEventListener("click", startGame);
   });
 
   socket.on('gameUpdate', function(updateObj){
@@ -47,6 +61,12 @@
   socket.on('kicked', function (){
     window.location.reload();
   });
+
+  function startGame(){
+    document.getElementById('startMenu').style.visibility = 'hidden';
+    document.getElementById('game').style.visibility = 'visible';
+    updateGame({"user": savedUser, "notify": true});
+  }
   
   function sendAction(){
     const input = document.getElementById('actionInput');
@@ -179,6 +199,8 @@
     if(updateObj.notify == true){
       location();
     }
+
+    doScreenEffects(savedUser, updateObj.user);
   }
 
   function scroll(){
@@ -252,5 +274,19 @@
 
   function capitalizeFirstLetter(word){
     return word.charAt(0).toUpperCase() + word.slice(1);
+  }
+
+  // Screen effects
+
+  function doScreenEffects(oldSave, newSave){
+    // Screen shake on damage
+    if(oldSave.game.health > newSave.game.health) shakeElement(document.getElementById('text'), 300);
+  }
+
+  function shakeElement(element, duration){
+    element.classList.add('shake');
+    setTimeout(function(){
+      element.classList.remove('shake');
+    }, duration);
   }
 })();

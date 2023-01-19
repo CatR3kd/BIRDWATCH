@@ -14,7 +14,76 @@ html, body {
   font-family: Inconsolata, monospace;
 }
 
-#loginBttn{
+#settingsButton{
+  color: #D1D1CD;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 1px;
+  margin: 4px;
+  transition: 0.2s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: center;
+}
+
+#settingsButton:hover{
+  cursor: pointer;
+  transform: scale(1.1) rotate(60deg);
+}
+
+#settingsButton:active{
+  transform: none;
+}
+
+#sidebars{
+  display: flex;
+  height: 50vh;
+  width: 60vw;
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#sidebars > div {
+  flex: 1;
+}
+
+.sidebar{
+  color: #D1D1CD;
+  border: 2px solid #cccccc;
+  border-radius: 6px;
+  padding: 5px;
+  overflow: scroll;
+}
+
+.sidebar h2{
+  margin-top: 5px;
+  text-align: center;
+}
+
+.sidebar hr{
+  border: none;
+  background-color: #D1D1CD;
+  height: 1px;
+  margin-top: 0;
+}
+
+#supporters li{
+  font-size: 18px;
+}
+
+#supportPlug{
+  margin-top: 20px;
+  font-size: 13px;
+  bottom: 0;
+  text-align: center;
+}
+
+#login{
   position: absolute;
   left: 50%;
   top: 50%;
@@ -31,29 +100,30 @@ html, body {
   transition: box-shadow 0.3s ease, text-shadow 0.25s ease;
 }
 
-#loginBttn:hover{
+#login:hover{
   cursor: pointer;
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
   text-shadow: 0 0 5px #C8C8C8;
 }
 
-#loginBttn:active{
+#login:active{
   box-shadow: none;
 }
 
 #plug{
-  position: fixed;
+  position: absolute;
+  margin: 0;
   bottom: 0;
   right: 0;
-  margin: 5px;
   color: #D1D1CD;
+  margin: 5px;
 }
 
 #plug a{
   color: #D1D1CD;
 }
 
-#content{
+#game{
   visibility: hidden;
 }
 
@@ -178,6 +248,15 @@ html, body {
     margin: 0;
     overflow-y: scroll;
   }
+
+  #login{
+    width: 50vw;
+  }
+
+  #plug{
+    right: unset;
+    text-align: center;
+  }
   
   #terminal, #text, #actionInput{
     font-size: 16px;
@@ -196,4 +275,28 @@ html, body {
   #terminal{
     width: 100vw;
   }
+
+  .sidebar{
+    visibility: hidden;
+  }
+}
+
+/* Screen Effects */
+
+.shake{
+  animation: shake 0.35s linear infinite;
+}
+
+@keyframes shake{
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(3px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(3px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
 }
