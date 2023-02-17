@@ -119,8 +119,12 @@ html, body {
   margin: 5px;
 }
 
-#plug a{
+a{
   color: #D1D1CD;
+}
+
+a:active{
+  color: #BF0000;
 }
 
 #game{
