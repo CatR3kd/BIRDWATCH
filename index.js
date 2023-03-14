@@ -22,8 +22,11 @@ let leaderboard = getLeaderboard();
 class Game{
 	constructor(){
     this.money = 0;
+    this.level = 1;
     this.speed = 1;
+    this.speedBuff = 0;
     this.damage = 15;
+    this.damageBuff = 0;
     this.health = 100;
     this.maxHealth = 100;
     this.location = 'spawnpoint';
@@ -243,12 +246,12 @@ async function playAction(username, socket, actionObj){
       if(user.game.defeatedEnemies.includes(targetEnemy.name)) return socket.emit('message', 'That is not an available action. (You have already beaten this enemy!)');
 
     busyPlayers.set(user.username, 'fighting');
-    let nextTurn = (user.game.speed >= targetEnemy.stats.speed)? 'user' : 'enemy';
+    let nextTurn = ((user.game.speed * user.game.speedBuff) >= targetEnemy.stats.speed)? 'user' : 'enemy';
 
     const fightInterval = setInterval(function(){
       if(nextTurn == 'user'){
-        targetEnemy.stats.health -= user.game.damage;
-        socket.emit('message', `You attacked the ${targetEnemy.name} and dealt ${user.game.damage} damage.`);
+        targetEnemy.stats.health -= (user.game.damage + user.game.damageBuff);
+        socket.emit('message', `You attacked the ${targetEnemy.name} and dealt ${user.game.damage + user.game.damageBuff} damage.`);
         nextTurn = 'enemy';
       } else { // else instead of elseif is lost redundancy and potentially bad
         user.game.health -= targetEnemy.stats.damage;
@@ -321,7 +324,7 @@ async function playAction(username, socket, actionObj){
 
     // Change player stats
     if(item.type == 'weapon'){
-      newUser.game.damage += item.damage;
+      newUser.game.damageBuff += item.damage;
     }
 
     if(item.type == 'armor'){
@@ -330,7 +333,7 @@ async function playAction(username, socket, actionObj){
     }
 
     if(item.type == 'speed'){
-      newUser.game.speed += item.speed;
+      newUser.game.speedBuff += item.speed;
     }
 
     await db.set(username, newUser);
@@ -347,7 +350,7 @@ async function playAction(username, socket, actionObj){
     // Change stats based on user items, stats, and ore type
     let mineTime = 1000;
     
-    const speedReduction = (user.game.speed > 150)? 150 : user.game.speed;
+    const speedReduction = ((user.game.speed + user.game.speedBuff)  > 250)? 250 : user.game.speed;
     mineTime -= speedReduction;
     
     if(user.game.items.includes('SuperPick')) mineTime -= 350;
@@ -394,6 +397,11 @@ async function playAction(username, socket, actionObj){
     if(user.game.location != 'gym') return socket.emit('message', 'That is not an available action.');
     if(user.game.money < 50) return socket.emit('message', 'You don\'t have enough money!');
 
+    const maxDamage = (newUser.game.level + 1) * 15;
+    const maxSpeed = newUser.game.level * 5;
+
+    if((user.game.speed >= maxSpeed) || (user.game.damage >= maxDamage)) return socket.emit('message', 'Your speed and strength stats are already maxed! Level up to increase your maximum stats.');
+
     let newUser = user;
     newUser.game.money -= 50;
 
@@ -411,6 +419,10 @@ async function playAction(username, socket, actionObj){
         const damageGained = Math.floor(Math.random() * multiplier);
         const speedGained = Math.floor(Math.random() * multiplier);
         const punctuation = ((damageGained + speedGained) > 0)? '!' : '.';
+
+        // Make sure user isn't over their level stat limit
+        if((newUser.game.damage + damageGained) > maxDamage) damageGained = (maxDamage - user.game.damage);
+        if((newUser.game.speed + speedGained) > maxSpeed) speedGained = (maxSpeed - user.game.speed);
         
         socket.emit('message', `Finished${punctuation} Damage stat increased by ${damageGained}, speed stat increased by ${speedGained}${punctuation}`);
 
@@ -441,13 +453,13 @@ async function playAction(username, socket, actionObj){
     }
     
     busyPlayers.set(user.username, 'fighting');
-    let nextTurn = (user.game.speed >= enemy.stats.speed)? 'user' : 'enemy';
+    let nextTurn = ((user.game.speed + user.game.speedBuff) >= enemy.stats.speed)? 'user' : 'enemy';
     const startingHP = user.game.health;
     
     const fightInterval = setInterval(function(){
       if(nextTurn == 'user'){
-        enemy.stats.health -= user.game.damage;
-        socket.emit('message', `You attacked the ${enemy.name} and dealt ${user.game.damage} damage.`);
+        enemy.stats.health -= (user.game.damage + user.game.damageBuff);
+        socket.emit('message', `You attacked the ${enemy.name} and dealt ${user.game.damage + user.game.damageBuff} damage.`);
         nextTurn = 'enemy';
       } else { // else instead of elseif is lost redundancy and potentially bad
         user.game.health -= enemy.stats.damage;

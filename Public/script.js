@@ -143,7 +143,7 @@
   function stats(){
     const text = document.getElementById('text');
     
-    text.innerText = `${text.innerText}Health: ${savedUser.game.health}/${savedUser.game.maxHealth}\nStrength: ${savedUser.game.damage}\nSpeed: ${savedUser.game.speed}\n\n`;
+    text.innerText = `${text.innerText}Health: ${savedUser.game.health}/${savedUser.game.maxHealth}\nLevel: ${savedUser.game.level}\nStrength: ${savedUser.game.damage}/${(savedUser.game.level + 1) * 15} (+ ${savedUser.game.damageBuff} in items)\nSpeed: ${savedUser.game.speed}/${savedUser.game.level * 5} (+ ${savedUser.game.speedBuff} in items)\n\n`;
     
     scroll();
   }
