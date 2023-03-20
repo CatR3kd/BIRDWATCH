@@ -57,7 +57,7 @@ html, body {
   border: 2px solid #cccccc;
   border-radius: 6px;
   padding: 5px;
-  overflow: scroll;
+  overflow-y: scroll;
 }
 
 .sidebar h2{

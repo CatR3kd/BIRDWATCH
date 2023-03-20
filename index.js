@@ -23,6 +23,8 @@ class Game{
 	constructor(){
     this.money = 0;
     this.level = 1;
+    this.xp = 0;
+    this.xpRequired = xpRequired(this.level);
     this.speed = 1;
     this.speedBuff = 0;
     this.damage = 15;
@@ -253,7 +255,7 @@ async function playAction(username, socket, actionObj){
         targetEnemy.stats.health -= (user.game.damage + user.game.damageBuff);
         socket.emit('message', `You attacked the ${targetEnemy.name} and dealt ${user.game.damage + user.game.damageBuff} damage.`);
         nextTurn = 'enemy';
-      } else { // else instead of elseif is lost redundancy and potentially bad
+      } else {
         user.game.health -= targetEnemy.stats.damage;
         socket.emit('message', `The ${targetEnemy.name} attacked you and dealt ${targetEnemy.stats.damage} damage.`);
         nextTurn = 'user';
@@ -264,10 +266,13 @@ async function playAction(username, socket, actionObj){
       
       if((user.game.health <= 0) || (targetEnemy.stats.health <= 0)){
         let newUser = user;
+        let xpMultiplier;
         
         if(user.game.health > 0){
           // Fight won
           newUser.game.defeatedEnemies.push(targetEnemy.name);
+
+          xpMultiplier = 1.2;
           
           socket.emit('message', `You beat the ${targetEnemy.name}!`);
         } else {
@@ -277,8 +282,13 @@ async function playAction(username, socket, actionObj){
           newUser.game.money -= moneyLost;
           newUser.game.health = user.game.maxHealth;
 
+          xpMultiplier = 0.5;
+
           socket.emit('message', `You died and lost $${moneyLost}. You've respawned at the world spawnpoint.`);
         }
+
+        const xpGained = 35 * (Math.random() + 1) * xpMultiplier;
+        newUser = addXP(newUser, xpGained, socket);
 
         db.set(username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": true});
@@ -472,16 +482,22 @@ async function playAction(username, socket, actionObj){
       
       if((user.game.health <= 0) || (enemy.stats.health <= 0)){
         let newUser = user;
+        let xpMultiplier;
         
         if(user.game.health > 0){
           // Fight won
+          xpMultiplier = 1.1;
+          
           socket.emit('message', `You beat the ${enemy.name} and gained $75!`);
           newUser.game.money += 75;
         } else {
           // Fight lost
+          xpMultiplier = 0.1;
           socket.emit('message', `You lost to the ${enemy.name}.`);
         }
-        
+
+        const xpGained = 35 * (Math.random() + 1) * xpMultiplier;
+        newUser = addXP(newUser, xpGained, socket);
         newUser.game.health = startingHP;
         
         db.set(username, newUser);
@@ -585,6 +601,28 @@ async function playAction(username, socket, actionObj){
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
   }
+}
+
+
+function addXP(user, xpGained, socket){
+  user.game.xp += Math.floor(xpGained);
+  socket.emit('message', `Gained ${Math.floor(xpGained)}XP!`);
+  
+  while(user.game.xp >= user.game.xpRequired){
+    user.game.level++;
+    user.game.xp = user.game.xp - user.game.xpRequired;
+    user.game.xpRequired = xpRequired(user.game.level);
+    socket.emit('message', `Leveled up! Now level ${user.game.level}.`);
+  }
+
+  socket.emit('message', `${user.game.xpRequired - user.game.xp}XP until next level.`);
+  return user;
+}
+
+
+function xpRequired(currentLevel){
+  const uncapped = Math.ceil((currentLevel + Math.sqrt(currentLevel)) / 5) * 5 * (Math.ceil(currentLevel / 10) * 10);
+  return (uncapped > 5000)? 5000 : uncapped;
 }
 
 
