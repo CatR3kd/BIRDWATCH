@@ -564,7 +564,8 @@ async function playAction(username, socket, actionObj){
     
     const food = {
       "sandwich":30,
-      "cake":200
+      "cake":200,
+      "birdseed":10
     }
     const healAmount = food[args[0]];
     
@@ -597,12 +598,19 @@ async function playAction(username, socket, actionObj){
     await db.set(username, newUser);
     
     socket.emit('gameUpdate', {"user": newUser, "notify": true});
+  } else if(command == 'raid'){
+    // Raiding
+    if(!((user.game.location == 'penguinHQ') || (user.game.location == 'pigeonHQ'))) return socket.emit('message', 'That is not an available action.');
+    if(user.game.level < 5) return socket.emit('message', 'You must be at least level 5 to participate in a raid!');
+    
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
   }
 }
 
+
+// XP and leveling
 
 function addXP(user, xpGained, socket){
   user.game.xp += Math.floor(xpGained);

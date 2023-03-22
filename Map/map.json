@@ -63,6 +63,7 @@
     "neededToEnter":["Coat"],
     "neighbors":{
       "north":"snowyTrail",
+      "south":"penguinHQ",
       "west":"penguinArmory"
     },
     "neededAlliances":[],
@@ -77,7 +78,7 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You enter the main area of the base, and it's filled with penguins busily running from one task to the next. They're working at desks with computers, training small regiments, arming and building weapons, and planning on war boards. In the middle of the commotion stands a penguin wearing a healment and holding a clipboard and pen. (\"talk commander\") To the west is a building labeled \"armory\". To the north is the snowy trail you entered on."
+    "text":"You enter the main area of the base, and it's filled with penguins busily running from one task to the next. They're working at desks with computers, training small regiments, arming and building weapons, and planning on war boards. In the middle of the commotion stands a penguin wearing a healment and holding a clipboard and pen. (\"talk commander\") To the west is a building labeled \"armory\", and to the south a building that seems to be the Penguin Headquarters. To the north is the snowy trail you entered on."
   },
   "penguinArmory":{
     "name":"Penguin Armory",
@@ -118,6 +119,26 @@
     "items":{},
     "enemies":{},
     "text":"You enter the armory, and see a penguin standing behind a desk and in front of a wall mounted with equipment. (\"talk clerk\")"
+  },
+  "penguinHQ":{
+    "name":"Penguin Headquarters",
+    "neededToEnter":[],
+    "neighbors":{
+      "north": "penguinBase"
+    },
+    "neededAlliances":["penguin"],
+    "bannedAlliances":["pigeon"],
+    "availableAlliances":[],
+    "npcs":{
+      "commander":{
+        "name": "Penguin Commander",
+        "text":"\"Welcome to the Penguin Headquarters! Here, we plan and execute raids on the Pigeon Base. You can participate if you are at least level 5. (\"raid\")\"",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You enter the penguin HQ. Inside is a large room with no windows, and a table with a monitor displaying a map for a surface. The map seems to display the Penguin and Pigeon bases. Next to it stands the Penguin Commander. (\"talk commander\") To the north is the Penguin Base."
   },
   "cliffside":{
     "name":"Cliffside",
@@ -176,6 +197,7 @@
     "name":"Pigeon Base",
     "neededToEnter":[],
     "neighbors":{
+      "north":"pigeonHQ",
       "east":"rockyTrail",
       "west":"pigeonHall"
     },
@@ -185,7 +207,7 @@
     "npcs":{},
     "items":{},
     "enemies":{},
-    "text":"The pigeons' base is a towering gothic building made of marble. The door is a massive archway, and inside the building is a hall filled with pigeons seated far above you on the various ledges dotting the walls. On a wall near the entrance, there is a pigeon propaganda poster that says to join the pigeon army. (\"ally pigeon\") To the west is a grand hall, and to the east is the trail you came on."
+    "text":"The pigeons' base is a towering gothic building made of marble. The door is a massive archway, and inside the building is a hall filled with pigeons seated far above you on the various ledges dotting the walls. On a wall near the entrance, there is a pigeon propaganda poster that says to join the pigeon army. (\"ally pigeon\") To the west is a grand hall, to the north is what looks to be the Pigeon Headquarters, and to the east is the trail you came on."
   },
   "pigeonHall":{
     "name":"Pigeon Hall",
@@ -213,6 +235,12 @@
             "type":"weapon",
             "damage":20,
             "description":"A sleek, tapered knife with a case that slides over top perfectly. Masterfully crafted, and anodized to be matte black. Deals 20 damage."
+          },
+          "birdseed":{
+            "name":"Birdseed",
+            "price":5,
+            "type":"other",
+            "description":"A cup of birdseed, yum. Heals 10HP. (\"eat birdseed\")"
           }
         }
       }
@@ -220,6 +248,26 @@
     "items":{},
     "enemies":{},
     "text":"In the middle of the otherwise empty hall is a pedestal with a computer monitor on top of it. The monitor is connected to its source by a multitude of snaking cables of varying thickness and color, all leading outwards towards the walls. The screen is red with a single eye in the middle, flitting about nervously until it notices you and the screen goes black. Without the light of the monitor, you can only see enough to walk up to it (\"talk computer\") or turn around. Back to the east is the entrance to the hall."
+  },
+  "pigeonHQ":{
+    "name":"Pigeon Headquarters",
+    "neededToEnter":[],
+    "neighbors":{
+      "south": "pigeonBase"
+    },
+    "neededAlliances":["pigeon"],
+    "bannedAlliances":["penguin"],
+    "availableAlliances":[],
+    "npcs":{
+      "manager":{
+        "name": "Pigeon Manager",
+        "text":"\"Welcome to the Pigeon Headquarters, where we launch raids on the hated penguins. If you're level 5 or higher, you can participate. (\"raid\")\"",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You enter the Headquarters. It is a dark room filled with pigeons monitoring old terminal screens, each displaying a different view of the Penguin Base. In the middle of the room, on a stool, is a pigeon who seems to be in charge. (\"talk manager\") To the south is the Pigeon Base."
   },
   "town":{
     "name":"Town Center",
