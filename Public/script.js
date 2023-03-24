@@ -115,7 +115,7 @@
     const location = map[savedUser.game.location];
 
     let addedMessage = '\n';
-
+    
     Object.keys(location.neighbors).forEach(function(key){
       const neighbor = map[location.neighbors[key]];
       addedMessage +=`\n${capitalizeFirstLetter(key)}: ${neighbor.name}`;

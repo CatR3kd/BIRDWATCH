@@ -12,6 +12,7 @@ const { QuickDB } = require("quick.db");
 const db = new QuickDB({filePath: "Data/db.sqlite"});
 const connectedPlayers = new Map();
 const busyPlayers = new Map();
+const raidingPlayers = new Map();
 
 // Make sure map is good and present
 validateMap();
@@ -112,6 +113,8 @@ io.on('connection', (socket) => {
       connectedPlayers.delete(username);
       io.emit('playerCount', connectedPlayers.size);
     }
+
+    if(raidingPlayers.has(username)) raidingPlayers.delete(username);
   });
 });
 
@@ -158,6 +161,66 @@ function isEmpty(path) {
   return true;
 }
 
+
+// Misc. game data
+
+const food = {
+  sandwich:30,
+  cake:200,
+  birdseed:10
+}
+
+const raidMap = {
+  pigeon:{
+    start:{
+      text:"Welcome to the raid, pigeon soldier. While raiding, you will be presented with options that will affect the outcome of the raid. To select an option, type \"option {number}\". We've arrived to the penguin base!\nOption 1: Enter from the front\nOption 2: Try to sneak around the back",
+      options:[
+        {
+          text:"You walk up to the entrance with your troops, and a few are picked off by the penguin guards, but you make it in quickly enough.",
+          destination:"insideKnown",
+          score: 0
+        },
+        {
+          text:"You and your troops walk to the back of the base, and are able to dispatch the lone guard without taking any damage. You enter via a small hole in the wall.",
+          destination:"insideUnknown",
+          score: 2
+        }
+      ]
+    },
+    insideKnown:{
+      text:"You are now inside the compound, and the penguins are aware of your presence.",
+      options:[
+        {
+          text:"",
+          destination:"",
+          score: 0
+        },
+        {
+          text:"",
+          destination:"",
+          score: 0
+        }
+      ]
+    },
+    insideUnknown:{
+      text:"You are now inside the penguin compound, and your presence is unknown.",
+      options:[
+        {
+          text:"",
+          destination:"",
+          score: 0
+        },
+        {
+          text:"",
+          destination:"",
+          score: 0
+        }
+      ]
+    }
+  }
+}
+
+
 // Game
 
 
@@ -165,14 +228,16 @@ async function playAction(username, socket, actionObj){
   // Make sure user exists and isn't busy
   const user = await db.get(username);
   if(user == undefined) return;
-  
-  const busy = busyPlayers.get(user.username);
-  if(busy != undefined) return socket.emit('message', `You cannot use this command while ${busy}.`);
 
   const command = (actionObj.command).toLowerCase();
   const args = (actionObj.args).map(elem => {
     return elem.toLowerCase();
   });
+
+  const busy = busyPlayers.get(user.username);
+  const busyWhitelist = ['option', 'eat'];
+  
+  if((busy != undefined) && (!busyWhitelist.includes(command))) return socket.emit('message', `You cannot use this command while ${busy}.`);
 
   // Get new, untouched map
   const gameMap = JSON.parse(fs.readFileSync('Map/map.json'));
@@ -562,11 +627,6 @@ async function playAction(username, socket, actionObj){
     // Eating system
     if(!user.game.items.includes(capitalizeFirstLetter(args[0]))) return socket.emit('message', 'That is not an available action.');
     
-    const food = {
-      "sandwich":30,
-      "cake":200,
-      "birdseed":10
-    }
     const healAmount = food[args[0]];
     
     if(healAmount == undefined) return socket.emit('message', 'That is not an available action.');
@@ -602,7 +662,36 @@ async function playAction(username, socket, actionObj){
     // Raiding
     if(!((user.game.location == 'penguinHQ') || (user.game.location == 'pigeonHQ'))) return socket.emit('message', 'That is not an available action.');
     if(user.game.level < 5) return socket.emit('message', 'You must be at least level 5 to participate in a raid!');
+
+    const raidTeam = (user.game.location == 'penguinHQ')? 'penguin' : 'pigeon';
     
+    busyPlayers.set(user.username, 'raiding');
+    raidingPlayers.set(user.username,{
+      'team': raidTeam,
+      'location': 'start',
+      'score': 0
+    });
+
+    return socket.emit('message', raidMap[raidTeam].start.text);
+  } else if(command == 'option'){
+    let raid = raidingPlayers.get(user.username);
+    
+    if(!raid) return socket.emit('message', 'That is not an available action.');
+
+    const selectedOption = raidMap[raid.team][raid.location].options[(+args[0] - 1)];
+    
+    if(!selectedOption) return socket.emit('message', 'You must specify what option you want to choose! Ex. \"option 1\"');
+
+    socket.emit('message', selectedOption.text);
+
+    // Update raid
+    raid.location = selectedOption.destination;
+    raid.score += selectedOption.score;
+
+    // Update player's raid
+    raidingPlayers.set(user.username, raid);
+    
+    socket.emit('message', raidMap[raid.team][raid.location].text);
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
