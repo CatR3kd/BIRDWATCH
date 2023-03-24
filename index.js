@@ -178,42 +178,116 @@ const raidMap = {
         {
           text:"You walk up to the entrance with your troops, and a few are picked off by the penguin guards, but you make it in quickly enough.",
           destination:"insideKnown",
-          score: 0
+          score: 1,
+          troopsLost: 5
         },
         {
           text:"You and your troops walk to the back of the base, and are able to dispatch the lone guard without taking any damage. You enter via a small hole in the wall.",
           destination:"insideUnknown",
-          score: 2
+          score: 0,
+          troopsLost: 0
         }
       ]
     },
     insideKnown:{
-      text:"You are now inside the compound, and the penguins are aware of your presence.",
+      text:"You are now inside the compound, and the penguins are aware of your presence.\nOption 1: Storm the barracks\nOption 2: Break into the headquarters and try to find valuable information",
       options:[
         {
-          text:"",
+          text:"You and your troops breach the barracks wall and begin fighting the penguins on the other side. After a long fight with losses on both sides, you come out victorious, but the penguins are on high alert and more will be arriving soon.",
           destination:"",
-          score: 0
+          score: 10,
+          troopsLost: 20
         },
         {
-          text:"",
-          destination:"",
-          score: 0
+          text:"You manage to bruteforce your way into the headquarters, and the alarm goes off. Thankfully, you find some classified documents.",
+          destination:"headquarters",
+          score: 5,
+          troopsLost: 0
         }
       ]
     },
     insideUnknown:{
-      text:"You are now inside the penguin compound, and your presence is unknown.",
+      text:"You are now inside the penguin compound, and your presence is unknown.\nOption 1: Try to pick off penguin guards with silenced weapons\nOption 2: Break into the headquarters and try to find valuable information",
       options:[
         {
-          text:"",
+          text:"You and your troops are able to take out multiple guards without being noticed.",
           destination:"",
-          score: 0
+          score: 5,
+          troopsLost: 0
         },
         {
-          text:"",
+          text:"You manage to bruteforce your way into the headquarters, and the alarm goes off. Thankfully, you find some classified documents.",
+          destination:"headquarters",
+          score: 5,
+          troopsLost: 0
+        }
+      ]
+    },
+    headquarters:{
+      text:"The alarm is blaring, and the blast doors that you entered the headquarters through automatically close, trapping you inside.\nOption 1: Wait the penguins out and search for more documents\nOption 2: Try to find a way through which to escape",
+      options:[
+        {
+          text:"Just as you decide to try to wait the penguins out, a section of wall unfolds and large autonomous turret is unveiled. Before your troops can take cover, some are shot down.",
           destination:"",
-          score: 0
+          score: 0,
+          troopsLost: 10
+        },
+        {
+          text:"You find an escape hatch under the table, and get away easily.",
+          destination:"tunnel",
+          score: 0,
+          troopsLost: 0
+        }
+      ]
+    },
+    tunnel:{
+      text:"You and your troops are walking through the escape tunnel when you eventually arrive at two more hatches, one labeled \"Armory\", and the other \"Control Room\".\nOption 1: Enter the armory\nOption 2: Enter the control room",
+      options:[
+        {
+          text:"You enter the armory, and your troops take a multitude of powerful and secret weapons with them.",
+          destination:"",
+          score: 15,
+          troopsLost: 0
+        },
+        {
+          text:"You enter the control room, and take out the guards with minimal loss.",
+          destination:"controlRoom",
+          score: 0,
+          troopsLost: 5
+        }
+      ]
+    },
+    controlRoom:{
+      text:"The control rooms consists of many monitors displaying camera feed from all over the base, and tables with many buttons and knobs, including one large red button.\nOption 1: Take note of the camera placement and leave to deal with the accumulating force of penguins outside\nOption 2: Press the big red button leave to battle the penguins",
+      options:[
+        {
+          text:"You write down the locations of the cameras and leave.",
+          destination:"battle",
+          score: 5,
+          troopsLost: 0
+        },
+        {
+          text:"You press the button, and all the monitors switch to views of what seems to be a prison block, and all the cell doors open. Now swarming the base is a group of escapees, with no alliance. You lose some troops when they arrive, but the penguins lose more.",
+          destination:"battle",
+          score: 15,
+          troopsLost: 10
+        }
+      ]
+    },
+    battle:{
+      text:"Now outside in the thick of it, the battle rages.\nOption 1: Escape with your troops\nOption 2: Face the penguins in a final standoff before escaping.",
+      options:[
+        {
+          text:"You escape back to base without losing any troops.",
+          destination:"victory",
+          score: 0,
+          troopsLost: 0
+        },
+        {
+          text:"You face the penguins, and both sides suffer heavy loses.",
+          destination:"victory",
+          score: 15,
+          troopsLost: 20
         }
       ]
     }
@@ -235,7 +309,7 @@ async function playAction(username, socket, actionObj){
   });
 
   const busy = busyPlayers.get(user.username);
-  const busyWhitelist = ['option', 'eat'];
+  const busyWhitelist = ['option'];
   
   if((busy != undefined) && (!busyWhitelist.includes(command))) return socket.emit('message', `You cannot use this command while ${busy}.`);
 
@@ -669,7 +743,8 @@ async function playAction(username, socket, actionObj){
     raidingPlayers.set(user.username,{
       'team': raidTeam,
       'location': 'start',
-      'score': 0
+      'score': 0,
+      'troops': 50
     });
 
     return socket.emit('message', raidMap[raidTeam].start.text);
@@ -685,13 +760,31 @@ async function playAction(username, socket, actionObj){
     socket.emit('message', selectedOption.text);
 
     // Update raid
-    raid.location = selectedOption.destination;
-    raid.score += selectedOption.score;
-
-    // Update player's raid
-    raidingPlayers.set(user.username, raid);
+    raid.troops -= selctedOption.troopsLost;
     
-    socket.emit('message', raidMap[raid.team][raid.location].text);
+    if((raid.troops > 0) && (selectedOption.destination != 'victory')){
+      raid.score += selectedOption.score;
+      raid.location = selectedOption.destination;
+
+      raidingPlayers.set(user.username, raid);
+      socket.emit('message', raidMap[raid.team][raid.location].text);
+    } else {
+      const victory = (selectedOption.destination == 'victory')? true : false;
+      
+      raidingPlayers.delete(user.username);
+      busyPlayers.delete(user.username);
+
+      const xpMult = (victory == true)? 1.1 : 0.75;
+      const troopBonus = Math.floor(raid.troops / 3.3);
+      const xpGained = (raid.score + troopBonus) * (xpMult + (Math.random() / 4));
+      
+      socket.emit('message', `${(victory == true)? 'Raid successful!' : 'All of your troops have died. You manage to make it back to base alive.'}\nFinal score: ${raid.score}${(troopBonus > 0)? `\nRemaning troop bonus: ${troopBonus}` : ''}`);
+      
+      let newUser = addXP(user, xpGained, socket);
+      await db.set(username, newUser);
+    
+      socket.emit('gameUpdate', {"user": newUser, "notify": true});
+    }
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
