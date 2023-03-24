@@ -760,7 +760,7 @@ async function playAction(username, socket, actionObj){
     socket.emit('message', selectedOption.text);
 
     // Update raid
-    raid.troops -= selctedOption.troopsLost;
+    raid.troops -= selectedOption.troopsLost;
     
     if((raid.troops > 0) && (selectedOption.destination != 'victory')){
       raid.score += selectedOption.score;
@@ -774,9 +774,9 @@ async function playAction(username, socket, actionObj){
       raidingPlayers.delete(user.username);
       busyPlayers.delete(user.username);
 
-      const xpMult = (victory == true)? 1.1 : 0.75;
+      const xpMult = (victory == true)? (1.1 + (Math.random() / 2)) : 0.75;
       const troopBonus = Math.floor(raid.troops / 3.3);
-      const xpGained = (raid.score + troopBonus) * (xpMult + (Math.random() / 4));
+      const xpGained = (raid.score + troopBonus) * xpMult;
       
       socket.emit('message', `${(victory == true)? 'Raid successful!' : 'All of your troops have died. You manage to make it back to base alive.'}\nFinal score: ${raid.score}${(troopBonus > 0)? `\nRemaning troop bonus: ${troopBonus}` : ''}`);
       
