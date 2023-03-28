@@ -199,8 +199,6 @@
     if(updateObj.notify == true){
       location();
     }
-
-    doScreenEffects(savedUser, updateObj.user);
   }
 
   function scroll(){
@@ -274,19 +272,5 @@
 
   function capitalizeFirstLetter(word){
     return word.charAt(0).toUpperCase() + word.slice(1);
-  }
-
-  // Screen effects
-
-  function doScreenEffects(oldSave, newSave){
-    // Screen shake on damage
-    if(oldSave.game.health > newSave.game.health) shakeElement(document.getElementById('text'), 300);
-  }
-
-  function shakeElement(element, duration){
-    element.classList.add('shake');
-    setTimeout(function(){
-      element.classList.remove('shake');
-    }, duration);
   }
 })();

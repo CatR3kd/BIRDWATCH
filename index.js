@@ -14,9 +14,6 @@ const connectedPlayers = new Map();
 const busyPlayers = new Map();
 const raidingPlayers = new Map();
 
-// Make sure map is good and present
-validateMap();
-
 // Get leaderboard
 let leaderboard = getLeaderboard();
 
@@ -55,7 +52,7 @@ http.listen(8000, () => {
 });
 
 app.get('/map',function(req,res) {
-  res.sendFile(path.join(__dirname + '/Map/map.json'));
+  res.sendFile(path.join(__dirname + '/Data/map.json'));
 });
 
 app.use(express.static(path.join(__dirname + '/Public')));
@@ -133,165 +130,14 @@ async function createAccount(username){
 }
 
 
-// Map
-
-function validateMap(){
-  const map = JSON.parse(fs.readFileSync('Map/map.json'));
-  const backup = JSON.parse(fs.readFileSync('Map/backup.json'));
-
-  if(isEmpty('Map/map.json') && !(isEmpty('Map/backup.json'))){
-    fs.writeFileSync('Map/map.json', JSON.stringify(backup));
-  }
-
-  if(!(isEmpty('Map/map.json')) && isEmpty('Map/backup.json')){
-    fs.writeFileSync('Map/backup.json', JSON.stringify(map));
-  }
-
-  if(isEmpty('Map/map.json') && isEmpty('Map/backup.json')){
-    console.log('Map files are empty.');
-  }
-}
-
-function isEmpty(path) {
-  const file = fs.readFileSync(path);
-  for(var key in file) {
-    if(file.hasOwnProperty(key) && Object.keys(JSON.parse(file)).length !== 0)
-      return false;
-    }
-  return true;
-}
-
-
 // Misc. game data
 
+const raidMap = JSON.parse(fs.readFileSync('Data/raids.json'));
+const gameMap = JSON.parse(fs.readFileSync('Data/map.json'));
 const food = {
-  sandwich:30,
-  cake:200,
-  birdseed:10
-}
-
-const raidMap = {
-  pigeon:{
-    start:{
-      text:"Welcome to the raid, pigeon soldier. While raiding, you will be presented with options that will affect the outcome of the raid. To select an option, type \"option {number}\". We've arrived to the penguin base!\nOption 1: Enter from the front\nOption 2: Try to sneak around the back",
-      options:[
-        {
-          text:"You walk up to the entrance with your troops, and a few are picked off by the penguin guards, but you make it in quickly enough.",
-          destination:"insideKnown",
-          score: 1,
-          troopsLost: 5
-        },
-        {
-          text:"You and your troops walk to the back of the base, and are able to dispatch the lone guard without taking any damage. You enter via a small hole in the wall.",
-          destination:"insideUnknown",
-          score: 0,
-          troopsLost: 0
-        }
-      ]
-    },
-    insideKnown:{
-      text:"You are now inside the compound, and the penguins are aware of your presence.\nOption 1: Storm the barracks\nOption 2: Break into the headquarters and try to find valuable information",
-      options:[
-        {
-          text:"You and your troops breach the barracks wall and begin fighting the penguins on the other side. After a long fight with losses on both sides, you come out victorious, but the penguins are on high alert and more will be arriving soon.",
-          destination:"",
-          score: 10,
-          troopsLost: 20
-        },
-        {
-          text:"You manage to bruteforce your way into the headquarters, and the alarm goes off. Thankfully, you find some classified documents.",
-          destination:"headquarters",
-          score: 5,
-          troopsLost: 0
-        }
-      ]
-    },
-    insideUnknown:{
-      text:"You are now inside the penguin compound, and your presence is unknown.\nOption 1: Try to pick off penguin guards with silenced weapons\nOption 2: Break into the headquarters and try to find valuable information",
-      options:[
-        {
-          text:"You and your troops are able to take out multiple guards without being noticed.",
-          destination:"",
-          score: 5,
-          troopsLost: 0
-        },
-        {
-          text:"You manage to bruteforce your way into the headquarters, and the alarm goes off. Thankfully, you find some classified documents.",
-          destination:"headquarters",
-          score: 5,
-          troopsLost: 0
-        }
-      ]
-    },
-    headquarters:{
-      text:"The alarm is blaring, and the blast doors that you entered the headquarters through automatically close, trapping you inside.\nOption 1: Wait the penguins out and search for more documents\nOption 2: Try to find a way through which to escape",
-      options:[
-        {
-          text:"Just as you decide to try to wait the penguins out, a section of wall unfolds and large autonomous turret is unveiled. Before your troops can take cover, some are shot down.",
-          destination:"",
-          score: 0,
-          troopsLost: 10
-        },
-        {
-          text:"You find an escape hatch under the table, and get away easily.",
-          destination:"tunnel",
-          score: 0,
-          troopsLost: 0
-        }
-      ]
-    },
-    tunnel:{
-      text:"You and your troops are walking through the escape tunnel when you eventually arrive at two more hatches, one labeled \"Armory\", and the other \"Control Room\".\nOption 1: Enter the armory\nOption 2: Enter the control room",
-      options:[
-        {
-          text:"You enter the armory, and your troops take a multitude of powerful and secret weapons with them.",
-          destination:"",
-          score: 15,
-          troopsLost: 0
-        },
-        {
-          text:"You enter the control room, and take out the guards with minimal loss.",
-          destination:"controlRoom",
-          score: 0,
-          troopsLost: 5
-        }
-      ]
-    },
-    controlRoom:{
-      text:"The control rooms consists of many monitors displaying camera feed from all over the base, and tables with many buttons and knobs, including one large red button.\nOption 1: Take note of the camera placement and leave to deal with the accumulating force of penguins outside\nOption 2: Press the big red button leave to battle the penguins",
-      options:[
-        {
-          text:"You write down the locations of the cameras and leave.",
-          destination:"battle",
-          score: 5,
-          troopsLost: 0
-        },
-        {
-          text:"You press the button, and all the monitors switch to views of what seems to be a prison block, and all the cell doors open. Now swarming the base is a group of escapees, with no alliance. You lose some troops when they arrive, but the penguins lose more.",
-          destination:"battle",
-          score: 15,
-          troopsLost: 10
-        }
-      ]
-    },
-    battle:{
-      text:"Now outside in the thick of it, the battle rages.\nOption 1: Escape with your troops\nOption 2: Face the penguins in a final standoff before escaping.",
-      options:[
-        {
-          text:"You escape back to base without losing any troops.",
-          destination:"victory",
-          score: 0,
-          troopsLost: 0
-        },
-        {
-          text:"You face the penguins, and both sides suffer heavy loses.",
-          destination:"victory",
-          score: 15,
-          troopsLost: 20
-        }
-      ]
-    }
-  }
+  sandwich: 30,
+  cake: 200,
+  birdseed: 10
 }
 
 
@@ -312,9 +158,6 @@ async function playAction(username, socket, actionObj){
   const busyWhitelist = ['option'];
   
   if((busy != undefined) && (!busyWhitelist.includes(command))) return socket.emit('message', `You cannot use this command while ${busy}.`);
-
-  // Get new, untouched map
-  const gameMap = JSON.parse(fs.readFileSync('Map/map.json'));
   
   if(command == 'move'){
     // Moving system
@@ -337,7 +180,7 @@ async function playAction(username, socket, actionObj){
     for(let bannedAlliance of destination.bannedAlliances){
       if(user.game.alliances.includes(bannedAlliance)){
         cannotPass = true;
-        return socket.emit('message', `You cannot enter this zone because it does not allow people with the ${bannedAlliance} alliance!`);
+        return socket.emit('message', `You cannot enter this zone because it does not allow members of the the ${bannedAlliance} alliance!`);
       }
     }
     
@@ -346,7 +189,7 @@ async function playAction(username, socket, actionObj){
     for(let neededAlliance of destination.neededAlliances){
       if(!(user.game.alliances.includes(neededAlliance))){
         cannotPass = true;
-        return socket.emit('message', `You cannot enter this zone because it only allows people with the ${neededAlliance} alliance!`);
+        return socket.emit('message', `You cannot enter this zone because it only allows members of the ${neededAlliance} alliance!`);
       }
     }
     
