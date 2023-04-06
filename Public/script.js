@@ -10,10 +10,12 @@
   });
 
   socket.on('supporters', function (supporters){
+    const ul = document.getElementById('supporters');
+    ul.innerHTML = '';
+    
     for(let supporter of supporters){
-      let ul = document.getElementById('supporters');
-      ul.innerHTML = '';
       let li = document.createElement('li');
+      
       li.appendChild(document.createTextNode(supporter));
       ul.appendChild(li);
     }

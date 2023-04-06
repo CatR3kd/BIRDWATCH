@@ -628,6 +628,16 @@ async function playAction(username, socket, actionObj){
     
       socket.emit('gameUpdate', {"user": newUser, "notify": true});
     }
+  } else if(command == 'blackjack'){
+    if(args[0] == 'help'){
+      // help
+      return;
+    } else if(args[0] == 'hit'){
+      // hit
+      return;
+    }
+
+    // create blackjack game
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
@@ -656,6 +666,116 @@ function addXP(user, xpGained, socket){
 function xpRequired(currentLevel){
   const uncapped = Math.ceil((currentLevel + Math.sqrt(currentLevel)) / 5) * 5 * (Math.ceil(currentLevel / 10) * 10);
   return (uncapped > 5000)? 5000 : uncapped;
+}
+
+
+// Blackjack
+
+class Deck{
+  constructor(){
+    this.cards = ['as', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', 'js', 'qs', 'ks', 'ah', '2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', 'jh', 'qh', 'kh', 'ac', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', 'jc', 'qc', 'kc', 'ad', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', 'jd', 'qd', 'kd'];
+  }
+
+  shuffle(){
+    for (let i = this.cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = this.cards[i];
+      this.cards[i] = this.cards[j];
+      this.cards[j] = temp;
+    }
+  }
+
+  draw(amount){
+    let cards = [];
+    
+    for (let i = 0; i < amount; i++) {
+      cards.push(this.cards[0]);
+      this.cards.shift();
+    }
+
+    return cards;
+  }
+}
+
+class Blackjack{
+  constructor(bet){
+    this.bet = bet;
+    
+    this.deck = new Deck();
+    this.deck.shuffle();
+
+    // I know that this isn't how you would deal in real life, but it doesn't matter since that's only a rule to prevent cheating, which can't be done here anyways.
+    this.dealerHand = this.deck.draw(2);
+    this.playerHand = this.deck.draw(2);
+  }
+
+  // Find total score of a hand
+  total(hand){
+    let total = 0;
+    let hasAce = false;
+
+    for(let card of hand){
+      const value = card.slice(0, -1);
+      const faces = ['j', 'q', 'k'];
+      
+      if(faces.includes(value)){
+        // Card is a face card
+        total += 10;
+      } else if(value == 'a'){
+        // Card is an ace
+        total += 11;
+        hasAce = true;
+      } else {
+        // Card is a number
+        total += +value
+      }
+    }
+
+    if((total > 21) && (hasAce == true)){
+      total -= 10;
+    }
+
+    return total;
+  }
+
+  // Hit the player's hand
+  hit(){
+    this.playerHand.push(...this.deck.draw(1));
+    if(this.total(this.playerHand) > 21) this.end();
+  }
+
+  // End the game and determine payout/loss
+  end(){
+    const playerTotal = this.total(this.playerHand);
+    
+    if((playerTotal == 21) && (this.playerHand.length == 2)){
+      // Blackjack
+      return this.bet * (3 / 2);
+    } else if(playerTotal > 21){
+      // Bust
+      return -this.bet;
+    } else {
+      while(this.total(this.dealerHand) < 17){
+        this.dealerHand.push(...this.deck.draw(1));
+      }
+
+      const dealerTotal = this.total(this.dealerHand);
+
+      if(dealerTotal > 21){
+        // Dealer bust
+        return this.bet;
+      } else if(playerTotal > dealerTotal){
+        // Player beat dealer
+        return this.bet;
+      } else if(playerTotal < dealerTotal){
+        // Dealer beat player
+        return -this.bet;
+      } else {
+        // Push
+        return 0;
+      }
+    }
+  }
 }
 
 
@@ -818,12 +938,13 @@ setInterval(async function(){
   io.emit('leaderboard', leaderboard);
 }, 5000);
 
-// Misc.
 
+// Misc.
 
 function capitalizeFirstLetter(word){
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
+
 
 // Replit tip system
 
