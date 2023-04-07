@@ -644,8 +644,11 @@ async function playAction(username, socket, actionObj){
     
     if(args[0] == 'hit'){
       // Hit
-      if(oldGame == undefined) return socket.emit('message', 'You must already be in a game of blackjack to hit!');
+      if(oldGame == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
       return oldGame.hit();
+    } else if(args[0] == 'stand'){
+      if(oldGame == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+      return oldGame.end();
     }
 
     if(oldGame != undefined) return socket.emit('message', 'You are already in a game of blackjack!');
