@@ -645,7 +645,7 @@ async function playAction(username, socket, actionObj){
     if(args[0] == 'hit'){
       // Hit
       if(oldGame == undefined) return socket.emit('message', 'You must already be in a game of blackjack to hit!');
-      return;
+      return oldGame.hit();
     }
 
     if(oldGame != undefined) return socket.emit('message', 'You are already in a game of blackjack!');
@@ -770,14 +770,19 @@ class Blackjack{
   // Generate a string to emit to the user
   updateUser(dealerFaceUp = false, status = ''){
     const playerTotal = this.total(this.playerHand);
-    
     const gameString = `Dealer: ${this.dealerHand[0]} ${(dealerFaceUp == true)? this.dealerHand[1] : '??'}${(dealerFaceUp == true)? this.total(this.dealerHand) : ''}\n${status}\nYou: ${this.playerHand[0]} ${this.playerHand[1]} - ${playerTotal}`;
+
+    return socket.emit('message', gameString);
   }
 
   // Hit the player's hand
   hit(){
     this.playerHand.push(...this.deck.draw(1));
-    if(this.total(this.playerHand) > 21) this.end();
+    if(this.total(this.playerHand) > 21){
+      this.end();
+    } else {
+      this.updateUser();
+    }
   }
 
   // End the game and determine payout/loss
@@ -821,6 +826,9 @@ class Blackjack{
     }
     
     this.updateUser(true, status);
+
+    busyPlayers.delete(this.user.username);
+    blackjackGames.delete(this.user.username);
 
     let newUser = this.user;
     newUser.game.money += payout;
