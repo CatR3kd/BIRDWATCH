@@ -13,6 +13,7 @@ const db = new QuickDB({filePath: "Data/db.sqlite"});
 const connectedPlayers = new Map();
 const busyPlayers = new Map();
 const raidingPlayers = new Map();
+const blackjackGames = new Map();
 
 // Get leaderboard
 let leaderboard = getLeaderboard();
@@ -111,7 +112,15 @@ io.on('connection', (socket) => {
       io.emit('playerCount', connectedPlayers.size);
     }
 
-    if(raidingPlayers.has(username)) raidingPlayers.delete(username);
+    if(raidingPlayers.has(username)){
+      raidingPlayers.delete(username);
+      busyPlayers.delete(username);
+    }
+
+    if(blackjackGames.has(username)){
+      blackjackGames.delete(username);
+      busyPlayers.delete(username);
+    }
   });
 });
 
@@ -210,7 +219,7 @@ async function playAction(username, socket, actionObj){
     
     let newUser = user;
     newUser.game.location = destinationName;
-    await db.set(username, newUser);
+    await db.set(user.username, newUser);
     
     return socket.emit('gameUpdate', {"user": newUser, "notify": true});
   } else if(command == 'talk'){
@@ -272,7 +281,7 @@ async function playAction(username, socket, actionObj){
         const xpGained = 35 * (Math.random() + 1) * xpMultiplier;
         newUser = addXP(newUser, xpGained, socket);
 
-        db.set(username, newUser);
+        db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": true});
         busyPlayers.delete(user.username);
         
@@ -328,7 +337,7 @@ async function playAction(username, socket, actionObj){
       newUser.game.speedBuff += item.speed;
     }
 
-    await db.set(username, newUser);
+    await db.set(user.username, newUser);
 
     socket.emit('message', `You purchased the ${item.name}!`);
     return socket.emit('gameUpdate', {"user": newUser, "notify": false});
@@ -377,7 +386,7 @@ async function playAction(username, socket, actionObj){
 
         newUser.game.money += (oreFound * oreValue);
         
-        db.set(username, newUser);
+        db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": false});
 
         busyPlayers.delete(user.username);
@@ -422,7 +431,7 @@ async function playAction(username, socket, actionObj){
         newUser.game.damage += damageGained;
         newUser.game.speed += speedGained;
         
-        db.set(username, newUser);
+        db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": false});
 
         busyPlayers.delete(user.username);
@@ -482,7 +491,7 @@ async function playAction(username, socket, actionObj){
         newUser = addXP(newUser, xpGained, socket);
         newUser.game.health = startingHP;
         
-        db.set(username, newUser);
+        db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": false});
         busyPlayers.delete(user.username);
         
@@ -506,7 +515,7 @@ async function playAction(username, socket, actionObj){
     newUser.game.health += HPToHeal;
     
     // Save user and update the client
-    await db.set(username, newUser);
+    await db.set(user.username, newUser);
     
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
 
@@ -536,7 +545,7 @@ async function playAction(username, socket, actionObj){
     let newUser = user;
     newUser.game.alliances.push(targetAlly);
 
-    await db.set(username, newUser);
+    await db.set(user.username, newUser);
 
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
     socket.emit('message', `Joined the ${targetAlly} alliance!`);
@@ -561,7 +570,7 @@ async function playAction(username, socket, actionObj){
     newUser.game.health += healAmount;
     if(newUser.game.health > newUser.game.maxHealth) newUser.game.health = newUser.game.maxHealth;
     
-    await db.set(username, newUser);
+    await db.set(user.username, newUser);
     
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
     return socket.emit('message', `Healed ${newUser.game.health - oldHealth} HP by eating the ${capitalizeFirstLetter(args[0])}!`);
@@ -572,7 +581,7 @@ async function playAction(username, socket, actionObj){
     let newUser = user;
     newUser.game.location = 'spawnpoint';
 
-    await db.set(username, newUser);
+    await db.set(user.username, newUser);
     
     socket.emit('gameUpdate', {"user": newUser, "notify": true});
   } else if(command == 'raid'){
@@ -624,20 +633,32 @@ async function playAction(username, socket, actionObj){
       socket.emit('message', `${(victory == true)? 'Raid successful!' : 'All of your troops have died. You manage to make it back to base alive.'}\nFinal score: ${raid.score}${(troopBonus > 0)? `\nRemaning troop bonus: ${troopBonus}` : ''}`);
       
       let newUser = addXP(user, xpGained, socket);
-      await db.set(username, newUser);
+      await db.set(user.username, newUser);
     
       socket.emit('gameUpdate', {"user": newUser, "notify": true});
     }
   } else if(command == 'blackjack'){
-    if(args[0] == 'help'){
-      // help
-      return;
-    } else if(args[0] == 'hit'){
-      // hit
+    if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
+      
+    const oldGame = blackjackGames.get(user.username);
+    
+    if(args[0] == 'hit'){
+      // Hit
+      if(oldGame == undefined) return socket.emit('message', 'You must already be in a game of blackjack to hit!');
       return;
     }
 
-    // create blackjack game
+    if(oldGame != undefined) return socket.emit('message', 'You are already in a game of blackjack!');
+
+    const bet = +args[0];
+    
+    if(isNaN(+bet)) return socket.emit('message', 'You must include a valid bet value! Ex. \"blackjack 100\"');
+    if(bet > user.game.money) return socket.emit('message', 'You don\'t have that much money!');
+
+    const game = new Blackjack(bet, user, socket);
+    
+    blackjackGames.set(user.username, game);
+
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
@@ -698,8 +719,10 @@ class Deck{
 }
 
 class Blackjack{
-  constructor(bet){
+  constructor(bet, user, socket){
     this.bet = bet;
+    this.user = user;
+    this.socket = socket;
     
     this.deck = new Deck();
     this.deck.shuffle();
@@ -707,6 +730,12 @@ class Blackjack{
     // I know that this isn't how you would deal in real life, but it doesn't matter since that's only a rule to prevent cheating, which can't be done here anyways.
     this.dealerHand = this.deck.draw(2);
     this.playerHand = this.deck.draw(2);
+
+    if(this.total(this.playerHand) == 21 ){
+      this.end();
+    } else {
+      this.updateUser();
+    }
   }
 
   // Find total score of a hand
@@ -738,6 +767,13 @@ class Blackjack{
     return total;
   }
 
+  // Generate a string to emit to the user
+  updateUser(dealerFaceUp = false, status = ''){
+    const playerTotal = this.total(this.playerHand);
+    
+    const gameString = `Dealer: ${this.dealerHand[0]} ${(dealerFaceUp == true)? this.dealerHand[1] : '??'}${(dealerFaceUp == true)? this.total(this.dealerHand) : ''}\n${status}\nYou: ${this.playerHand[0]} ${this.playerHand[1]} - ${playerTotal}`;
+  }
+
   // Hit the player's hand
   hit(){
     this.playerHand.push(...this.deck.draw(1));
@@ -745,15 +781,19 @@ class Blackjack{
   }
 
   // End the game and determine payout/loss
-  end(){
+  async end(){
     const playerTotal = this.total(this.playerHand);
+    let status = '';
+    let payout = 0;
     
     if((playerTotal == 21) && (this.playerHand.length == 2)){
       // Blackjack
-      return this.bet * (3 / 2);
+      payout = this.bet * (3 / 2);
+      status = '\nBlackjack\n';
     } else if(playerTotal > 21){
       // Bust
-      return -this.bet;
+      payout = -this.bet;
+      status = '\nBust.\n'
     } else {
       while(this.total(this.dealerHand) < 17){
         this.dealerHand.push(...this.deck.draw(1));
@@ -763,18 +803,30 @@ class Blackjack{
 
       if(dealerTotal > 21){
         // Dealer bust
-        return this.bet;
+        payout = this.bet;
+        status = '\nDealer bust\n';
       } else if(playerTotal > dealerTotal){
         // Player beat dealer
-        return this.bet;
+        payout = this.bet;
+        status = '\nPlayer higher score\n';
       } else if(playerTotal < dealerTotal){
         // Dealer beat player
-        return -this.bet;
+        payout = -this.bet;
+        status = '\nDealer higher score\n';
       } else {
         // Push
-        return 0;
+        payout = 0;
+        status = '\nPush\n';
       }
     }
+    
+    this.updateUser(true, status);
+
+    let newUser = this.user;
+    newUser.game.money += payout;
+    await db.set(this.user.username, newUser);
+
+    return socket.emit('message', `${status}: ${(payout > 0)? 'gained': 'lost'} $${Math.abs(payout)}${(payout > 0)? '!' : '.'}`);
   }
 }
 

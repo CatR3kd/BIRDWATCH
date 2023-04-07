@@ -73,6 +73,9 @@
   function sendAction(){
     const input = document.getElementById('actionInput');
     const action = input.value;
+
+    if(action.toLowerCase() == 'blackjack help') return blackjackHelp();
+    
     let args = action.split(' ');
     const command = args[0];
     args.shift();
@@ -108,6 +111,14 @@
     "eat {item}": Consume a food item to heal. Must have item in inventory
     "clear": Clears the output.
     NOTE: There are other location-specific commands that will be explained by other characters.\n\n`;
+    
+    scroll();
+  }
+  
+  function blackjackHelp(){
+    const text = document.getElementById('text');
+    
+    text.innerText = text.innerText + 'The goal of blackjack is to get a higher point value than the dealer, without going over 21. You will be dealt two face up cards, and the dealer will have one face up card and one face down card. Your point value is the value of each of your cards added up, with these values:\nNumber cards: Worth their number (Ex. 2 of spades is worth 2 points)\nFace cards (J, Q, K): All worth 10 points\nAces: Can be worth either 1 or 11 points, and can be changed whenever\nTo get more points, you can \"hit\". When you hit, you will be given another card from the top of the deck. If your point value goes over 21, or \"bust\", at any time, you instantly lose your bet. Once you are done hitting, you can \"stand\", and the dealer shows his hidden card, and hits until he has at least 17 points. The dealer can also bust. Once the dealer and player are done hitting, whomever has the higher score without busting wins the bet. There is also a chance of getting a \"blackjack\", or being dealt and Ace and a Ten or Face card, which pays you 1.5x your original bet.\nCommands:\nStart game: \"blackjack <bet amount>\"\nHit: \"blackjack hit\"\nStand: \"blackjack stand\"';
     
     scroll();
   }
