@@ -370,7 +370,7 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You enter the Diner, and notice there are only a few people present, fewer of them eating. One man sits alone at a table with a drink in hand. He looks older, probably in his late fifties. (\"talk man\") There's only one cook, standing bored behind the counter, waiting for business. (\"talk cook\") Playing blackjack with a few tried, and progressively poorer patrons, is a dealer. (\"talk dealer\") Back to the south is the town."
+    "text":"You enter the Diner, and notice there are only a few people present, fewer of them eating. One man sits alone at a table with a drink in hand. He looks older, probably in his late fifties. (\"talk man\") There's only one cook, standing bored behind the counter, waiting for business. (\"talk cook\") Playing blackjack with a few tired, and progressively poorer patrons, is a dealer. (\"talk dealer\") Back to the south is the town."
   },
   "mine":{
     "name":"Gold Mine",

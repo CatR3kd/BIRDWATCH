@@ -598,7 +598,7 @@ async function playAction(username, socket, actionObj){
       'score': 0,
       'troops': 50
     });
-
+    
     return socket.emit('message', raidMap[raidTeam].start.text);
   } else if(command == 'option'){
     let raid = raidingPlayers.get(user.username);
@@ -868,7 +868,7 @@ class Blackjack{
     blackjackGames.delete(this.user.username);
 
     return setTimeout(function(){
-      this.socket.emit('message', `${(payout > 0)? 'Gained': 'Lost'} $${formatNumber(Math.abs(payout))}${(payout > 0)? '!' : '.'}`);
+      this.socket.emit('message', `${(payout >= 0)? 'Gained': 'Lost'} $${formatNumber(Math.abs(payout))}${(payout > 0)? '!' : '.'}`);
     }.bind(this), 2000);
   }
 }
