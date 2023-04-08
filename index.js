@@ -657,11 +657,11 @@ async function playAction(username, socket, actionObj){
     
     if(isNaN(+bet)) return socket.emit('message', 'You must include a valid bet value! Ex. \"blackjack 100\"');
     if(bet > user.game.money) return socket.emit('message', 'You don\'t have that much money!');
+    if(bet < 1) return socket.emit('message', 'You must bet a minimum of $1!');
 
     const game = new Blackjack(bet, user, socket);
     
     blackjackGames.set(user.username, game);
-
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
@@ -734,7 +734,7 @@ class Blackjack{
     this.dealerHand = this.deck.draw(2);
     this.playerHand = this.deck.draw(2);
 
-    if(this.total(this.playerHand) == 21 ){
+    if(this.total(this.playerHand) == 21){
       this.end();
     } else {
       this.updateUser();
@@ -770,12 +770,37 @@ class Blackjack{
     return total;
   }
 
-  // Generate a string to emit to the user
-  updateUser(dealerFaceUp = false, status = ''){
-    const playerTotal = this.total(this.playerHand);
-    const gameString = `Dealer: ${this.dealerHand[0]} ${(dealerFaceUp == true)? this.dealerHand[1] : '??'}${(dealerFaceUp == true)? this.total(this.dealerHand) : ''}\n${status}\nYou: ${this.playerHand[0]} ${this.playerHand[1]} - ${playerTotal}`;
+  // Change card from basic string to pretty uppercase one using suit characters
+  formatCard(card){
+    let newCard = card;
+    
+    if(newCard.slice(-1) == 's') newCard = newCard.slice(0, -1) + '♤';
+    if(newCard.slice(-1) == 'h') newCard = newCard.slice(0, -1) + '♡';
+    if(newCard.slice(-1) == 'c') newCard = newCard.slice(0, -1) + '♧';
+    if(newCard.slice(-1) == 'd') newCard = newCard.slice(0, -1) + '♢';
 
-    return socket.emit('message', gameString);
+    return newCard.toUpperCase();
+  }
+
+  // Generate a string to emit to the user
+  updateUser(playerStood = false){
+    const playerTotal = this.total(this.playerHand);
+    let playerHandString = '';
+    let dealerHandString = '';
+
+    for(let card of this.playerHand){
+      playerHandString += `${this.formatCard(card)} `;
+    }
+
+    if(playerStood == true){
+      for(let card of this.dealerHand){
+        dealerHandString += `${this.formatCard(card)} `;
+      }
+    }
+    
+    const gameString = `\n\nDealer's hand\n ${(playerStood == true)? dealerHandString : `${this.formatCard(this.dealerHand[1])} ??`}${(playerStood == true)? `(${this.total(this.dealerHand)})` : ''}\n\n ${playerHandString}(${playerTotal})\nYour hand\n`;
+
+    return this.socket.emit('message', gameString);
   }
 
   // Hit the player's hand
@@ -797,11 +822,11 @@ class Blackjack{
     if((playerTotal == 21) && (this.playerHand.length == 2)){
       // Blackjack
       payout = this.bet * (3 / 2);
-      status = '\nBlackjack\n';
+      status = 'Blackjack!';
     } else if(playerTotal > 21){
       // Bust
       payout = -this.bet;
-      status = '\nBust.\n'
+      status = 'Bust.'
     } else {
       while(this.total(this.dealerHand) < 17){
         this.dealerHand.push(...this.deck.draw(1));
@@ -812,32 +837,39 @@ class Blackjack{
       if(dealerTotal > 21){
         // Dealer bust
         payout = this.bet;
-        status = '\nDealer bust\n';
+        status = 'Dealer bust!';
       } else if(playerTotal > dealerTotal){
         // Player beat dealer
         payout = this.bet;
-        status = '\nPlayer higher score\n';
+        status = 'Player higher score!';
       } else if(playerTotal < dealerTotal){
         // Dealer beat player
         payout = -this.bet;
-        status = '\nDealer higher score\n';
+        status = 'Dealer higher score.';
       } else {
         // Push
         payout = 0;
-        status = '\nPush\n';
+        status = 'Push.';
       }
     }
-    
-    this.updateUser(true, status);
-
-    busyPlayers.delete(this.user.username);
-    blackjackGames.delete(this.user.username);
 
     let newUser = this.user;
     newUser.game.money += payout;
     await db.set(this.user.username, newUser);
+    
+    this.updateUser(true);
 
-    return socket.emit('message', `${status}: ${(payout > 0)? 'gained': 'lost'} $${Math.abs(payout)}${(payout > 0)? '!' : '.'}`);
+    setTimeout(function(){
+      this.socket.emit('message', status);
+    }.bind(this), 1000);
+    // .bind(this) binds the timeout function to the original .this object, very useful
+
+    busyPlayers.delete(this.user.username);
+    blackjackGames.delete(this.user.username);
+
+    return setTimeout(function(){
+      this.socket.emit('message', `${(payout > 0)? 'Gained': 'Lost'} $${Math.abs(payout)}${(payout > 0)? '!' : '.'}`);
+    }.bind(this), 2000);
   }
 }
 
