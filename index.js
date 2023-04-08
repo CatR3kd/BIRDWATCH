@@ -868,7 +868,7 @@ class Blackjack{
     blackjackGames.delete(this.user.username);
 
     return setTimeout(function(){
-      this.socket.emit('message', `${(payout > 0)? 'Gained': 'Lost'} $${Math.abs(payout)}${(payout > 0)? '!' : '.'}`);
+      this.socket.emit('message', `${(payout > 0)? 'Gained': 'Lost'} $${formatNumber(Math.abs(payout))}${(payout > 0)? '!' : '.'}`);
     }.bind(this), 2000);
   }
 }
@@ -1038,6 +1038,10 @@ setInterval(async function(){
 
 function capitalizeFirstLetter(word){
   return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+function formatNumber(number){
+  return(number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','));
 }
 
 
