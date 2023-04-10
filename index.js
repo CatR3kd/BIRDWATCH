@@ -641,27 +641,31 @@ async function playAction(username, socket, actionObj){
     if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
       
     const oldGame = blackjackGames.get(user.username);
-    
-    if(args[0] == 'hit'){
-      // Hit
-      if(oldGame == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
-      return oldGame.hit();
-    } else if(args[0] == 'stand'){
-      if(oldGame == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
-      return oldGame.end();
-    }
-
     if(oldGame != undefined) return socket.emit('message', 'You are already in a game of blackjack!');
 
     const bet = +args[0];
     
-    if(isNaN(+bet)) return socket.emit('message', 'You must include a valid bet value! Ex. \"blackjack 100\"');
+    if(isNaN(bet)) return socket.emit('message', 'You must include a valid bet value! Ex. \"blackjack 100\"');
     if(bet > user.game.money) return socket.emit('message', 'You don\'t have that much money!');
     if(bet < 1) return socket.emit('message', 'You must bet a minimum of $1!');
 
     const game = new Blackjack(bet, user, socket);
     
     blackjackGames.set(user.username, game);
+  } else if(command == 'hit'){
+    if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
+    
+    const game = blackjackGames.get(user.username);
+    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    
+    game.hit();
+  } else if(command == 'stand'){
+    if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
+    
+    const game = blackjackGames.get(user.username);
+    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    
+    game.end();
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
