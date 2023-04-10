@@ -326,7 +326,8 @@
     "name":"Birdwatch Diner",
     "neededToEnter":["Coupon"],
     "neighbors":{
-      "south":"town"
+      "south":"town",
+      "north": "arena"
     },
     "neededAlliances":[],
     "bannedAlliances":[],
@@ -335,6 +336,11 @@
       "dealer":{
         "name": "Blackjack Dealer",
         "text":"\"Hey. If ya'd like ta play blackjack, ya can use tha \"blackjack <bet>\" command. If ya need an explanation, type \"blackjack help\".\"",
+        "wares":{}
+      },
+      "bouncer":{
+        "name": "Bouncer",
+        "text":"\"If you vant to get in, you vill need an invitation.\"",
         "wares":{}
       },
       "man":{
@@ -370,7 +376,21 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You enter the Diner, and notice there are only a few people present, fewer of them eating. One man sits alone at a table with a drink in hand. He looks older, probably in his late fifties. (\"talk man\") There's only one cook, standing bored behind the counter, waiting for business. (\"talk cook\") Playing blackjack with a few tired, and progressively poorer patrons, is a dealer. (\"talk dealer\") Back to the south is the town."
+    "text":"You enter the Diner, and notice there are only a few people present, fewer of them eating. One man sits alone at a table with a drink in hand. He looks older, probably in his late fifties. (\"talk man\") There's only one cook, standing bored behind the counter, waiting for business. (\"talk cook\") Playing blackjack with a few tired, and progressively poorer patrons, is a dealer. (\"talk dealer\") On the northern wall, there's a door with a bouncer guarding it. (\"talk bouncer\") Back to the south is the town."
+  },
+  "arena":{
+    "name":"Illicit Arena",
+    "neededToEnter":["Invitation"],
+    "neighbors":{
+      "south":"diner"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{},
+    "items":{},
+    "enemies":{},
+    "text":""
   },
   "mine":{
     "name":"Gold Mine",
@@ -487,8 +507,15 @@
       },
       "guard":{
         "name": "Birdwatch Guard",
-        "text":"*grunt* \"Five minutes 'till my shift is over... I can't see a reason to guard this place, but I gotta get paid somehow. Maybe I';; go over to the boot camp to get some money. I wish I was guarding the trail to the platinum mines from bandits instead, it wouldn't be too bad to have some exitement for a change... I'm probably going to go to the gym after my shift, gotta stay fit after all.\"",
-        "wares":{}
+        "text":"*grunt* \"Five minutes 'till my shift is over... I can't even go to the arena tonight, not with my back the way it is... I guess I could sell you my invitation for a few bucks, how about $1000? What a deal...\"\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "wares":{
+          "invitation":{
+            "name":"Invitation",
+            "price":1000,
+            "type":"other",
+            "description":"An invitation to \"The Arena\"."
+          }
+        }
       }
     },
     "items":{},
