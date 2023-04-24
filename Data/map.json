@@ -387,10 +387,16 @@
     "neededAlliances":[],
     "bannedAlliances":[],
     "availableAlliances":[],
-    "npcs":{},
+    "npcs":{
+      "bookie":{
+        "name": "Bookie",
+        "text":"\"If you want to fight someone, just use the \"battle <buff>\" command to be added to the queue to fight another player! You can choose a buff of attack, speed, or defense that will be temporarily applied to your stats to give you and edge over your opponent. The winner will receive 10% of the loser's money, and we'll get you back to full health afterwards.\"",
+        "wares":{}
+      }
+    },
     "items":{},
     "enemies":{},
-    "text":""
+    "text":"The bouncer checks your invitation and lets you through the door with a scowl. The arena consists of a boxing ring surrounded by bleachers and a table with a person waiting to take bets on the side. (\"talk bookie\")"
   },
   "mine":{
     "name":"Gold Mine",

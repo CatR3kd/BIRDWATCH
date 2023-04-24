@@ -14,6 +14,7 @@ const connectedPlayers = new Map();
 const busyPlayers = new Map();
 const raidingPlayers = new Map();
 const blackjackGames = new Map();
+const battleQueue = new Map();
 
 // Get leaderboard
 let leaderboard = getLeaderboard();
@@ -164,8 +165,9 @@ async function playAction(username, socket, actionObj){
   });
 
   const busy = busyPlayers.get(user.username);
-  const busyWhitelist = ['option'];
-  
+  const busyWhitelist = ['option', 'leave'];
+
+  // Make sure user is not busy, with the exception of a few commands
   if((busy != undefined) && (!busyWhitelist.includes(command))) return socket.emit('message', `You cannot use this command while ${busy}.`);
   
   if(command == 'move'){
@@ -239,7 +241,7 @@ async function playAction(username, socket, actionObj){
       if(user.game.defeatedEnemies.includes(targetEnemy.name)) return socket.emit('message', 'That is not an available action. (You have already beaten this enemy!)');
 
     busyPlayers.set(user.username, 'fighting');
-    let nextTurn = ((user.game.speed * user.game.speedBuff) >= targetEnemy.stats.speed)? 'user' : 'enemy';
+    let nextTurn = ((user.game.speed + user.game.speedBuff) >= targetEnemy.stats.speed)? 'user' : 'enemy';
 
     const fightInterval = setInterval(function(){
       if(nextTurn == 'user'){
@@ -440,64 +442,90 @@ async function playAction(username, socket, actionObj){
     }, trainTime);
   } else if(command == 'battle'){
     // Battling
-    if(user.game.location != 'camp') return socket.emit('message', 'That is not an available action.');
+    if((user.game.location != 'camp') && (user.game.location != 'arena')) return socket.emit('message', 'That is not an available action.');
 
-    const enemyHealth = ((Math.floor(Math.random() * 2) + 2) * 50);
-    const enemy = {
-      name: "Opposing Brawler",
-      stats: {
-        speed: (Math.floor(Math.random() * Math.random() * 9) + 1),
-        health: enemyHealth,
-        maxHealth: enemyHealth,
-        damage: ((Math.floor(Math.random() * 5) + 1) * 5)
-      }
-    }
-    
-    busyPlayers.set(user.username, 'fighting');
-    let nextTurn = ((user.game.speed + user.game.speedBuff) >= enemy.stats.speed)? 'user' : 'enemy';
-    const startingHP = user.game.health;
-    
-    const fightInterval = setInterval(function(){
-      if(nextTurn == 'user'){
-        enemy.stats.health -= (user.game.damage + user.game.damageBuff);
-        socket.emit('message', `You attacked the ${enemy.name} and dealt ${user.game.damage + user.game.damageBuff} damage.`);
-        nextTurn = 'enemy';
-      } else { // else instead of elseif is lost redundancy and potentially bad
-        user.game.health -= enemy.stats.damage;
-        socket.emit('message', `The ${enemy.name} attacked you and dealt ${enemy.stats.damage} damage.`);
-        nextTurn = 'user';
-      }
-
-      socket.emit('gameUpdate', {"user": user, "notify": false});
-      socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health: ${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
-      
-      if((user.game.health <= 0) || (enemy.stats.health <= 0)){
-        let newUser = user;
-        let xpMultiplier;
-        
-        if(user.game.health > 0){
-          // Fight won
-          xpMultiplier = 1.1;
-          
-          socket.emit('message', `You beat the ${enemy.name} and gained $75!`);
-          newUser.game.money += 75;
-        } else {
-          // Fight lost
-          xpMultiplier = 0.1;
-          socket.emit('message', `You lost to the ${enemy.name}.`);
+    if(user.game.location == 'camp'){
+      // Camp battle
+      const enemyHealth = ((Math.floor(Math.random() * 2) + 2) * 50);
+      const enemy = {
+        name: "Opposing Brawler",
+        stats: {
+          speed: (Math.floor(Math.random() * Math.random() * 9) + 1),
+          health: enemyHealth,
+          maxHealth: enemyHealth,
+          damage: ((Math.floor(Math.random() * 5) + 1) * 5)
         }
-
-        const xpGained = 35 * (Math.random() + 1) * xpMultiplier;
-        newUser = addXP(newUser, xpGained, socket);
-        newUser.game.health = startingHP;
-        
-        db.set(user.username, newUser);
-        socket.emit('gameUpdate', {"user": newUser, "notify": false});
-        busyPlayers.delete(user.username);
-        
-        clearInterval(fightInterval);
       }
-    }, 500);
+      
+      busyPlayers.set(user.username, 'fighting');
+      let nextTurn = ((user.game.speed + user.game.speedBuff) >= enemy.stats.speed)? 'user' : 'enemy';
+      const startingHP = user.game.health;
+      
+      const fightInterval = setInterval(function(){
+        if(nextTurn == 'user'){
+          enemy.stats.health -= (user.game.damage + user.game.damageBuff);
+          socket.emit('message', `You attacked the ${enemy.name} and dealt ${user.game.damage + user.game.damageBuff} damage.`);
+          nextTurn = 'enemy';
+        } else { // else instead of elseif is lost redundancy and potentially bad
+          user.game.health -= enemy.stats.damage;
+          socket.emit('message', `The ${enemy.name} attacked you and dealt ${enemy.stats.damage} damage.`);
+          nextTurn = 'user';
+        }
+  
+        socket.emit('gameUpdate', {"user": user, "notify": false});
+        socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health: ${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
+        
+        if((user.game.health <= 0) || (enemy.stats.health <= 0)){
+          let newUser = user;
+          let xpMultiplier;
+          
+          if(user.game.health > 0){
+            // Fight won
+            xpMultiplier = 1.1;
+            
+            socket.emit('message', `You beat the ${enemy.name} and gained $75!`);
+            newUser.game.money += 75;
+          } else {
+            // Fight lost
+            xpMultiplier = 0.1;
+            socket.emit('message', `You lost to the ${enemy.name}.`);
+          }
+  
+          const xpGained = 35 * (Math.random() + 1) * xpMultiplier;
+          newUser = addXP(newUser, xpGained, socket);
+          newUser.game.health = startingHP;
+          
+          db.set(user.username, newUser);
+          socket.emit('gameUpdate', {"user": newUser, "notify": false});
+          busyPlayers.delete(user.username);
+          
+          clearInterval(fightInterval);
+        }
+      }, 500);
+    } else {
+      // Arena battle
+      if(!['attack', 'speed', 'defense'].includes(args[0])) return socket.emit('message', 'You need to choose a buff (attack, speed, defense) to battle! Ex. \"battle speed\"');
+      if(user.game.money < 100) return socket.emit('message', 'You need to have at least $100 to battle!');
+      
+      const playerObj = {
+        user: user,
+        socket: socket,
+        buff: args[0]
+      }
+
+      busyPlayers.set(user.username, 'waiting for a battle');
+      battleQueue.set(user.username, playerObj);
+
+      socket.emit('message', `Matchmaking${(battleQueue.size > 1)? ', should take less than 5 seconds' : ''}...\n(Use the "leave" command to exit the queue)`);
+    }
+  } else if(command == 'leave'){
+    // Leaving the battle queue
+    if(!battleQueue.has(user.username)) return socket.emit('message', 'That is not an available action.');
+
+    battleQueue.delete(user.username);
+    busyPlayers.delete(user.username);
+    
+    socket.emit('message', 'Left the matchmaking queue.');
   } else if(command == 'heal'){
     // Healing
     if(user.game.location != 'fountain') return socket.emit('message', 'That is not an available action.');
@@ -659,6 +687,13 @@ async function playAction(username, socket, actionObj){
     if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
     
     game.hit();
+  } else if(command == 'double'){
+    if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
+    
+    const game = blackjackGames.get(user.username);
+    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    
+    game.double();
   } else if(command == 'stand'){
     if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
     
@@ -817,6 +852,19 @@ class Blackjack{
     }
   }
 
+  // Double: double bet and hit once before ending the game
+  double(){
+    if(this.playerHand.length != 2) return this.socket.emit('message', 'You can only double before hitting!');
+    if(this.user.game.money < (this.bet * 2)) return this.socket.emit('message', 'You don\'t have enough money to double your bet!');
+    
+    this.bet = this.bet * 2;
+    this.hit();
+
+    // Make sure the end() function is only called once
+    if(this.total(this.playerHand) > 21) return;
+    this.end();
+  }
+
   // End the game and determine payout/loss
   async end(){
     const playerTotal = this.total(this.playerHand);
@@ -876,6 +924,139 @@ class Blackjack{
     }.bind(this), 2000);
   }
 }
+
+
+// Online battles
+
+function onlineBattle(playerOne, playerTwo){
+  // Shuffle the players
+  if(Math.random() < 0.5){
+    let temp = playerOne;
+    playerOne = playerTwo;
+    playerTwo = temp;
+  }
+
+  // Apply buffs and set as busy
+  for(let player of [playerOne, playerTwo]){
+    busyPlayers.set(player.user.username, 'fighting');
+
+    player.buff = {
+      attack: (player.buff == 'attack')? (Math.ceil(player.user.game.damage / 6)) : 0,
+      speed: (player.buff == 'speed')? (Math.ceil(player.user.game.level / 5) * 10) : 0,
+      defense: (player.buff == 'defense')? (Math.ceil(player.user.game.damage / 6)) : 0
+    }
+  }
+  
+  let nextTurn = ((playerOne.user.game.speed + playerTwo.user.game.speedBuff + playerOne.buff.speed) >= (playerTwo.user.game.speed + playerOne.user.game.speedBuff + playerOne.buff.speed))? 'playerOne' : 'playerTwo';
+
+  const fightInterval = setInterval(function(){
+    const attackingPlayer = (nextTurn == 'playerOne')? playerOne : playerTwo;
+    const defendingPlayer = (nextTurn == 'playerTwo')? playerOne : playerTwo;
+
+    // Deal damage to the defending player
+    const dealtDamage = attackingPlayer.user.game.damage + attackingPlayer.user.game.damageBuff + attackingPlayer.buff.attack - defendingPlayer.buff.defense;
+
+    defendingPlayer.user.game.health -= dealtDamage;
+
+    // Update players and set next turn
+    if(nextTurn == 'playerOne'){
+      playerOne = attackingPlayer;
+      playerTwo = defendingPlayer;
+      
+      nextTurn = 'playerTwo';
+    } else {
+      playerOne = defendingPlayer;
+      playerTwo = attackingPlayer;
+      
+      nextTurn = 'playerOne';
+    }
+
+    // Emit update message
+    const message = `${attackingPlayer.user.username} attacked ${defendingPlayer.user.username} and dealt ${dealtDamage} damage!\nDealt: ${attackingPlayer.user.game.damage + attackingPlayer.user.game.damageBuff + attackingPlayer.buff.attack}\nBlocked: ${defendingPlayer.buff.defense}\n\n${playerOne.user.username}'s health: ${(playerOne.user.game.health > 0)? playerOne.user.game.health : 0}HP\n${playerTwo.user.username}'s health: ${(playerTwo.user.game.health > 0)? playerTwo.user.game.health : 0}HP`;
+
+    playerOne.socket.emit('message', message);
+    playerTwo.socket.emit('message', message);
+
+    if((playerOne.user.game.health <= 0) || (playerTwo.user.game.health <= 0)){
+      let winMessage;
+      let winner;
+
+      // Pay out and formulate the winning message
+      if(playerOne.user.game.health <= 0){
+        // Player two wins
+        winner = playerTwo;
+        loser = playerOne;
+        winMessage = `${playerTwo.user.username} beat ${playerOne.user.username} and won $${Math.floor(playerOne.user.game.money / 10)}!`;
+        
+        playerTwo.user.game.money += Math.floor(playerOne.user.game.money / 10);
+        playerOne.user.game.money -= Math.floor(playerOne.user.game.money / 10);
+      } else {
+        // Player one wins
+        winner = playerOne;
+        loser = playerTwo;
+        winMessage = `${playerOne.user.username} beat ${playerTwo.user.username} and won $${Math.floor(playerTwo.user.game.money / 10)}!`;
+        
+        playerOne.user.game.money += Math.floor(playerOne.user.game.money / 10);
+        playerTwo.user.game.money -= Math.floor(playerOne.user.game.money / 10);
+      }
+
+      // Heal & save players, give XP, and clean up
+      for(let player of [playerOne, playerTwo]){
+        
+        player.user.game.health = player.user.game.maxHealth;
+        
+        let xpGained;
+        if(player.user.username == winner.username){
+          const levelDifference = (loser.user.game.level >= winner.user.game.level)? (loser.user.game.level - winner.user.game.level) : 0;
+          xpGained = Math.floor(10 + (levelDifference ** 1.75));
+        } else {
+          xpGained = Math.ceil(10 * Math.random());
+        }
+        
+        player.socket.emit('message', winMessage);
+
+        player.user = addXP(player.user, xpGained, player.socket);
+        db.set(player.user.username, player.user);
+        
+        player.socket.emit('gameUpdate', {"user": player.user, "notify": true});
+        
+        busyPlayers.delete(player.user.username);
+      }
+      
+      clearInterval(fightInterval);
+    }
+  }, 1500);
+}
+
+function matchmakeBattles(){
+  // Return if less than 2 players are waiting
+  if(battleQueue.size < 2) return;
+    
+  const battleArray = [...battleQueue.values()];
+
+  // Sort players by money
+  battleArray.sort((a, b) => b.user.game.money - a.user.game.money);
+  
+  let pairs = [];
+
+  // Make pairs
+  battleArray.reduce(function(result, value, index, array) {
+    if (index % 2 === 0) pairs.push(array.slice(index, index + 2));
+  }, []);
+
+  // Battle each pair
+  for(let pair of pairs){
+    for(let player in pair){
+      battleQueue.delete(pair[player].user.username);
+      pair[player].socket.emit('message', `Found match! Opponent: ${(player == 0)? pair[1].user.username : pair[0].user.username}`)
+    }
+
+    onlineBattle(pair[0], pair[1]);
+  }
+}
+
+// Make matches every 5 seconds
+setInterval(matchmakeBattles, 5000);
 
 
 // Chat
