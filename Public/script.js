@@ -208,8 +208,8 @@
 
   function updateGame(updateObj){
     savedUser = updateObj.user;
-    //if(savedUser.game.items.includes('Map')) drawMap();
-    drawMap();
+    if(savedUser.game.items.includes('Map')) drawMap();
+    
     if(updateObj.notify == true){
       location();
     }
@@ -283,6 +283,19 @@
       [(map[savedUser.game.location].neighbors.west == undefined)? '' : map[map[savedUser.game.location].neighbors.west].name, map[savedUser.game.location].name, (map[savedUser.game.location].neighbors.east == undefined)? '' : map[map[savedUser.game.location].neighbors.east].name],
       [getCornerName('south', 'west'), (map[savedUser.game.location].neighbors.south == undefined)? '' : map[map[savedUser.game.location].neighbors.south].name, getCornerName('south', 'east')]
     ];
+
+    for(let row in mapArray){
+      for(let location in mapArray[row]){
+        let name = mapArray[row][location];
+
+        name = name.replaceAll('Birdwatch', 'BW');
+        name = name.replaceAll('Spawnpoint', 'Spawn Point');
+        name = name.replaceAll('Cliffside', 'Cliff Side');
+
+        mapArray[row][location] = name;
+      }
+    }
+    
     const tiles = document.getElementById('map').children;
     let currentTile = 0;
     

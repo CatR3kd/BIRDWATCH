@@ -148,16 +148,25 @@ a:active{
   position: fixed;
   bottom: 29px;
   right: calc(25vw - 3px);
-  margin: 8px;
+  margin: 0;
+  padding: 8px;
   display: grid;
   grid-template-rows: 50px 50px 50px;
   grid-template-columns: 50px 50px 50px;
   gap: 10px;
+  opacity: 1;
+  transition: opacity 0.25s;
+}
+
+#map:hover{
+  opacity: 0;
 }
 
 .mapTile{
   font-size: 12px;
   color: #D1D1CD;
+  background: #000522;
+  pointer-events: none;
   border: 1px solid #cccccc;
   width: 50px;
   height: 50px;
@@ -166,6 +175,10 @@ a:active{
   text-align: center;
   overflow-wrap: break-word;
   visibility: hidden;
+}
+
+.mapTile:hover{
+  cursor: default;
 }
 
 .mapTile:nth-child(5) {
