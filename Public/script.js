@@ -208,7 +208,8 @@
 
   function updateGame(updateObj){
     savedUser = updateObj.user;
-    
+    //if(savedUser.game.items.includes('Map')) drawMap();
+    drawMap();
     if(updateObj.notify == true){
       location();
     }
@@ -275,7 +276,50 @@
     }
   }
 
+  function drawMap(){
+    // The corners are too much to get in a one-liner, using another function
+    let mapArray = [
+      [getCornerName('north', 'west'), (map[savedUser.game.location].neighbors.north == undefined)? '' : map[map[savedUser.game.location].neighbors.north].name, getCornerName('north', 'east')],
+      [(map[savedUser.game.location].neighbors.west == undefined)? '' : map[map[savedUser.game.location].neighbors.west].name, map[savedUser.game.location].name, (map[savedUser.game.location].neighbors.east == undefined)? '' : map[map[savedUser.game.location].neighbors.east].name],
+      [getCornerName('south', 'west'), (map[savedUser.game.location].neighbors.south == undefined)? '' : map[map[savedUser.game.location].neighbors.south].name, getCornerName('south', 'east')]
+    ];
+    const tiles = document.getElementById('map').children;
+    let currentTile = 0;
+    
+    for (let x = 0; x < 3; x++) {
+      for (let y = 0; y < 3; y++) {
+        const location = mapArray[x][y];
+        const tile = tiles[currentTile];
+        
+        if(location == ''){
+          tile.style.visibility = 'hidden';
+        } else {
+          tile.style.visibility = 'visible';
+          tile.innerText = location;
+        }
+        
+        currentTile++;
+      }
+    }
+  }
+
+  function getCornerName(directionOne, directionTwo){
+    // Swap direction if one does not exist
+    if(map[savedUser.game.location].neighbors[directionOne] == undefined){
+      let temp = directionOne;
+      directionOne = directionTwo;
+      directionTwo = temp;
+    }
+
+    if(map[savedUser.game.location].neighbors[directionOne] == undefined) return '';
+
+    const cornerID = map[map[savedUser.game.location].neighbors[directionOne]].neighbors[directionTwo];
+    
+    return ((cornerID == undefined) || (!savedUser.game.discoveredLocations.includes(cornerID)))? '' : map[cornerID].name;
+  }
+
   function formatNumber(number){
+    if(!number) return number;
     return(number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','));
   }
 

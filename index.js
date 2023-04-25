@@ -35,6 +35,7 @@ class Game{
   	this.items = [];
     this.alliances = [];
     this.defeatedEnemies = [];
+    this.discoveredLocations = ['spawnpoint'];
   }
 }
 
@@ -220,7 +221,10 @@ async function playAction(username, socket, actionObj){
     if(cannotPass == true) return;
     
     let newUser = user;
+    
     newUser.game.location = destinationName;
+    if(!newUser.game.discoveredLocations.includes(destinationName)) newUser.game.discoveredLocations.push(destinationName);
+    
     await db.set(user.username, newUser);
     
     return socket.emit('gameUpdate', {"user": newUser, "notify": true});

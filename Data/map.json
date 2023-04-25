@@ -291,6 +291,12 @@
             "type":"other",
             "description":"The newest SuperPick model, even though it's not yet released? Grants 35% faster mining speed."
           },
+          "map":{
+            "name":"Map",
+            "price":500,
+            "type":"other",
+            "description":"A dusty map. Gives you a small map on your UI."
+          },
           "dagger":{
             "name":"Dagger",
             "price":250,
@@ -620,7 +626,7 @@
     "neededToEnter":[],
     "neighbors":{
       "south": "forestTrailTwo",
-      "west": "platinumMine"
+      "east": "platinumMine"
     },
     "neededAlliances":[],
     "bannedAlliances":[],
@@ -634,7 +640,7 @@
     "name":"Platinum Mine",
     "neededToEnter":[],
     "neighbors":{
-      "east": "forestTrailThree"
+      "west": "forestTrailThree"
     },
     "neededAlliances":[],
     "bannedAlliances":[],
