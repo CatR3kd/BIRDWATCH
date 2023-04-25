@@ -148,8 +148,7 @@ a:active{
   position: fixed;
   bottom: 29px;
   right: calc(25vw - 3px);
-  margin: 0;
-  padding: 8px;
+  margin: 8px;
   display: grid;
   grid-template-rows: 50px 50px 50px;
   grid-template-columns: 50px 50px 50px;
