@@ -119,8 +119,11 @@ io.on('connection', (socket) => {
       busyPlayers.delete(username);
     }
 
-    if(blackjackGames.has(username)){
-      blackjackGames.delete(username);
+    const blackjackGame = blackjackGames.get(username);
+    if(blackjackGame != undefined)  blackjackGame.end();
+
+    if(battleQueue.has(username)){
+      battleQueue.delete(user.username);
       busyPlayers.delete(username);
     }
   });
