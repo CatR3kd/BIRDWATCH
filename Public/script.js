@@ -20,6 +20,10 @@
       ul.appendChild(li);
     }
   });
+
+  socket.on('loginError', function(error){
+    document.getElementById('loginError').innerText = error;
+  });
   
   socket.on('loggedIn', function(user){
     savedUser = user;

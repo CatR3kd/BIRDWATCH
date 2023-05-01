@@ -48,6 +48,11 @@ const sendChatRateLimit = new RateLimiterMemory({
   duration: 2
 });
 
+const commandRateLimit = new RateLimiterMemory({
+  points: 5,
+  duration: 2
+});
+
 
 // Server
 
@@ -73,6 +78,10 @@ io.on('connection', (socket) => {
     const username = socket.handshake.headers['x-replit-user-name'];
     
     if((!username) || (connectedPlayers.has(username))){
+      if(connectedPlayers.has(username)){
+        socket.emit('loginError', 'You are already logged in somewhere else!');
+      }
+      
       socket.disconnect();
     } else {
       let user = await db.get(username);
@@ -87,10 +96,17 @@ io.on('connection', (socket) => {
     }
   })();
 
-  socket.on('action', function(actionObj) {
-    const username = socket.handshake.headers['x-replit-user-name'];
-    
-    playAction(username, socket, actionObj);
+  socket.on('action', async function(actionObj) {
+    try{
+      const username = socket.handshake.headers['x-replit-user-name'];
+      
+      await commandRateLimit.consume(username);
+      
+      playAction(username, socket, actionObj);
+    } catch(rejRes) {
+      // Ratelimited
+      return socket.emit('message', 'Slow down!');
+    }
   });
 
   socket.on('sendChat', async function(msg) {

@@ -14,29 +14,6 @@ html, body {
   font-family: Inconsolata, monospace;
 }
 
-#settingsButton{
-  color: #D1D1CD;
-  background: transparent;
-  border: none;
-  outline: none;
-  padding: 1px;
-  margin: 4px;
-  transition: 0.2s ease;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: center;
-}
-
-#settingsButton:hover{
-  cursor: pointer;
-  transform: scale(1.1) rotate(60deg);
-}
-
-#settingsButton:active{
-  transform: none;
-}
-
 #sidebars{
   display: flex;
   height: 50vh;
@@ -108,6 +85,16 @@ html, body {
 
 #login:active{
   box-shadow: none;
+}
+
+#loginError{
+  color: #D1D1CD;
+  position: fixed;
+  left: 50%;
+  top: calc(50% + 35px);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  max-width: 20vw;
 }
 
 #plug{
@@ -322,5 +309,10 @@ a:active{
 
   .sidebar{
     visibility: hidden;
+  }
+
+  #loginError{
+    width: 95vw;
+    max-width: unset;
   }
 }
