@@ -36,6 +36,7 @@ class Game{
     this.alliances = [];
     this.defeatedEnemies = [];
     this.discoveredLocations = ['spawnpoint'];
+    this.completedActivities = [];
   }
 }
 
@@ -708,6 +709,19 @@ async function playAction(username, socket, actionObj){
     if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
     
     game.end();
+  } else if(command == 'burn'){
+    // Burning easter egg
+    if(user.game.location != 'field') return socket.emit('message', 'That is not an available action.');
+    if(user.game.completedActivities.includes('burners')) return socket.emit('message', 'The cabin is already burned to the ground!');
+
+    socket.emit('message', 'Upon closer inspection, the canister has a small trademark inscribed near the nozzle that reads \"Burners\". You pick it up and begin pouring the gas onto the cabin, and even though you pour out what should have been all of the gas, the canister is still full when you finish. You strike a match and light the building, and when it finishes burning, you see $500 in cash in the middle of the floor. Weird.');
+
+    let newUser = user;
+    newUser.game.money += 500;
+    newUser.game.completedActivities.push('burners');
+    await db.set(user.username, newUser);
+
+    socket.emit('gameUpdate', {"user": newUser, "notify": false});
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');

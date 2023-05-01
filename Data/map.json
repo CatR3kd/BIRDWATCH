@@ -234,7 +234,7 @@
             "price":1000,
             "type":"weapon",
             "damage":20,
-            "description":"A sleek, tapered knife with a case that slides over top perfectly. Masterfully crafted, and anodized to be matte black. Deals 20 damage."
+            "description":"A sleek, tapered knife with a case that slides over top perfectly. Masterfully crafted, anodized matte black. Deals 20 damage."
           },
           "birdseed":{
             "name":"Birdseed",
@@ -314,8 +314,8 @@
         }
       },
       "governor":{
-        "name": "Governor Humdrum",
-        "text":"\"Hello there, commoner. I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.) The Birdwatch has taken pretty good care of us, but I'm not as fond of them as the people in the Diner to the north. Their obesession with the Birdwatch has become something of an... Oh- well, never mind that.\"",
+        "name": "Governor Thompson",
+        "text":"\"Hello there! I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.) The Birdwatch has taken pretty good care of us, but I'm not as fond of them as the people in the Diner to the north. Their obesession with the Birdwatch has become something of an... Oh- well, never mind that.\"",
         "wares":{}
       },
       "prospector":{
@@ -626,7 +626,8 @@
     "neededToEnter":[],
     "neighbors":{
       "south": "forestTrailTwo",
-      "east": "platinumMine"
+      "east": "platinumMine",
+      "north": "field"
     },
     "neededAlliances":[],
     "bannedAlliances":[],
@@ -635,6 +636,20 @@
     "items":{},
     "enemies":{},
     "text":"You continue on the trail, but it begins to brighten. To the west is what looks like another mine, and to the south is the trail that leads back to the world spawnpoint."
+  },
+  "field":{
+    "name":"Sunny Field",
+    "neededToEnter":[],
+    "neighbors":{
+      "south": "forestTrailThree"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{},
+    "items":{},
+    "enemies":{},
+    "text":"You walk out of an abrupt ending in the forest and find yourself in an open field of tall grass. Near you is an abandoned cabin with a decaying wooden frame, and at your feet lies a red gasoline canister and a box of matches. Perhaps you can use them for something... To the south is the trail you entered by."
   },
   "platinumMine":{
     "name":"Platinum Mine",

@@ -291,6 +291,7 @@
         name = name.replaceAll('Birdwatch', 'BW');
         name = name.replaceAll('Spawnpoint', 'Spawn Point');
         name = name.replaceAll('Cliffside', 'Cliff Side');
+        name = name.replaceAll('Headquarters', 'HQ');
 
         mapArray[row][location] = name;
       }
