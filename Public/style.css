@@ -91,7 +91,7 @@ html, body {
   color: #D1D1CD;
   position: fixed;
   left: 50%;
-  top: calc(50% + 35px);
+  top: calc(50% + 40px);
   transform: translate(-50%, -50%);
   text-align: center;
   max-width: 20vw;
