@@ -678,7 +678,7 @@ async function playAction(username, socket, actionObj){
     const oldGame = blackjackGames.get(user.username);
     if(oldGame != undefined) return socket.emit('message', 'You are already in a game of blackjack!');
 
-    const bet = +args[0];
+    const bet = Math.floor(+args[0]);
     
     if(isNaN(bet)) return socket.emit('message', 'You must include a valid bet value! Ex. \"blackjack 100\"');
     if(bet > user.game.money) return socket.emit('message', 'You don\'t have that much money!');
@@ -880,7 +880,7 @@ class Blackjack{
     
     if((playerTotal == 21) && (this.playerHand.length == 2)){
       // Blackjack
-      payout = this.bet * (3 / 2);
+      payout = Math.floor(this.bet * 1.5);
       status = 'Blackjack!';
     } else if(playerTotal > 21){
       // Bust
