@@ -1,0 +1,30 @@
+{
+  "ringfighter":{
+    "name":"Ring Fighter",
+    "description":"Win a fight in the arena behind the Birdwatch Diner",
+    "reward":250,
+    "minimumLevel":1,
+    "secret":false
+  },
+  "bountyhunter":{
+    "name":"Bounty Hunter",
+    "description":"Win a fight against an enemy",
+    "reward":100,
+    "minimumLevel":1,
+    "secret":false
+  },
+  "warringnations":{
+    "name":"Warring Nations",
+    "description":"Successfully complete a raid",
+    "reward":500,
+    "minimumLevel":1,
+    "secret":false
+  },
+  "burners":{
+    "name":"Burners",
+    "description":"Burn down the cabin in the field",
+    "reward":500,
+    "minimumLevel":1,
+    "secret":true
+  }
+}

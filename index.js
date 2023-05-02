@@ -36,7 +36,8 @@ class Game{
     this.alliances = [];
     this.defeatedEnemies = [];
     this.discoveredLocations = ['spawnpoint'];
-    this.completedActivities = [];
+    this.completedQuests = [];
+    this.claimedQuests = [];
   }
 }
 
@@ -111,7 +112,7 @@ io.on('connection', (socket) => {
 
   socket.on('sendChat', async function(msg) {
     const username = socket.handshake.headers['x-replit-user-name'];
-    const userid = socket.handshake.headers['x-replit-user-id']
+    const userid = socket.handshake.headers['x-replit-user-id'];
     
     try {
       await sendChatRateLimit.consume(username);
@@ -163,8 +164,9 @@ async function createAccount(username){
 
 // Misc. game data
 
-const raidMap = JSON.parse(fs.readFileSync('Data/raids.json'));
 const gameMap = JSON.parse(fs.readFileSync('Data/map.json'));
+const quests = JSON.parse(fs.readFileSync('Data/quests.json'));
+const raidMap = JSON.parse(fs.readFileSync('Data/raids.json'));
 const food = {
   sandwich: 30,
   cake: 200,
@@ -173,7 +175,6 @@ const food = {
 
 
 // Game
-
 
 async function playAction(username, socket, actionObj){
   // Make sure user exists and isn't busy
@@ -288,6 +289,7 @@ async function playAction(username, socket, actionObj){
         if(user.game.health > 0){
           // Fight won
           newUser.game.defeatedEnemies.push(targetEnemy.name);
+          if(!user.game.completedQuests.includes('bountyhunter')) user.game.completedQuests.push('bountyhunter');
 
           xpMultiplier = 1.2;
           
@@ -321,12 +323,12 @@ async function playAction(username, socket, actionObj){
     let targetItem;
 
     // Find item in the wares of nearby NPC's
-    Object.keys(currentLocation.npcs).forEach(function(key){
+    for(key of Object.keys(currentLocation.npcs)){
       const npc = currentLocation.npcs[key];
       const item = npc.wares[args[0]];
       
       if(item != undefined) targetItem = item;
-    });
+    };
     
     const item = targetItem;
     
@@ -673,11 +675,13 @@ async function playAction(username, socket, actionObj){
       raidingPlayers.set(user.username, raid);
       socket.emit('message', raidMap[raid.team][raid.location].text);
     } else {
+      // Raid complete
       const victory = (selectedOption.destination == 'victory')? true : false;
       
       raidingPlayers.delete(user.username);
       busyPlayers.delete(user.username);
 
+      // Calculate XP
       const xpMult = (victory == true)? (1.1 + (Math.random() / 2)) : 0.75;
       const troopBonus = Math.floor(raid.troops / 3.3);
       const xpGained = (raid.score + troopBonus) * xpMult;
@@ -686,6 +690,9 @@ async function playAction(username, socket, actionObj){
       
       let newUser = addXP(user, xpGained, socket);
       await db.set(user.username, newUser);
+
+      // Warring nations quest
+      if((victory == true) && (!user.completedQuests.includes('warringnations'))) newUser.game.completedQuests.push('warringnations');
     
       socket.emit('gameUpdate', {"user": newUser, "notify": true});
     }
@@ -725,16 +732,62 @@ async function playAction(username, socket, actionObj){
     if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
     
     game.end();
+  } else if(command == 'quests'){
+    // Quest system
+    if(user.game.location != 'spawnpoint') return socket.emit('message', 'That is not an available action.');
+
+    let incompleteQuests = '';
+    let completedQuests = '';
+    let newlyCompletedQuests = '';
+    let totalReward = 0;
+
+    let newUser = user;
+
+    for(let key of Object.keys(quests)){
+      const quest = quests[key];
+      
+      if(user.game.level >= quest.minimumLevel){
+        if(user.game.completedQuests.includes(key)){
+          completedQuests += `${quest.name}${(quest.secret == true)? ' (Secret)' : ''} - ${quest.description} - Reward: $${quest.reward}\n`;
+          
+          if(!user.game.claimedQuests.includes(key)){
+            newlyCompletedQuests += `${quest.name}, `;
+            totalReward += quest.reward;
+  
+            newUser.game.claimedQuests.push(key);
+            newUser.game.money += quest.reward;
+          }
+        } else {
+          if(quest.secret == false){
+            incompleteQuests += `${quest.name} - ${quest.description} - Reward: $${quest.reward}\n`;
+          } else {
+            incompleteQuests += '???\n';
+          }
+        }
+      }
+    }
+
+    let message = '';
+
+    if(incompleteQuests != '') message += `INCOMPLETE Quests:\n\n${incompleteQuests}\n`;
+    if(completedQuests != '') message += `COMPLETED Quests:\n\n${completedQuests}\n`;
+    if(newlyCompletedQuests != '') message += `Newly completed quests!\n\n${newlyCompletedQuests.slice(0, -2)}\nTotal rewards: $${totalReward}\n`;
+
+    message += '\nIf you complete a quest, come back and use the \"quests\" command to claim your rewards!';
+
+    socket.emit('message', message);
+
+    await db.set(user.username, newUser);
+    socket.emit('gameUpdate', {"user": newUser, "notify": false});
   } else if(command == 'burn'){
     // Burning easter egg
     if(user.game.location != 'field') return socket.emit('message', 'That is not an available action.');
-    if(user.game.completedActivities.includes('burners')) return socket.emit('message', 'The cabin is already burned to the ground!');
+    if(user.game.completedQuests.includes('burners')) return socket.emit('message', 'The cabin is already burned to the ground!');
 
-    socket.emit('message', 'Upon closer inspection, the canister has a small trademark inscribed near the nozzle that reads \"Burners\". You pick it up and begin pouring the gas onto the cabin, and even though you pour out what should have been all of the gas, the canister is still full when you finish. You strike a match and light the building, and when it finishes burning, you see $500 in cash in the middle of the floor. Weird.');
+    socket.emit('message', 'Upon closer inspection, the canister has a small trademark inscribed near the nozzle that reads \"Burners\". You pick it up and begin pouring the gas onto the cabin, and even though you pour out what should have been all of the gas, the canister is still full when you finish. You strike a match and light the building on fire.\n(You feel as though you\'ve completed something important, maybe you should check the quest board!)');
 
     let newUser = user;
-    newUser.game.money += 500;
-    newUser.game.completedActivities.push('burners');
+    newUser.game.completedQuests.push('burners');
     await db.set(user.username, newUser);
 
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
@@ -1046,6 +1099,8 @@ function onlineBattle(playerOne, playerTwo){
         if(player.user.username == winner.username){
           const levelDifference = (loser.user.game.level >= winner.user.game.level)? (loser.user.game.level - winner.user.game.level) : 0;
           xpGained = Math.floor(10 + (levelDifference ** 1.75));
+
+          if(!player.user.game.completedQuests.includes('ringfighter')) player.user.game.completedQuests.push('ringfighter');
         } else {
           xpGained = Math.ceil(10 * Math.random());
         }
@@ -1104,7 +1159,7 @@ async function sendChat(username, msg, socket){
 
   const user = await db.get(username);
 
-  if(user.banStatus == true) return systemMessage(socket.id, 'You are currently banned from using the chat function.');
+  if(user.banStatus == true) return systemMessage(socket.id, 'You are currently banned from sending chat messages.');
 
   let badgeColor = '#D1D1CD';
   let title = '';
