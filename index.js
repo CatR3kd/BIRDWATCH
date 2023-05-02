@@ -164,7 +164,7 @@ async function createAccount(username){
 
 // Misc. game data
 
-const gameMap = JSON.parse(fs.readFileSync('Data/map.json'));
+const savedMap = JSON.parse(fs.readFileSync('Data/map.json'));
 const quests = JSON.parse(fs.readFileSync('Data/quests.json'));
 const raidMap = JSON.parse(fs.readFileSync('Data/raids.json'));
 const food = {
@@ -191,6 +191,9 @@ async function playAction(username, socket, actionObj){
 
   // Make sure user is not busy, with the exception of a few commands
   if((busy != undefined) && (!busyWhitelist.includes(command))) return socket.emit('message', `You cannot use this command while ${busy}.`);
+
+  // Create a clone of the map to prevent overwriting it on accident
+  const gameMap = JSON.parse(JSON.stringify(savedMap));
   
   if(command == 'move'){
     // Moving system
@@ -259,8 +262,7 @@ async function playAction(username, socket, actionObj){
     return socket.emit('message', `${targetNPC.name}: ${targetNPC.text}`);
   } else if(command == 'fight'){
     // Fighting system
-    // Create a deep copy using JSON.parse() and JSON.stringify() to prevent accidentally editing the original map
-    const targetEnemy = JSON.parse(JSON.stringify(gameMap[user.game.location].enemies[args[0]]));
+    const targetEnemy = gameMap[user.game.location].enemies[args[0]];
     
     if(targetEnemy == undefined) return socket.emit('message', 'That is not an available action.');
 
