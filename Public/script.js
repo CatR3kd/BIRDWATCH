@@ -115,7 +115,7 @@
     "move {direction}": Moves you in a given direction. (North, South, East, West) You can also just type the direction you want to move in, Ex. "north"
     "alliances": Lists your alliances.
     "eat {item}": Consume a food item to heal. Must have item in inventory
-    "clear": Clears the output.
+    "clear": Clears the terminal. (The text you are currently reading)
     NOTE: There are other location-specific commands that will be explained by other characters.\n\n`;
     
     scroll();
