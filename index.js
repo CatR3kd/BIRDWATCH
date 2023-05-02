@@ -289,6 +289,8 @@ async function playAction(username, socket, actionObj){
         if(user.game.health > 0){
           // Fight won
           newUser.game.defeatedEnemies.push(targetEnemy.name);
+
+          // Bounty hunter quest
           if(!user.game.completedQuests.includes('bountyhunter')) user.game.completedQuests.push('bountyhunter');
 
           xpMultiplier = 1.2;
@@ -413,6 +415,9 @@ async function playAction(username, socket, actionObj){
         let newUser = user;
 
         newUser.game.money += (oreFound * oreValue);
+
+        // Platinum miner quest
+        if((!user.game.completedQuests.includes('platinumminer')) && (ore == 'platinum')) newUser.game.completedQuests.push('platinumminer');
         
         db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": false});
@@ -780,7 +785,7 @@ async function playAction(username, socket, actionObj){
     await db.set(user.username, newUser);
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
   } else if(command == 'burn'){
-    // Burning easter egg
+    // Burners quest
     if(user.game.location != 'field') return socket.emit('message', 'That is not an available action.');
     if(user.game.completedQuests.includes('burners')) return socket.emit('message', 'The cabin is already burned to the ground!');
 
@@ -1100,6 +1105,7 @@ function onlineBattle(playerOne, playerTwo){
           const levelDifference = (loser.user.game.level >= winner.user.game.level)? (loser.user.game.level - winner.user.game.level) : 0;
           xpGained = Math.floor(10 + (levelDifference ** 1.75));
 
+          // Ringfighter quest
           if(!player.user.game.completedQuests.includes('ringfighter')) player.user.game.completedQuests.push('ringfighter');
         } else {
           xpGained = Math.ceil(10 * Math.random());

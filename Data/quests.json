@@ -26,5 +26,12 @@
     "reward":500,
     "minimumLevel":1,
     "secret":true
+  },
+  "platinumminer":{
+    "name":"Platinum Miner",
+    "description":"Mine platinum ore",
+    "reward":250,
+    "minimumLevel":1,
+    "secret":true
   }
 }

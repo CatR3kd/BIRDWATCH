@@ -1,3 +1,2 @@
-quests
 npc who sells you stuff only at a certain time in real life, probably at night, with an easter egg if you go at midnight
 fix you are already signed in bug
