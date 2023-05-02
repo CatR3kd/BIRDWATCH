@@ -308,7 +308,7 @@ async function playAction(username, socket, actionObj){
 
           xpMultiplier = 0.5;
 
-          socket.emit('message', `You died and lost $${moneyLost}. You've respawned at the world spawnpoint.`);
+          socket.emit('message', `You died and lost $${formatNumber(moneyLost)}. You've respawned at the world spawnpoint.`);
         }
 
         const xpGained = 35 * (Math.random() + 1) * xpMultiplier;
@@ -341,7 +341,7 @@ async function playAction(username, socket, actionObj){
 
     // Inspect
     if(command == 'inspect'){
-      return socket.emit('message', `${item.name}: ${item.description}\nPrice: $${item.price}`);
+      return socket.emit('message', `${item.name}: ${item.description}\nPrice: $${formatNumber(item.price)}`);
     }
 
     // Buy
@@ -412,7 +412,7 @@ async function playAction(username, socket, actionObj){
         const punctuation = (oreFound > 0)? '!' : '.';
         const grams = (oreFound != 1)? 'grams' : 'gram';
         
-        socket.emit('message', `Finished${punctuation} Found ${oreFound} ${grams} of ${ore}${punctuation} (Earned: $${oreFound * oreValue})`);
+        socket.emit('message', `Finished${punctuation} Found ${oreFound} ${grams} of ${ore}${punctuation} (Earned: $${formatNumber(oreFound * oreValue)})`);
 
         // Save profit
         let newUser = user;
@@ -582,7 +582,7 @@ async function playAction(username, socket, actionObj){
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
 
     // Emit message
-    socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth})\nMoney spent: $${price}`);
+    socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth})\nMoney spent: $${formatNumber(price)}`);
   } else if(command == 'ally'){
     // Ally system
     if(!gameMap[user.game.location].availableAlliances.includes(args[0])) return socket.emit('message', 'That is not an available action.');
@@ -754,9 +754,9 @@ async function playAction(username, socket, actionObj){
     for(let key of Object.keys(quests)){
       const quest = quests[key];
       
-      if(user.game.level >= quest.minimumLevel){
+      if(user.game.level >= quest.appearAtLevel){
         if(user.game.completedQuests.includes(key)){
-          completedQuests += `${quest.name}${(quest.secret == true)? ' (Secret)' : ''} - ${quest.description} - Reward: $${quest.reward}\n`;
+          completedQuests += `${quest.name}${(quest.secret == true)? ' (Secret)' : ''} - ${quest.description} - Reward: $${formatNumber(quest.reward)}\n`;
           
           if(!user.game.claimedQuests.includes(key)){
             newlyCompletedQuests += `${quest.name}, `;
@@ -767,7 +767,7 @@ async function playAction(username, socket, actionObj){
           }
         } else {
           if(quest.secret == false){
-            incompleteQuests += `${quest.name} - ${quest.description} - Reward: $${quest.reward}\n`;
+            incompleteQuests += `${quest.name} - ${quest.description} - Reward: $${formatNumber(quest.reward)}\n`;
           } else {
             incompleteQuests += '???\n';
           }
@@ -779,7 +779,7 @@ async function playAction(username, socket, actionObj){
 
     if(incompleteQuests != '') message += `INCOMPLETE Quests:\n\n${incompleteQuests}\n`;
     if(completedQuests != '') message += `COMPLETED Quests:\n\n${completedQuests}\n`;
-    if(newlyCompletedQuests != '') message += `Newly completed quests!\n\n${newlyCompletedQuests.slice(0, -2)}\nTotal rewards: $${totalReward}\n`;
+    if(newlyCompletedQuests != '') message += `Newly completed quests!\n\n${newlyCompletedQuests.slice(0, -2)}\nTotal rewards: $${formatNumber(totalReward)}\n`;
 
     message += '\nIf you complete a quest, come back and use the \"quests\" command to claim your rewards!';
 
@@ -818,6 +818,12 @@ function addXP(user, xpGained, socket){
     user.game.xpRequired = xpRequired(user.game.level);
     socket.emit('message', `Leveled up! Now level ${user.game.level}.`);
   }
+
+  // Junior player quest
+  if((user.game.level >= 10) && (!user.game.completedQuests.includes('juniorplayer'))) user.game.completedQuests.push('juniorplayer');
+
+  // Senior player quest
+  if((user.game.level >= 100) && (!user.game.completedQuests.includes('seniorplayer'))) user.game.completedQuests.push('seniorplayer');
 
   socket.emit('message', `${user.game.xpRequired - user.game.xp}XP until next level.`);
   return user;
@@ -1084,7 +1090,7 @@ function onlineBattle(playerOne, playerTwo){
         // Player two wins
         winner = playerTwo;
         loser = playerOne;
-        winMessage = `${playerTwo.user.username} beat ${playerOne.user.username} and won $${Math.floor(playerOne.user.game.money / 10)}!`;
+        winMessage = `${playerTwo.user.username} beat ${playerOne.user.username} and won $${formatNumber(Math.floor(playerOne.user.game.money / 10))}!`;
         
         playerTwo.user.game.money += Math.floor(playerOne.user.game.money / 10);
         playerOne.user.game.money -= Math.floor(playerOne.user.game.money / 10);

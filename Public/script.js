@@ -76,9 +76,11 @@
   
   function sendAction(){
     const input = document.getElementById('actionInput');
-    const action = input.value;
+    let action = input.value;
 
+    if(action == '') return;
     if(action.toLowerCase() == 'blackjack help') return blackjackHelp();
+    if(['north', 'east', 'south', 'west'].includes(action)) action = `move ${action}`;
     
     let args = action.split(' ');
     const command = args[0];
@@ -110,7 +112,7 @@
     "stats": List your current stats. (Health, strength, speed, etc.)
     "balance": Tells you how much money you have.
     "inventory": Shows you what items you own.
-    "move {direction}": Moves you in a given direction. (North, South, East, West)
+    "move {direction}": Moves you in a given direction. (North, South, East, West) You can also just type the direction you want to move in, Ex. "north"
     "alliances": Lists your alliances.
     "eat {item}": Consume a food item to heal. Must have item in inventory
     "clear": Clears the output.
