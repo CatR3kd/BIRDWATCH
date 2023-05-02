@@ -306,7 +306,7 @@ async function playAction(username, socket, actionObj){
           newUser.game.money -= moneyLost;
           newUser.game.health = user.game.maxHealth;
 
-          xpMultiplier = 0.5;
+          xpMultiplier = 0.15;
 
           socket.emit('message', `You died and lost $${formatNumber(moneyLost)}. You've respawned at the world spawnpoint.`);
         }
@@ -420,7 +420,10 @@ async function playAction(username, socket, actionObj){
         newUser.game.money += (oreFound * oreValue);
 
         // Platinum miner quest
-        if((!user.game.completedQuests.includes('platinumminer')) && (ore == 'platinum')) newUser.game.completedQuests.push('platinumminer');
+        if((!user.game.completedQuests.includes('platinumminer')) && (ore == 'platinum')){
+          newUser.game.completedQuests.push('platinumminer');
+          socket.emit('message', '(You feel as though you\'ve completed something important, maybe you should check the quest board!)');
+        }
         
         db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": false});
