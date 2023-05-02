@@ -259,7 +259,8 @@ async function playAction(username, socket, actionObj){
     return socket.emit('message', `${targetNPC.name}: ${targetNPC.text}`);
   } else if(command == 'fight'){
     // Fighting system
-    const targetEnemy = gameMap[user.game.location].enemies[args[0]];
+    // Create a deep copy using JSON.parse() and JSON.stringify() to prevent accidentally editing the original map
+    const targetEnemy = JSON.parse(JSON.stringify(gameMap[user.game.location].enemies[args[0]]));
     
     if(targetEnemy == undefined) return socket.emit('message', 'That is not an available action.');
 
