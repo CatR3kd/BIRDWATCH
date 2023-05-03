@@ -239,7 +239,7 @@
           "birdseed":{
             "name":"Birdseed",
             "price":5,
-            "type":"other",
+            "type":"food",
             "description":"A cup of birdseed, yum. Heals 10HP. (\"eat birdseed\")"
           }
         }
@@ -368,13 +368,13 @@
           "sandwich":{
             "name":"Sandwich",
             "price":20,
-            "type":"other",
+            "type":"food",
             "description":"An absolutely massive chicken sandwich. (looks like it used the entire thing) Eat the birds, beat the birds, I guess. Heals 50 HP. (\"eat sandwich\")"
           },
           "cake":{
             "name":"Cake",
             "price":200,
-            "type":"other",
+            "type":"food",
             "description":"What appears to be an entire wedding cake. Heals a whopping 200HP. (\"eat cake\")"
           }
         }
@@ -641,7 +641,8 @@
     "name":"Sunny Field",
     "neededToEnter":[],
     "neighbors":{
-      "south": "forestTrailThree"
+      "south": "forestTrailThree",
+      "west": "hollow"
     },
     "neededAlliances":[],
     "bannedAlliances":[],
@@ -649,7 +650,47 @@
     "npcs":{},
     "items":{},
     "enemies":{},
-    "text":"You walk out of an abrupt ending in the forest and find yourself in an open field of tall grass. Near you is an abandoned cabin with a decaying wooden frame, and at your feet lies a red gasoline canister and a box of matches. Perhaps you can use them for something... To the south is the trail you entered by."
+    "text":"You walk out of an abrupt ending in the forest and find yourself in an open field of tall grass. Near you is an abandoned cabin with a decaying wooden frame, and at your feet lies a red gasoline canister and a box of matches. Perhaps you can use them for something... To the west is a hollowing in the trees, and to the south is the trail you entered by."
+  },
+  "hollow":{
+    "name":"Nighttime Hollow",
+    "neededToEnter":[],
+    "neighbors":{
+      "east": "field"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{
+      "manny":{
+        "name": "Manny",
+        "text":"\"Hey bub, happy tommorow eve. What can I get for you?\"\nWares:\n\nMicrowave - $1000\nPouch - $2500\nMine - $500\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "wares":{
+          "microwave":{
+            "name":"Microwave",
+            "price":1000,
+            "type":"other",
+            "description":"A cordless microwave. Adds a x1.5 HP bonus to all the food you eat!."
+          },
+          "pouch":{
+            "name":"Pouch",
+            "price":2500,
+            "type":"other",
+            "description":"A pouch to store food in. Kind of gross, but allows you to store infinite food. Instead of using \"eat <food>\", use \"eat <amount>\"."
+          },
+          "mine":{
+            "name":"Mine",
+            "price":500,
+            "type":"weapon",
+            "damage":5,
+            "description":"An old naval mine. Defused, but still somewhat useful. Provides 5 extra damage."
+          }
+        }
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You enter the hollow through the opening in the trees, and find a small man with a little shop set up in the middle of the moonlight. (\"talk manny\") To the east is the field."
   },
   "platinumMine":{
     "name":"Platinum Mine",

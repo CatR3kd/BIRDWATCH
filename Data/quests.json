@@ -30,14 +30,21 @@
   "seniorplayer":{
     "name":"Senior Player",
     "description":"Reach level 100",
-    "reward":100000000,
-    "appearAtLevel":1,
+    "reward":10000000,
+    "appearAtLevel":10,
     "secret":false
   },
   "burners":{
     "name":"Burners",
     "description":"Burn down the cabin in the field",
     "reward":500,
+    "appearAtLevel":1,
+    "secret":true
+  },
+  "midnightmarket":{
+    "name":"Manny's Midnight Market",
+    "description":"Find Manny in the nighttime hollow after 8 P.M.",
+    "reward":750,
     "appearAtLevel":1,
     "secret":true
   },

@@ -38,6 +38,7 @@ class Game{
     this.discoveredLocations = ['spawnpoint'];
     this.completedQuests = [];
     this.claimedQuests = [];
+    this.food = 0;
   }
 }
 
@@ -243,8 +244,14 @@ async function playAction(username, socket, actionObj){
     }
     
     if(cannotPass == true) return;
-    
+
+    // Nighttime hollow time check
+    if((destinationName == 'hollow') && (actionObj.hour < 20)) return socket.emit('message', 'The trees are pointing up towards the sun and block your path. Maybe if you come back later you can get through...');
+
     let newUser = user;
+
+    // Manny's Midnight Market quest
+    if((destinationName == 'hollow') && (!user.game.completedQuests.includes('midnightmarket'))) newUser.game.completedQuests.push('midnightmarket');
     
     newUser.game.location = destinationName;
     if(!newUser.game.discoveredLocations.includes(destinationName)) newUser.game.discoveredLocations.push(destinationName);
@@ -354,7 +361,13 @@ async function playAction(username, socket, actionObj){
 
     let newUser = user;
     newUser.game.money -= price;
-    newUser.game.items.push(item.name);
+    
+    if(user.game.items.includes('Pouch') && (item.type == 'food')){
+      // Check if the player is buying food and has the pouch and/or microwave
+      newUser.game.food += (food[item.name.toLowerCase()]  * ((user.game.items.includes('Microwave'))? 1.5 : 1));
+    } else {
+      newUser.game.items.push(item.name);
+    }
 
     // Change player stats
     if(item.type == 'weapon'){
@@ -368,6 +381,20 @@ async function playAction(username, socket, actionObj){
 
     if(item.type == 'speed'){
       newUser.game.speedBuff += item.speed;
+    }
+
+    // Convert food if player bought the pouch
+    if(item.name == 'Pouch'){
+      for(let item in user.game.items){
+        const current = food[user.game.items[item].toLowerCase()];
+        
+        if(current != undefined){
+          user.game.items.splice(item, 1);
+
+          // Multiply by 1.5 if the user has the microwave
+          user.game.food += (current * ((user.game.items.includes('Microwave'))? 1.5 : 1));
+        }
+      }
     }
 
     await db.set(user.username, newUser);
@@ -616,29 +643,48 @@ async function playAction(username, socket, actionObj){
     socket.emit('message', `Joined the ${targetAlly} alliance!`);
   } else if(command == 'eat'){
     // Eating system
-    if(!user.game.items.includes(capitalizeFirstLetter(args[0]))) return socket.emit('message', 'That is not an available action.');
-    
-    const healAmount = food[args[0]];
-    
-    if(healAmount == undefined) return socket.emit('message', 'That is not an available action.');
-
     if(user.game.health >= user.game.maxHealth) return socket.emit('message', 'You are already at full health!');
-
-    let oldHealth = user.health;
+    
+    let healAmount;
+    let oldHealth = user.game.health;
     let newUser = user;
+    let message;
+
+    if(user.game.items.includes('Pouch')){
+      // User has food pouch
+      healAmount = Math.floor(+args[0]);
     
-    const foodIndex = newUser.game.items.indexOf(capitalizeFirstLetter(args[0]));
+      if(isNaN(healAmount)) return socket.emit('message', 'You must include a valid food value! Ex. \"eat 25\"');
+      if(healAmount > user.game.food) return socket.emit('message', 'You don\'t have that much food!');
+      if(healAmount < 1) return socket.emit('message', 'You must eat a minimum of 1!');
+      if(healAmount > (user.game.maxHealth - user.game.health)) return socket.emit('message', 'You don\'t need to eat that much!');
+
+      newUser.food -= healAmount;
+      newUser.game.health += healAmount;
+      
+      message = `Healed ${formatNumber(newUser.game.health - oldHealth)} HP!`;
+    } else {
+      // User is eating normally
+      if(food[args[0]] == undefined) return socket.emit('message', 'That is not an available action.');
+      if(!user.game.items.includes(capitalizeFirstLetter(args[0]))) return socket.emit('message', 'That is not an available action.');
+
+      // Multiply by 1.5 if user has the microwave
+      healAmount = food[args[0]] * ((user.game.items.includes('Microwave'))? 1.5 : 1);
+      const foodIndex = newUser.game.items.indexOf(capitalizeFirstLetter(args[0]));
     
-    if(foodIndex == -1) return socket.emit('message', 'That is not an available action.');
-    
-    newUser.game.items.splice(foodIndex, 1);
-    newUser.game.health += healAmount;
-    if(newUser.game.health > newUser.game.maxHealth) newUser.game.health = newUser.game.maxHealth;
+      if(foodIndex == -1) return socket.emit('message', 'That is not an available action.');
+      newUser.game.items.splice(foodIndex, 1);
+      
+      newUser.game.health += healAmount;
+      if(newUser.game.health > newUser.game.maxHealth) newUser.game.health = newUser.game.maxHealth;
+      
+      message = `Healed ${formatNumber(newUser.game.health - oldHealth)} HP by eating the ${capitalizeFirstLetter(args[0])}!`
+    }
     
     await db.set(user.username, newUser);
     
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
-    return socket.emit('message', `Healed ${newUser.game.health - oldHealth} HP by eating the ${capitalizeFirstLetter(args[0])}!`);
+    return socket.emit('message', message);
   } else if(command == 'spawn'){
     // Porter
     if(!user.game.items.includes('Porter')) return socket.emit('message', 'That is not an available action.');

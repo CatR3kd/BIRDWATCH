@@ -89,7 +89,8 @@
   
     const actionObj = {
       command: command,
-      args: args
+      args: args,
+      hour: new Date().getHours()
     };
 
     if(command.toLowerCase() == 'help') return help();
@@ -179,6 +180,8 @@
         textToDisplay += `\n${item}`;
       }
     }
+
+    if(savedUser.game.items.includes('Pouch')) textToDisplay += `\nYou also have ${formatNumber(savedUser.game.food)}HP worth of food in your pouch!`;
     
     const text = document.getElementById('text');
     
@@ -298,6 +301,7 @@
         name = name.replaceAll('Spawnpoint', 'Spawn Point');
         name = name.replaceAll('Cliffside', 'Cliff Side');
         name = name.replaceAll('Headquarters', 'HQ');
+        name = name.replaceAll('Nighttime', 'Night Time');
 
         mapArray[row][location] = name;
       }
