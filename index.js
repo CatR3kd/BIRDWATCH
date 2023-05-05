@@ -843,7 +843,7 @@ async function playAction(username, socket, actionObj){
       'pigeon': (pigeonMultiplier >= 0.5)? (pigeonMultiplier + 1) : pigeonMultiplier
     }
 
-    let message = `Currently, the Penguins have won ~${Math.floor(penguinMultiplier * 100)}% of raids, and the Pigeons have won ~${Math.floor(pigeonMultiplier * 100)}% of raids.`
+    let message = `Currently, the Penguins have won ~${Math.floor(penguinMultiplier * 100)}% of raids (${penguinScore - 1}), and the Pigeons have won ~${Math.floor(pigeonMultiplier * 100)}% of raids. (${pigeonScore - 1})`
 
     if(user.game.alliance == ''){
       message += '\n(If you join an alliance, you can come back here to collect a daily reward depending on the victory rate of your alliance!)';
