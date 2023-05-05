@@ -10,6 +10,7 @@ filter = new Filter(); // The filter code is slightly modified by me
 const { RateLimiterMemory } = require('rate-limiter-flexible');
 const { QuickDB } = require("quick.db");
 const db = new QuickDB({filePath: "Data/db.sqlite"});
+const raidScores = new QuickDB({filePath: "Data/raids.sqlite"});
 const connectedPlayers = new Map();
 const busyPlayers = new Map();
 const raidingPlayers = new Map();
@@ -33,12 +34,13 @@ class Game{
     this.maxHealth = 100;
     this.location = 'spawnpoint';
   	this.items = [];
-    this.alliances = [];
+    this.alliance = '';
     this.defeatedEnemies = [];
     this.discoveredLocations = ['spawnpoint'];
     this.completedQuests = [];
     this.claimedQuests = [];
     this.food = 0;
+    this.lastDailyReward = 0;
   }
 }
 
@@ -215,7 +217,7 @@ async function playAction(username, socket, actionObj){
     if(cannotPass == true) return;
 
     for(let bannedAlliance of destination.bannedAlliances){
-      if(user.game.alliances.includes(bannedAlliance)){
+      if(user.game.alliance == bannedAlliance){
         cannotPass = true;
         return socket.emit('message', `You cannot enter this zone because it does not allow members of the the ${bannedAlliance} alliance!`);
       }
@@ -224,7 +226,7 @@ async function playAction(username, socket, actionObj){
     if(cannotPass == true) return;
 
     for(let neededAlliance of destination.neededAlliances){
-      if(!(user.game.alliances.includes(neededAlliance))){
+      if(user.game.alliance != neededAlliance){
         cannotPass = true;
         return socket.emit('message', `You cannot enter this zone because it only allows members of the ${neededAlliance} alliance!`);
       }
@@ -619,23 +621,11 @@ async function playAction(username, socket, actionObj){
     
     const targetAlly = args[0];
 
-    if(user.game.alliances.includes(targetAlly)) return socket.emit('message', 'You are already in this alliance!');
-
-    const allianceEnemies = {
-      "penguin": ["pigeon"],
-      "pigeon": ["penguin"]
-    }
-
-    let enemy = false;
-
-    for(let alliance of user.game.alliances){
-      if(allianceEnemies[targetAlly].includes(alliance)) return enemy = true;
-    }
-
-    if(enemy == true) return socket.emit('message', 'You are already in an opposing alliance!');
+    if(user.game.alliance == targetAlly) return socket.emit('message', 'You are already in this alliance!');
+    if(user.game.alliance != '') return socket.emit('message', 'You are already in another alliance!');
 
     let newUser = user;
-    newUser.game.alliances.push(targetAlly);
+    newUser.game.alliance = targetAlly;
 
     await db.set(user.username, newUser);
 
@@ -734,6 +724,10 @@ async function playAction(username, socket, actionObj){
     } else {
       // Raid complete
       const victory = (selectedOption.destination == 'victory')? true : false;
+
+      // Update raid scores
+      const oldScore = await raidScores.get(raid.team);
+      raidScores.set(raid.team, (oldScore + 1));
       
       raidingPlayers.delete(user.username);
       busyPlayers.delete(user.username);
@@ -791,7 +785,7 @@ async function playAction(username, socket, actionObj){
     game.end();
   } else if(command == 'quests'){
     // Quest system
-    if(user.game.location != 'spawnpoint') return socket.emit('message', 'That is not an available action.');
+    if(user.game.location != 'courtyard') return socket.emit('message', 'That is not an available action.');
 
     let incompleteQuests = '';
     let completedQuests = '';
@@ -836,6 +830,47 @@ async function playAction(username, socket, actionObj){
 
     await db.set(user.username, newUser);
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
+  } else if (command == 'raidreward'){
+    // Raid stats and reward
+    if(user.game.location != 'courtyard') return socket.emit('message', 'That is not an available action.');
+
+    const penguinScore = await raidScores.get('penguin');
+    const pigeonScore = await raidScores.get('pigeon');
+    const penguinMultiplier = penguinScore / (penguinScore + pigeonScore);
+    const pigeonMultiplier = pigeonScore / (penguinScore + pigeonScore);
+    const multipliers = {
+      'penguin': (penguinMultiplier >= 0.5)? (penguinMultiplier + 1) : penguinMultiplier,
+      'pigeon': (pigeonMultiplier >= 0.5)? (pigeonMultiplier + 1) : pigeonMultiplier
+    }
+
+    let message = `Currently, the Penguins have won ~${Math.floor(penguinMultiplier * 100)}% of raids, and the Pigeons have won ~${Math.floor(pigeonMultiplier * 100)}% of raids.`
+
+    if(user.game.alliance == ''){
+      message += '\n(If you join an alliance, you can come back here to collect a daily reward depending on the victory rate of your alliance!)';
+      return socket.emit('message', message);
+    }
+    
+    const time = Date.now();
+    
+    if((time - user.game.lastDailyReward) > (1000 * 60 * 60 * 24)){
+      const finalReward = Math.floor(100 * (1 + (user.game.level / 5)) * multipliers[user.game.alliance]);
+  
+      let newUser = user;
+      newUser.game.money += finalReward;
+      newUser.game.lastDailyReward = time;
+
+      message += `\nSince you are on the ${capitalizeFirstLetter(user.game.alliance)} alliance, and at a level of ${user.game.level}, your daily reward comes to $${formatNumber(finalReward)}!\nReward collected.`;
+      
+      socket.emit('message', message);
+    
+      await db.set(user.username, newUser);
+      socket.emit('gameUpdate', {"user": newUser, "notify": false});
+    } else {
+      const hours = (24 - Math.floor((time - user.game.lastDailyReward) / (1000 * 60 * 60)));
+      message += `\n(You can only collect your daily reward once every 24 hours, yours will be next available in ~${hours} hour${(hours == 1)? '' : 's'}.)`;
+
+      socket.emit('message', message);
+    }
   } else if(command == 'burn'){
     // Burners quest
     if(user.game.location != 'field') return socket.emit('message', 'That is not an available action.');
@@ -883,6 +918,20 @@ function xpRequired(currentLevel){
   const uncapped = Math.ceil((currentLevel + Math.sqrt(currentLevel)) / 5) * 5 * (Math.ceil(currentLevel / 10) * 10);
   return (uncapped > 5000)? 5000 : uncapped;
 }
+
+
+// Raid DB
+
+async function validateRaidScores(){
+  const penguinScore = await raidScores.get('penguin');
+  const pigeonScore = await raidScores.get('pigeon');
+  
+  if(!penguinScore) raidScores.set('penguin', 1);
+  if(!pigeonScore) raidScores.set('pigeon', 1);
+}
+
+// Validate scores on startup
+validateRaidScores();
 
 
 // Blackjack
@@ -1350,6 +1399,7 @@ function systemMessage(socketID, msg){
 
 async function getLeaderboard(){
   const all = await db.all();
+  
   all.sort(function (a, b) {
     return b.value.game.money - a.value.game.money;
   });

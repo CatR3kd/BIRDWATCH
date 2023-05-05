@@ -302,6 +302,7 @@
         name = name.replaceAll('Cliffside', 'Cliff Side');
         name = name.replaceAll('Headquarters', 'HQ');
         name = name.replaceAll('Nighttime', 'Night Time');
+        name = name.replaceAll('Courtyard', 'Court Yard')
 
         mapArray[row][location] = name;
       }

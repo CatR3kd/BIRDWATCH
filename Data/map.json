@@ -25,7 +25,7 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You arrive at the world spawnpoint. It's a well-forested area, and the ground is scattered with rocks and leaves. On a particularly large boulder, a little girl is sitting and looking at the trees, (\"talk girl\") and by the entrance to a trail stands a guard. (\"talk guard\") To the side of the opening is a board with various requests and bounties tacked to it, perhaps you can make some money by completing them. (\"quests\") To the north, you see a small town area, and to the east you see a dirt trail leading into the trees. To the south, you see a snowy area to which a trail of small, tri-pointed tracks lead. To the west, you see a soaring cliff flocked by pigeons."
+    "text":"You arrive at the world spawnpoint. It's a well-forested area, and the ground is scattered with rocks and leaves. On a particularly large boulder, a little girl is sitting and looking at the trees, (\"talk girl\") and by the entrance to a trail stands a guard. (\"talk guard\") To the north, you see a small town area, and to the east you see a dirt trail leading into the trees. To the south, you see a snowy area to which a trail of small, tri-pointed tracks lead. To the west, you see a soaring cliff flocked by pigeons."
   },
   "tundra":{
     "name":"Tundra",
@@ -132,7 +132,7 @@
     "npcs":{
       "commander":{
         "name": "Penguin Commander",
-        "text":"\"Welcome to the Penguin Headquarters! Here, we plan and execute raids on the Pigeon Base. You can participate if you are at least level 5. (\"raid\")\"",
+        "text":"\"Welcome to the Penguin Headquarters! Here, we plan and execute raids on the Pigeon Base. You can participate if you are at least level 5. Raids are a great way to support the team by driving up the win rate, which will grant you a higher daily reward at the courtyard! Also, raiding is a good way to get XP. (\"raid\")\"",
         "wares":{}
       }
     },
@@ -261,7 +261,7 @@
     "npcs":{
       "manager":{
         "name": "Pigeon Manager",
-        "text":"\"Welcome to the Pigeon Headquarters, where we launch raids on the hated penguins. If you're level 5 or higher, you can participate. (\"raid\")\"",
+        "text":"\"Welcome to the Pigeon Headquarters, where we launch raids on the hated penguins. If you're level 5 or higher, you can participate. Raids are a great way to support the team by driving up the win rate, which will grant you a higher daily reward at the courtyard, and raiding is also a good way to get XP. (\"raid\")\"",
         "wares":{}
       }
     },
@@ -274,6 +274,7 @@
     "neededToEnter":[],
     "neighbors":{
       "north":"diner",
+      "east": "courtyard",
       "south":"spawnpoint",
       "west":"mine"
     },
@@ -425,10 +426,27 @@
     "enemies":{},
     "text":"You walk into the mine's opening, and find a large interior hewn from the rock. Another prospector stands by a torch on one of the support structures. (\"talk prospector\") Back to the east is the town, and to the south is the cliffside."
   },
+  "courtyard":{
+    "name":"Courtyard",
+    "neededToEnter":[],
+    "neighbors":{
+      "east":"forestTrail",
+      "south":"spawnpoint",
+      "west":"town"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{},
+    "items":{},
+    "enemies":{},
+    "text":"You walk into a gorgeous brick courtyard. On a pole, there's a board with various requests and bounties tacked to it, perhaps you can make some money by completing them. (\"quests\") Near to the board is a split flap display with the live raid scores of the Pigeon and Penguin teams. (\"raidreward\")"
+  },
   "trail":{
     "name":"Beaten Trail",
     "neededToEnter":[],
     "neighbors":{
+      "north": "courtyard",
       "east": "trailTwo",
       "west":"spawnpoint"
     },
@@ -579,7 +597,8 @@
     "neededToEnter":[],
     "neighbors":{
       "north": "forestTrailTwo",
-      "south": "trailTwo"
+      "south": "trailTwo",
+      "west": "courtyard"
     },
     "neededAlliances":[],
     "bannedAlliances":[],
