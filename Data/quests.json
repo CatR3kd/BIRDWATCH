@@ -1,0 +1,58 @@
+{
+  "ringfighter":{
+    "name":"Ring Fighter",
+    "description":"Win a fight in the arena behind the Birdwatch Diner",
+    "reward":250,
+    "appearAtLevel":1,
+    "secret":false
+  },
+  "bountyhunter":{
+    "name":"Bounty Hunter",
+    "description":"Win a fight against an enemy",
+    "reward":100,
+    "appearAtLevel":1,
+    "secret":false
+  },
+  "warringnations":{
+    "name":"Warring Nations",
+    "description":"Successfully complete a raid",
+    "reward":500,
+    "appearAtLevel":1,
+    "secret":false
+  },
+  "juniorplayer":{
+    "name":"Junior Player",
+    "description":"Reach level 10",
+    "reward":2500,
+    "appearAtLevel":1,
+    "secret":false
+  },
+  "seniorplayer":{
+    "name":"Senior Player",
+    "description":"Reach level 100",
+    "reward":10000000,
+    "appearAtLevel":10,
+    "secret":false
+  },
+  "burners":{
+    "name":"Burners",
+    "description":"Burn down the cabin in the field",
+    "reward":500,
+    "appearAtLevel":1,
+    "secret":true
+  },
+  "midnightmarket":{
+    "name":"Manny's Midnight Market",
+    "description":"Find Manny in the nighttime hollow after 8 P.M.",
+    "reward":750,
+    "appearAtLevel":1,
+    "secret":true
+  },
+  "platinumminer":{
+    "name":"Platinum Miner",
+    "description":"Mine platinum ore",
+    "reward":250,
+    "appearAtLevel":1,
+    "secret":true
+  }
+}

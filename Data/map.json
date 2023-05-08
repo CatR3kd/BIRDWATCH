@@ -63,6 +63,7 @@
     "neededToEnter":["Coat"],
     "neighbors":{
       "north":"snowyTrail",
+      "south":"penguinHQ",
       "west":"penguinArmory"
     },
     "neededAlliances":[],
@@ -77,7 +78,7 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You enter the main area of the base, and it's filled with penguins busily running from one task to the next. They're working at desks with computers, training small regiments, arming and building weapons, and planning on war boards. In the middle of the commotion stands a penguin wearing a healment and holding a clipboard and pen. (\"talk commander\") To the west is a building labeled \"armory\". To the north is the snowy trail you entered on."
+    "text":"You enter the main area of the base, and it's filled with penguins busily running from one task to the next. They're working at desks with computers, training small regiments, arming and building weapons, and planning on war boards. In the middle of the commotion stands a penguin wearing a healment and holding a clipboard and pen. (\"talk commander\") To the west is a building labeled \"armory\", and to the south a building that seems to be the Penguin Headquarters. To the north is the snowy trail you entered on."
   },
   "penguinArmory":{
     "name":"Penguin Armory",
@@ -118,6 +119,26 @@
     "items":{},
     "enemies":{},
     "text":"You enter the armory, and see a penguin standing behind a desk and in front of a wall mounted with equipment. (\"talk clerk\")"
+  },
+  "penguinHQ":{
+    "name":"Penguin Headquarters",
+    "neededToEnter":[],
+    "neighbors":{
+      "north": "penguinBase"
+    },
+    "neededAlliances":["penguin"],
+    "bannedAlliances":["pigeon"],
+    "availableAlliances":[],
+    "npcs":{
+      "commander":{
+        "name": "Penguin Commander",
+        "text":"\"Welcome to the Penguin Headquarters! Here, we plan and execute raids on the Pigeon Base. You can participate if you are at least level 5. Raids are a great way to support the team by driving up the win rate, which will grant you a higher daily reward at the courtyard! Also, raiding is a good way to get XP. (\"raid\")\"",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You enter the penguin HQ. Inside is a large room with no windows, and a table with a monitor displaying a map for a surface. The map seems to display the Penguin and Pigeon bases. Next to it stands the Penguin Commander. (\"talk commander\") To the north is the Penguin Base."
   },
   "cliffside":{
     "name":"Cliffside",
@@ -176,6 +197,7 @@
     "name":"Pigeon Base",
     "neededToEnter":[],
     "neighbors":{
+      "north":"pigeonHQ",
       "east":"rockyTrail",
       "west":"pigeonHall"
     },
@@ -185,7 +207,7 @@
     "npcs":{},
     "items":{},
     "enemies":{},
-    "text":"The pigeons' base is a towering gothic building made of marble. The door is a massive archway, and inside the building is a hall filled with pigeons seated far above you on the various ledges dotting the walls. On a wall near the entrance, there is a pigeon propaganda poster that says to join the pigeon army. (\"ally pigeon\") To the west is a grand hall, and to the east is the trail you came on."
+    "text":"The pigeons' base is a towering gothic building made of marble. The door is a massive archway, and inside the building is a hall filled with pigeons seated far above you on the various ledges dotting the walls. On a wall near the entrance, there is a pigeon propaganda poster that says to join the pigeon army. (\"ally pigeon\") To the west is a grand hall, to the north is what looks to be the Pigeon Headquarters, and to the east is the trail you came on."
   },
   "pigeonHall":{
     "name":"Pigeon Hall",
@@ -212,7 +234,13 @@
             "price":1000,
             "type":"weapon",
             "damage":20,
-            "description":"A sleek, tapered knife with a case that slides over top perfectly. Masterfully crafted, and anodized to be matte black. Deals 20 damage."
+            "description":"A sleek, tapered knife with a case that slides over top perfectly. Masterfully crafted, anodized matte black. Deals 20 damage."
+          },
+          "birdseed":{
+            "name":"Birdseed",
+            "price":5,
+            "type":"food",
+            "description":"A cup of birdseed, yum. Heals 10HP. (\"eat birdseed\")"
           }
         }
       }
@@ -221,11 +249,32 @@
     "enemies":{},
     "text":"In the middle of the otherwise empty hall is a pedestal with a computer monitor on top of it. The monitor is connected to its source by a multitude of snaking cables of varying thickness and color, all leading outwards towards the walls. The screen is red with a single eye in the middle, flitting about nervously until it notices you and the screen goes black. Without the light of the monitor, you can only see enough to walk up to it (\"talk computer\") or turn around. Back to the east is the entrance to the hall."
   },
+  "pigeonHQ":{
+    "name":"Pigeon Headquarters",
+    "neededToEnter":[],
+    "neighbors":{
+      "south": "pigeonBase"
+    },
+    "neededAlliances":["pigeon"],
+    "bannedAlliances":["penguin"],
+    "availableAlliances":[],
+    "npcs":{
+      "manager":{
+        "name": "Pigeon Manager",
+        "text":"\"Welcome to the Pigeon Headquarters, where we launch raids on the hated penguins. If you're level 5 or higher, you can participate. Raids are a great way to support the team by driving up the win rate, which will grant you a higher daily reward at the courtyard, and raiding is also a good way to get XP. (\"raid\")\"",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You enter the Headquarters. It is a dark room filled with pigeons monitoring old terminal screens, each displaying a different view of the Penguin Base. In the middle of the room, on a stool, is a pigeon who seems to be in charge. (\"talk manager\") To the south is the Pigeon Base."
+  },
   "town":{
     "name":"Town Center",
     "neededToEnter":[],
     "neighbors":{
       "north":"diner",
+      "east": "courtyard",
       "south":"spawnpoint",
       "west":"mine"
     },
@@ -235,13 +284,19 @@
     "npcs":{
       "merchant":{
         "name":"Strange Merchant",
-        "text":"\"Welcome to my shoppe! Here you can purchase from my endless stock of seemingly random products, ha!\"\nWares:\n\nSuperPick - $1000\nDagger - $250\nQuickShoes - $750\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "text":"\"Welcome to my shoppe! Here you can purchase from my endless stock of seemingly random products, ha!\"\nWares:\n\nSuperPick - $1000\nDagger - $250\nQuickShoes - $750\nMap - $500\n\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "superpick":{
             "name":"SuperPick",
             "price":1000,
             "type":"other",
             "description":"The newest SuperPick model, even though it's not yet released? Grants 35% faster mining speed."
+          },
+          "map":{
+            "name":"Map",
+            "price":500,
+            "type":"other",
+            "description":"A dusty map. Gives you a small map on your UI."
           },
           "dagger":{
             "name":"Dagger",
@@ -260,8 +315,8 @@
         }
       },
       "governor":{
-        "name": "Governor Humdrum",
-        "text":"\"Hello there, commoner. I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.) The Birdwatch has taken pretty good care of us, but I'm not as fond of them as the people in the Diner to the north. Their obesession with the Birdwatch has become something of an... Oh- well, never mind that.\"",
+        "name": "Governor Thompson",
+        "text":"\"Hello there! I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.) The Birdwatch has taken pretty good care of us, but I'm not as fond of them as the people in the Diner to the north. Their obesession with the Birdwatch has become something of an... Oh- well, never mind that.\"",
         "wares":{}
       },
       "prospector":{
@@ -278,12 +333,23 @@
     "name":"Birdwatch Diner",
     "neededToEnter":["Coupon"],
     "neighbors":{
-      "south":"town"
+      "south":"town",
+      "north": "arena"
     },
     "neededAlliances":[],
     "bannedAlliances":[],
     "availableAlliances":[],
     "npcs":{
+      "dealer":{
+        "name": "Blackjack Dealer",
+        "text":"\"Hey. If ya'd like ta play blackjack, ya can use tha \"blackjack <bet>\" command. If ya need an explanation, type \"blackjack help\".\"",
+        "wares":{}
+      },
+      "bouncer":{
+        "name": "Bouncer",
+        "text":"\"If you vant to get in, you vill need an invitation.\"",
+        "wares":{}
+      },
       "man":{
         "name":"Retired Birdwatch Guard",
         "text":"\"Hey. I've seen you new folks roamin' around spawn, but you're the first I seen in here. Hopefully you're wantin' to investigate them pigeons? If ya'd like, I can sell you my old climbing rope for a few bucks, so ya can get up to their sanctuary on top of that old cliff. A warnin', though: Both sides of the war are no good. Don't get any ideas of conspirin' with any of them shady bunch.\"\nWares:\n\nRope - $50\n\n(Use \"inspect {item}\" or \"buy {item}\")",
@@ -303,13 +369,13 @@
           "sandwich":{
             "name":"Sandwich",
             "price":20,
-            "type":"other",
+            "type":"food",
             "description":"An absolutely massive chicken sandwich. (looks like it used the entire thing) Eat the birds, beat the birds, I guess. Heals 50 HP. (\"eat sandwich\")"
           },
           "cake":{
             "name":"Cake",
             "price":200,
-            "type":"other",
+            "type":"food",
             "description":"What appears to be an entire wedding cake. Heals a whopping 200HP. (\"eat cake\")"
           }
         }
@@ -317,7 +383,27 @@
     },
     "items":{},
     "enemies":{},
-    "text":"You enter the Diner, and notice there are only a few people present, fewer of them eating. One man sits alone at a table with a drink in hand. He looks older, probably in his late fifties. (\"talk man\") There's only one cook, standing bored behind the counter, waiting for business. (\"talk cook\") Back to the south is the town."
+    "text":"You enter the Diner, and notice there are only a few people present, fewer of them eating. One man sits alone at a table with a drink in hand. He looks older, probably in his late fifties. (\"talk man\") There's only one cook, standing bored behind the counter, waiting for business. (\"talk cook\") Playing blackjack with a few tired, and progressively poorer patrons, is a dealer. (\"talk dealer\") On the northern wall, there's a door with a bouncer guarding it. (\"talk bouncer\") Back to the south is the town."
+  },
+  "arena":{
+    "name":"Illicit Arena",
+    "neededToEnter":["Invitation"],
+    "neighbors":{
+      "south":"diner"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{
+      "bookie":{
+        "name": "Bookie",
+        "text":"\"If you want to fight someone, just use the \"battle <buff>\" command to be added to the queue to fight another player! You can choose a buff of attack, speed, or defense that will be temporarily applied to your stats to give you and edge over your opponent. The winner will receive 10% of the loser's money, and we'll get you back to full health afterwards.\"",
+        "wares":{}
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"The bouncer checks your invitation and lets you through the door with a scowl. The arena consists of a boxing ring surrounded by bleachers and a table with a person waiting to take bets on the side. (\"talk bookie\")"
   },
   "mine":{
     "name":"Gold Mine",
@@ -340,10 +426,27 @@
     "enemies":{},
     "text":"You walk into the mine's opening, and find a large interior hewn from the rock. Another prospector stands by a torch on one of the support structures. (\"talk prospector\") Back to the east is the town, and to the south is the cliffside."
   },
+  "courtyard":{
+    "name":"Courtyard",
+    "neededToEnter":[],
+    "neighbors":{
+      "east":"forestTrail",
+      "south":"spawnpoint",
+      "west":"town"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{},
+    "items":{},
+    "enemies":{},
+    "text":"You walk into a gorgeous brick courtyard. On a pole, there's a board with various requests and bounties tacked to it, perhaps you can make some money by completing them. (\"quests\") Near to the board is a split flap display with the live raid scores of the Pigeon and Penguin teams. (\"raidreward\")"
+  },
   "trail":{
     "name":"Beaten Trail",
     "neededToEnter":[],
     "neighbors":{
+      "north": "courtyard",
       "east": "trailTwo",
       "west":"spawnpoint"
     },
@@ -434,8 +537,15 @@
       },
       "guard":{
         "name": "Birdwatch Guard",
-        "text":"*grunt* \"Five minutes 'till my shift is over... I can't see a reason to guard this place, but I gotta get paid somehow. Maybe I';; go over to the boot camp to get some money. I wish I was guarding the trail to the platinum mines from bandits instead, it wouldn't be too bad to have some exitement for a change... I'm probably going to go to the gym after my shift, gotta stay fit after all.\"",
-        "wares":{}
+        "text":"*grunt* \"Five minutes 'till my shift is over... I can't even go to the arena tonight, not with my back the way it is... I guess I could sell you my invitation for a few bucks, how about $1000? What a deal...\"\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "wares":{
+          "invitation":{
+            "name":"Invitation",
+            "price":1000,
+            "type":"other",
+            "description":"An invitation to \"The Arena\"."
+          }
+        }
       }
     },
     "items":{},
@@ -487,7 +597,8 @@
     "neededToEnter":[],
     "neighbors":{
       "north": "forestTrailTwo",
-      "south": "trailTwo"
+      "south": "trailTwo",
+      "west": "courtyard"
     },
     "neededAlliances":[],
     "bannedAlliances":[],
@@ -534,7 +645,8 @@
     "neededToEnter":[],
     "neighbors":{
       "south": "forestTrailTwo",
-      "west": "platinumMine"
+      "east": "platinumMine",
+      "north": "field"
     },
     "neededAlliances":[],
     "bannedAlliances":[],
@@ -544,11 +656,66 @@
     "enemies":{},
     "text":"You continue on the trail, but it begins to brighten. To the west is what looks like another mine, and to the south is the trail that leads back to the world spawnpoint."
   },
+  "field":{
+    "name":"Sunny Field",
+    "neededToEnter":[],
+    "neighbors":{
+      "south": "forestTrailThree",
+      "west": "hollow"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{},
+    "items":{},
+    "enemies":{},
+    "text":"You walk out of an abrupt ending in the forest and find yourself in an open field of tall grass. Near you is an abandoned cabin with a decaying wooden frame, and at your feet lies a red gasoline canister and a box of matches. Perhaps you can use them for something... To the west is a hollowing in the trees, and to the south is the trail you entered by."
+  },
+  "hollow":{
+    "name":"Nighttime Hollow",
+    "neededToEnter":[],
+    "neighbors":{
+      "east": "field"
+    },
+    "neededAlliances":[],
+    "bannedAlliances":[],
+    "availableAlliances":[],
+    "npcs":{
+      "manny":{
+        "name": "Manny",
+        "text":"\"Hey bub, happy tommorow eve. What can I get for you?\"\nWares:\n\nMicrowave - $1000\nPouch - $2500\nMine - $500\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "wares":{
+          "microwave":{
+            "name":"Microwave",
+            "price":1000,
+            "type":"other",
+            "description":"A cordless microwave. Adds a x1.5 HP bonus to all the food you eat!."
+          },
+          "pouch":{
+            "name":"Pouch",
+            "price":2500,
+            "type":"other",
+            "description":"A pouch to store food in. Kind of gross, but allows you to store infinite food. Instead of using \"eat <food>\", use \"eat <amount>\"."
+          },
+          "mine":{
+            "name":"Mine",
+            "price":500,
+            "type":"weapon",
+            "damage":5,
+            "description":"An old naval mine. Defused, but still somewhat useful. Provides 5 extra damage."
+          }
+        }
+      }
+    },
+    "items":{},
+    "enemies":{},
+    "text":"You enter the hollow through the opening in the trees, and find a small man with a little shop set up in the middle of the moonlight. (\"talk manny\") To the east is the field."
+  },
   "platinumMine":{
     "name":"Platinum Mine",
     "neededToEnter":[],
     "neighbors":{
-      "east": "forestTrailThree"
+      "west": "forestTrailThree"
     },
     "neededAlliances":[],
     "bannedAlliances":[],

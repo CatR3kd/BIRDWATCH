@@ -14,7 +14,53 @@ html, body {
   font-family: Inconsolata, monospace;
 }
 
-#loginBttn{
+#sidebars{
+  display: flex;
+  height: 50vh;
+  width: 60vw;
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#sidebars > div {
+  flex: 1;
+}
+
+.sidebar{
+  color: #D1D1CD;
+  border: 2px solid #cccccc;
+  border-radius: 6px;
+  padding: 5px;
+  overflow-y: scroll;
+}
+
+.sidebar h2{
+  margin-top: 5px;
+  text-align: center;
+}
+
+.sidebar hr{
+  border: none;
+  background-color: #D1D1CD;
+  height: 1px;
+  margin-top: 0;
+}
+
+#supporters li{
+  font-size: 18px;
+}
+
+#supportPlug{
+  margin-top: 20px;
+  font-size: 13px;
+  bottom: 0;
+  text-align: center;
+}
+
+#login{
   position: absolute;
   left: 50%;
   top: 50%;
@@ -31,29 +77,44 @@ html, body {
   transition: box-shadow 0.3s ease, text-shadow 0.25s ease;
 }
 
-#loginBttn:hover{
+#login:hover{
   cursor: pointer;
   box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
   text-shadow: 0 0 5px #C8C8C8;
 }
 
-#loginBttn:active{
+#login:active{
   box-shadow: none;
 }
 
-#plug{
+#loginError{
+  color: #D1D1CD;
   position: fixed;
+  left: 50%;
+  top: calc(50% + 400px);
+  transform: translate(-50%, -50%);
+  text-align: center;
+  max-width: 20vw;
+}
+
+#plug{
+  position: absolute;
+  margin: 0;
   bottom: 0;
   right: 0;
+  color: #D1D1CD;
   margin: 5px;
+}
+
+a{
   color: #D1D1CD;
 }
 
-#plug a{
-  color: #D1D1CD;
+a:active{
+  color: #BF0000;
 }
 
-#content{
+#game{
   visibility: hidden;
 }
 
@@ -68,12 +129,52 @@ html, body {
   margin: 5px;
   color: #D1D1CD;
   font-size: 20px;
-  
+}
+
+#map{
+  position: fixed;
+  bottom: 29px;
+  right: calc(25vw - 1px);
+  margin: 8px;
+  display: grid;
+  grid-template-rows: 50px 50px 50px;
+  grid-template-columns: 50px 50px 50px;
+  gap: 10px;
+  opacity: 1;
+  transition: opacity 0.25s;
+}
+
+#map:hover{
+  opacity: 0;
+}
+
+.mapTile{
+  font-size: 12px;
+  color: #D1D1CD;
+  background: #000522;
+  pointer-events: none;
+  border: 1px solid #cccccc;
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  overflow-wrap: break-word;
+  visibility: hidden;
+}
+
+.mapTile:hover{
+  cursor: default;
+}
+
+.mapTile:nth-child(5) {
+  color: #98d993;
+  border: 1px solid #98d993;
 }
 
 #actionInput{
   height: 25px;
-  width: calc(75vw - 8px);
+  width: calc(75vw - 6px);
   margin: 0 2px;
   border: 2px solid #cccccc;
   color: #D1D1CD;
@@ -92,7 +193,7 @@ html, body {
 
 #sidebar{
   width: calc(25vw - 3px);
-  height: calc(100vh - 2px);
+  height: calc(100vh - 1px);
   margin: 0;
   bottom: 0;
   right: 0;
@@ -146,7 +247,7 @@ html, body {
   position: absolute;
   bottom: 0;
   left: 0;
-  width: calc(25vw - 12px);
+  width: calc(25vw - 11px);
   height: 21px;
   padding: 3px;
   border: 2px solid #cccccc;
@@ -178,6 +279,15 @@ html, body {
     margin: 0;
     overflow-y: scroll;
   }
+
+  #login{
+    width: 50vw;
+  }
+
+  #plug{
+    right: unset;
+    text-align: center;
+  }
   
   #terminal, #text, #actionInput{
     font-size: 16px;
@@ -195,5 +305,14 @@ html, body {
 
   #terminal{
     width: 100vw;
+  }
+
+  .sidebar{
+    visibility: hidden;
+  }
+
+  #loginError{
+    width: 95vw;
+    max-width: unset;
   }
 }

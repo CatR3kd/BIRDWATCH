@@ -10,11 +10,12 @@ filter = new Filter(); // The filter code is slightly modified by me
 const { RateLimiterMemory } = require('rate-limiter-flexible');
 const { QuickDB } = require("quick.db");
 const db = new QuickDB({filePath: "Data/db.sqlite"});
+const raidScores = new QuickDB({filePath: "Data/raids.sqlite"});
 const connectedPlayers = new Map();
 const busyPlayers = new Map();
-
-// Make sure map is good and present
-validateMap();
+const raidingPlayers = new Map();
+const blackjackGames = new Map();
+const battleQueue = new Map();
 
 // Get leaderboard
 let leaderboard = getLeaderboard();
@@ -22,14 +23,24 @@ let leaderboard = getLeaderboard();
 class Game{
 	constructor(){
     this.money = 0;
+    this.level = 1;
+    this.xp = 0;
+    this.xpRequired = xpRequired(this.level);
     this.speed = 1;
+    this.speedBuff = 0;
     this.damage = 15;
+    this.damageBuff = 0;
     this.health = 100;
     this.maxHealth = 100;
     this.location = 'spawnpoint';
   	this.items = [];
-    this.alliances = [];
+    this.alliance = '';
     this.defeatedEnemies = [];
+    this.discoveredLocations = ['spawnpoint'];
+    this.completedQuests = [];
+    this.claimedQuests = [];
+    this.food = 0;
+    this.lastDailyReward = 0;
   }
 }
 
@@ -37,7 +48,12 @@ class Game{
 // Ratelimiter
 
 const sendChatRateLimit = new RateLimiterMemory({
-  points: 4,
+  points: 3,
+  duration: 2
+});
+
+const commandRateLimit = new RateLimiterMemory({
+  points: 5,
   duration: 2
 });
 
@@ -49,7 +65,7 @@ http.listen(8000, () => {
 });
 
 app.get('/map',function(req,res) {
-  res.sendFile(path.join(__dirname + '/Map/map.json'));
+  res.sendFile(path.join(__dirname + '/Data/map.json'));
 });
 
 app.use(express.static(path.join(__dirname + '/Public')));
@@ -58,11 +74,18 @@ app.use(express.static(path.join(__dirname + '/Public')));
 // Socket.io
 
 io.on('connection', (socket) => {
+  // Emit supporter list
+  socket.emit('supporters', tippers);
+  
   // Set up and login/create account
   (async function(){
     const username = socket.handshake.headers['x-replit-user-name'];
     
     if((!username) || (connectedPlayers.has(username))){
+      if(connectedPlayers.has(username)){
+        socket.emit('loginError', 'You are already logged in somewhere else!');
+      }
+      
       socket.disconnect();
     } else {
       let user = await db.get(username);
@@ -77,15 +100,22 @@ io.on('connection', (socket) => {
     }
   })();
 
-  socket.on('action', function(actionObj) {
-    const username = socket.handshake.headers['x-replit-user-name'];
-    
-    playAction(username, socket, actionObj);
+  socket.on('action', async function(actionObj) {
+    try{
+      const username = socket.handshake.headers['x-replit-user-name'];
+      
+      await commandRateLimit.consume(username);
+      
+      playAction(username, socket, actionObj);
+    } catch(rejRes) {
+      // Ratelimited
+      return socket.emit('message', 'Slow down!');
+    }
   });
 
   socket.on('sendChat', async function(msg) {
     const username = socket.handshake.headers['x-replit-user-name'];
-    const userid = socket.handshake.headers['x-replit-user-id']
+    const userid = socket.handshake.headers['x-replit-user-id'];
     
     try {
       await sendChatRateLimit.consume(username);
@@ -103,6 +133,19 @@ io.on('connection', (socket) => {
     if(connectedPlayers.has(username)){
       connectedPlayers.delete(username);
       io.emit('playerCount', connectedPlayers.size);
+    }
+
+    if(raidingPlayers.has(username)){
+      raidingPlayers.delete(username);
+      busyPlayers.delete(username);
+    }
+
+    const blackjackGame = blackjackGames.get(username);
+    if(blackjackGame != undefined)  blackjackGame.end();
+
+    if(battleQueue.has(username)){
+      battleQueue.delete(user.username);
+      busyPlayers.delete(username);
     }
   });
 });
@@ -122,52 +165,38 @@ async function createAccount(username){
 }
 
 
-// Map
+// Misc. game data
 
-function validateMap(){
-  const map = JSON.parse(fs.readFileSync('Map/map.json'));
-  const backup = JSON.parse(fs.readFileSync('Map/backup.json'));
-
-  if(isEmpty('Map/map.json') && !(isEmpty('Map/backup.json'))){
-    fs.writeFileSync('Map/map.json', JSON.stringify(backup));
-  }
-
-  if(!(isEmpty('Map/map.json')) && isEmpty('Map/backup.json')){
-    fs.writeFileSync('Map/backup.json', JSON.stringify(map));
-  }
-
-  if(isEmpty('Map/map.json') && isEmpty('Map/backup.json')){
-    console.log('Map files are empty.');
-  }
+const savedMap = JSON.parse(fs.readFileSync('Data/map.json'));
+const quests = JSON.parse(fs.readFileSync('Data/quests.json'));
+const raidMap = JSON.parse(fs.readFileSync('Data/raids.json'));
+const food = {
+  sandwich: 30,
+  cake: 200,
+  birdseed: 10
 }
 
-function isEmpty(path) {
-  const file = fs.readFileSync(path);
-  for(var key in file) {
-    if(file.hasOwnProperty(key) && Object.keys(JSON.parse(file)).length !== 0)
-      return false;
-    }
-  return true;
-}
 
 // Game
-
 
 async function playAction(username, socket, actionObj){
   // Make sure user exists and isn't busy
   const user = await db.get(username);
   if(user == undefined) return;
-  
-  const busy = busyPlayers.get(user.username);
-  if(busy != undefined) return socket.emit('message', `You cannot use this command while ${busy}.`);
 
   const command = (actionObj.command).toLowerCase();
   const args = (actionObj.args).map(elem => {
     return elem.toLowerCase();
   });
 
-  // Get new, untouched map
-  const gameMap = JSON.parse(fs.readFileSync('Map/map.json'));
+  const busy = busyPlayers.get(user.username);
+  const busyWhitelist = ['option', 'leave'];
+
+  // Make sure user is not busy, with the exception of a few commands
+  if((busy != undefined) && (!busyWhitelist.includes(command))) return socket.emit('message', `You cannot use this command while ${busy}.`);
+
+  // Create a clone of the map to prevent overwriting it on accident
+  const gameMap = JSON.parse(JSON.stringify(savedMap));
   
   if(command == 'move'){
     // Moving system
@@ -188,18 +217,18 @@ async function playAction(username, socket, actionObj){
     if(cannotPass == true) return;
 
     for(let bannedAlliance of destination.bannedAlliances){
-      if(user.game.alliances.includes(bannedAlliance)){
+      if(user.game.alliance == bannedAlliance){
         cannotPass = true;
-        return socket.emit('message', `You cannot enter this zone because it does not allow people with the ${bannedAlliance} alliance!`);
+        return socket.emit('message', `You cannot enter this zone because it does not allow members of the the ${bannedAlliance} alliance!`);
       }
     }
     
     if(cannotPass == true) return;
 
     for(let neededAlliance of destination.neededAlliances){
-      if(!(user.game.alliances.includes(neededAlliance))){
+      if(user.game.alliance != neededAlliance){
         cannotPass = true;
-        return socket.emit('message', `You cannot enter this zone because it only allows people with the ${neededAlliance} alliance!`);
+        return socket.emit('message', `You cannot enter this zone because it only allows members of the ${neededAlliance} alliance!`);
       }
     }
     
@@ -217,10 +246,19 @@ async function playAction(username, socket, actionObj){
     }
     
     if(cannotPass == true) return;
-    
+
+    // Nighttime hollow time check
+    if((destinationName == 'hollow') && (actionObj.hour < 20)) return socket.emit('message', 'The trees are pointing up towards the sun and block your path. Maybe if you come back later you can get through...');
+
     let newUser = user;
+
+    // Manny's Midnight Market quest
+    if((destinationName == 'hollow') && (!user.game.completedQuests.includes('midnightmarket'))) newUser.game.completedQuests.push('midnightmarket');
+    
     newUser.game.location = destinationName;
-    await db.set(username, newUser);
+    if(!newUser.game.discoveredLocations.includes(destinationName)) newUser.game.discoveredLocations.push(destinationName);
+    
+    await db.set(user.username, newUser);
     
     return socket.emit('gameUpdate', {"user": newUser, "notify": true});
   } else if(command == 'talk'){
@@ -240,28 +278,34 @@ async function playAction(username, socket, actionObj){
       if(user.game.defeatedEnemies.includes(targetEnemy.name)) return socket.emit('message', 'That is not an available action. (You have already beaten this enemy!)');
 
     busyPlayers.set(user.username, 'fighting');
-    let nextTurn = (user.game.speed >= targetEnemy.stats.speed)? 'user' : 'enemy';
+    let nextTurn = ((user.game.speed + user.game.speedBuff) >= targetEnemy.stats.speed)? 'user' : 'enemy';
 
     const fightInterval = setInterval(function(){
       if(nextTurn == 'user'){
-        targetEnemy.stats.health -= user.game.damage;
-        socket.emit('message', `You attacked the ${targetEnemy.name} and dealt ${user.game.damage} damage.`);
+        targetEnemy.stats.health -= (user.game.damage + user.game.damageBuff);
+        socket.emit('message', `You attacked the ${targetEnemy.name} and dealt ${user.game.damage + user.game.damageBuff} damage.`);
         nextTurn = 'enemy';
-      } else { // else instead of elseif is lost redundancy and potentially bad
+      } else {
         user.game.health -= targetEnemy.stats.damage;
         socket.emit('message', `The ${targetEnemy.name} attacked you and dealt ${targetEnemy.stats.damage} damage.`);
         nextTurn = 'user';
       }
 
       socket.emit('gameUpdate', {"user": user, "notify": false});
-      socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health:${(targetEnemy.stats.health > 0)? targetEnemy.stats.health : 0}/${targetEnemy.stats.maxHealth}`);
+      socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health: ${(targetEnemy.stats.health > 0)? targetEnemy.stats.health : 0}/${targetEnemy.stats.maxHealth}`);
       
       if((user.game.health <= 0) || (targetEnemy.stats.health <= 0)){
         let newUser = user;
+        let xpMultiplier;
         
         if(user.game.health > 0){
           // Fight won
           newUser.game.defeatedEnemies.push(targetEnemy.name);
+
+          // Bounty hunter quest
+          if(!user.game.completedQuests.includes('bountyhunter')) user.game.completedQuests.push('bountyhunter');
+
+          xpMultiplier = 1.2;
           
           socket.emit('message', `You beat the ${targetEnemy.name}!`);
         } else {
@@ -271,10 +315,15 @@ async function playAction(username, socket, actionObj){
           newUser.game.money -= moneyLost;
           newUser.game.health = user.game.maxHealth;
 
-          socket.emit('message', `You died and lost $${moneyLost}. You've respawned at the world spawnpoint.`);
+          xpMultiplier = 0.15;
+
+          socket.emit('message', `You died and lost $${formatNumber(moneyLost)}. You've respawned at the world spawnpoint.`);
         }
 
-        db.set(username, newUser);
+        const xpGained = 35 * (Math.random() + 1) * xpMultiplier;
+        newUser = addXP(newUser, xpGained, socket);
+
+        db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": true});
         busyPlayers.delete(user.username);
         
@@ -288,12 +337,12 @@ async function playAction(username, socket, actionObj){
     let targetItem;
 
     // Find item in the wares of nearby NPC's
-    Object.keys(currentLocation.npcs).forEach(function(key){
+    for(key of Object.keys(currentLocation.npcs)){
       const npc = currentLocation.npcs[key];
       const item = npc.wares[args[0]];
       
       if(item != undefined) targetItem = item;
-    });
+    };
     
     const item = targetItem;
     
@@ -301,7 +350,7 @@ async function playAction(username, socket, actionObj){
 
     // Inspect
     if(command == 'inspect'){
-      return socket.emit('message', `${item.name}: ${item.description}\nPrice: $${item.price}`);
+      return socket.emit('message', `${item.name}: ${item.description}\nPrice: $${formatNumber(item.price)}`);
     }
 
     // Buy
@@ -314,11 +363,17 @@ async function playAction(username, socket, actionObj){
 
     let newUser = user;
     newUser.game.money -= price;
-    newUser.game.items.push(item.name);
+    
+    if(user.game.items.includes('Pouch') && (item.type == 'food')){
+      // Check if the player is buying food and has the pouch and/or microwave
+      newUser.game.food += (food[item.name.toLowerCase()]  * ((user.game.items.includes('Microwave'))? 1.5 : 1));
+    } else {
+      newUser.game.items.push(item.name);
+    }
 
     // Change player stats
     if(item.type == 'weapon'){
-      newUser.game.damage += item.damage;
+      newUser.game.damageBuff += item.damage;
     }
 
     if(item.type == 'armor'){
@@ -327,10 +382,24 @@ async function playAction(username, socket, actionObj){
     }
 
     if(item.type == 'speed'){
-      newUser.game.speed += item.speed;
+      newUser.game.speedBuff += item.speed;
     }
 
-    await db.set(username, newUser);
+    // Convert food if player bought the pouch
+    if(item.name == 'Pouch'){
+      for(let item in user.game.items){
+        const current = food[user.game.items[item].toLowerCase()];
+        
+        if(current != undefined){
+          user.game.items.splice(item, 1);
+
+          // Multiply by 1.5 if the user has the microwave
+          user.game.food += (current * ((user.game.items.includes('Microwave'))? 1.5 : 1));
+        }
+      }
+    }
+
+    await db.set(user.username, newUser);
 
     socket.emit('message', `You purchased the ${item.name}!`);
     return socket.emit('gameUpdate', {"user": newUser, "notify": false});
@@ -344,7 +413,7 @@ async function playAction(username, socket, actionObj){
     // Change stats based on user items, stats, and ore type
     let mineTime = 1000;
     
-    const speedReduction = (user.game.speed > 150)? 150 : user.game.speed;
+    const speedReduction = ((user.game.speed + user.game.speedBuff)  > 250)? 250 : user.game.speed;
     mineTime -= speedReduction;
     
     if(user.game.items.includes('SuperPick')) mineTime -= 350;
@@ -372,14 +441,20 @@ async function playAction(username, socket, actionObj){
         const punctuation = (oreFound > 0)? '!' : '.';
         const grams = (oreFound != 1)? 'grams' : 'gram';
         
-        socket.emit('message', `Finished${punctuation} Found ${oreFound} ${grams} of ${ore}${punctuation} (Earned: $${oreFound * oreValue})`);
+        socket.emit('message', `Finished${punctuation} Found ${oreFound} ${grams} of ${ore}${punctuation} (Earned: $${formatNumber(oreFound * oreValue)})`);
 
         // Save profit
         let newUser = user;
 
         newUser.game.money += (oreFound * oreValue);
+
+        // Platinum miner quest
+        if((!user.game.completedQuests.includes('platinumminer')) && (ore == 'platinum')){
+          newUser.game.completedQuests.push('platinumminer');
+          socket.emit('message', '(You feel as though you\'ve completed something important, maybe you should check the quest board!)');
+        }
         
-        db.set(username, newUser);
+        db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": false});
 
         busyPlayers.delete(user.username);
@@ -390,6 +465,11 @@ async function playAction(username, socket, actionObj){
     // Training
     if(user.game.location != 'gym') return socket.emit('message', 'That is not an available action.');
     if(user.game.money < 50) return socket.emit('message', 'You don\'t have enough money!');
+
+    const maxDamage = (newUser.game.level + 1) * 15;
+    const maxSpeed = newUser.game.level * 5;
+
+    if((user.game.speed >= maxSpeed) || (user.game.damage >= maxDamage)) return socket.emit('message', 'Your speed and strength stats are already maxed! Level up to increase your maximum stats.');
 
     let newUser = user;
     newUser.game.money -= 50;
@@ -408,6 +488,10 @@ async function playAction(username, socket, actionObj){
         const damageGained = Math.floor(Math.random() * multiplier);
         const speedGained = Math.floor(Math.random() * multiplier);
         const punctuation = ((damageGained + speedGained) > 0)? '!' : '.';
+
+        // Make sure user isn't over their level stat limit
+        if((newUser.game.damage + damageGained) > maxDamage) damageGained = (maxDamage - user.game.damage);
+        if((newUser.game.speed + speedGained) > maxSpeed) speedGained = (maxSpeed - user.game.speed);
         
         socket.emit('message', `Finished${punctuation} Damage stat increased by ${damageGained}, speed stat increased by ${speedGained}${punctuation}`);
 
@@ -415,7 +499,7 @@ async function playAction(username, socket, actionObj){
         newUser.game.damage += damageGained;
         newUser.game.speed += speedGained;
         
-        db.set(username, newUser);
+        db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": false});
 
         busyPlayers.delete(user.username);
@@ -424,58 +508,90 @@ async function playAction(username, socket, actionObj){
     }, trainTime);
   } else if(command == 'battle'){
     // Battling
-    if(user.game.location != 'camp') return socket.emit('message', 'That is not an available action.');
+    if((user.game.location != 'camp') && (user.game.location != 'arena')) return socket.emit('message', 'That is not an available action.');
 
-    const enemyHealth = ((Math.floor(Math.random() * 2) + 2) * 50);
-    const enemy = {
-      name: "Opposing Brawler",
-      stats: {
-        speed: (Math.floor(Math.random() * Math.random() * 9) + 1),
-        health: enemyHealth,
-        maxHealth: enemyHealth,
-        damage: ((Math.floor(Math.random() * 5) + 1) * 5)
-      }
-    }
-    
-    busyPlayers.set(user.username, 'fighting');
-    let nextTurn = (user.game.speed >= enemy.stats.speed)? 'user' : 'enemy';
-    const startingHP = user.game.health;
-    
-    const fightInterval = setInterval(function(){
-      if(nextTurn == 'user'){
-        enemy.stats.health -= user.game.damage;
-        socket.emit('message', `You attacked the ${enemy.name} and dealt ${user.game.damage} damage.`);
-        nextTurn = 'enemy';
-      } else { // else instead of elseif is lost redundancy and potentially bad
-        user.game.health -= enemy.stats.damage;
-        socket.emit('message', `The ${enemy.name} attacked you and dealt ${enemy.stats.damage} damage.`);
-        nextTurn = 'user';
-      }
-
-      socket.emit('gameUpdate', {"user": user, "notify": false});
-      socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health:${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
-      
-      if((user.game.health <= 0) || (enemy.stats.health <= 0)){
-        let newUser = user;
-        
-        if(user.game.health > 0){
-          // Fight won
-          socket.emit('message', `You beat the ${enemy.name} and gained $75!`);
-          newUser.game.money += 75;
-        } else {
-          // Fight lost
-          socket.emit('message', `You lost to the ${enemy.name}.`);
+    if(user.game.location == 'camp'){
+      // Camp battle
+      const enemyHealth = ((Math.floor(Math.random() * 2) + 2) * 50);
+      const enemy = {
+        name: "Opposing Brawler",
+        stats: {
+          speed: (Math.floor(Math.random() * Math.random() * 9) + 1),
+          health: enemyHealth,
+          maxHealth: enemyHealth,
+          damage: ((Math.floor(Math.random() * 5) + 1) * 5)
         }
-        
-        newUser.game.health = startingHP;
-        
-        db.set(username, newUser);
-        socket.emit('gameUpdate', {"user": newUser, "notify": false});
-        busyPlayers.delete(user.username);
-        
-        clearInterval(fightInterval);
       }
-    }, 500);
+      
+      busyPlayers.set(user.username, 'fighting');
+      let nextTurn = ((user.game.speed + user.game.speedBuff) >= enemy.stats.speed)? 'user' : 'enemy';
+      const startingHP = user.game.health;
+      
+      const fightInterval = setInterval(function(){
+        if(nextTurn == 'user'){
+          enemy.stats.health -= (user.game.damage + user.game.damageBuff);
+          socket.emit('message', `You attacked the ${enemy.name} and dealt ${user.game.damage + user.game.damageBuff} damage.`);
+          nextTurn = 'enemy';
+        } else { // else instead of elseif is lost redundancy and potentially bad
+          user.game.health -= enemy.stats.damage;
+          socket.emit('message', `The ${enemy.name} attacked you and dealt ${enemy.stats.damage} damage.`);
+          nextTurn = 'user';
+        }
+  
+        socket.emit('gameUpdate', {"user": user, "notify": false});
+        socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health: ${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
+        
+        if((user.game.health <= 0) || (enemy.stats.health <= 0)){
+          let newUser = user;
+          let xpMultiplier;
+          
+          if(user.game.health > 0){
+            // Fight won
+            xpMultiplier = 1.1;
+            
+            socket.emit('message', `You beat the ${enemy.name} and gained $75!`);
+            newUser.game.money += 75;
+          } else {
+            // Fight lost
+            xpMultiplier = 0.1;
+            socket.emit('message', `You lost to the ${enemy.name}.`);
+          }
+  
+          const xpGained = 35 * (Math.random() + 1) * xpMultiplier;
+          newUser = addXP(newUser, xpGained, socket);
+          newUser.game.health = startingHP;
+          
+          db.set(user.username, newUser);
+          socket.emit('gameUpdate', {"user": newUser, "notify": false});
+          busyPlayers.delete(user.username);
+          
+          clearInterval(fightInterval);
+        }
+      }, 500);
+    } else {
+      // Arena battle
+      if(!['attack', 'speed', 'defense'].includes(args[0])) return socket.emit('message', 'You need to choose a buff (attack, speed, defense) to battle! Ex. \"battle speed\"');
+      if(user.game.money < 100) return socket.emit('message', 'You need to have at least $100 to battle!');
+      
+      const playerObj = {
+        user: user,
+        socket: socket,
+        buff: args[0]
+      }
+
+      busyPlayers.set(user.username, 'waiting for a battle');
+      battleQueue.set(user.username, playerObj);
+
+      socket.emit('message', `Matchmaking${(battleQueue.size > 1)? ', should take less than 5 seconds' : ''}...\n(Use the "leave" command to exit the queue)`);
+    }
+  } else if(command == 'leave'){
+    // Leaving the battle queue
+    if(!battleQueue.has(user.username)) return socket.emit('message', 'That is not an available action.');
+
+    battleQueue.delete(user.username);
+    busyPlayers.delete(user.username);
+    
+    socket.emit('message', 'Left the matchmaking queue.');
   } else if(command == 'heal'){
     // Healing
     if(user.game.location != 'fountain') return socket.emit('message', 'That is not an available action.');
@@ -493,69 +609,72 @@ async function playAction(username, socket, actionObj){
     newUser.game.health += HPToHeal;
     
     // Save user and update the client
-    await db.set(username, newUser);
+    await db.set(user.username, newUser);
     
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
 
     // Emit message
-    socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth})\nMoney spent: $${price}`);
+    socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth})\nMoney spent: $${formatNumber(price)}`);
   } else if(command == 'ally'){
     // Ally system
     if(!gameMap[user.game.location].availableAlliances.includes(args[0])) return socket.emit('message', 'That is not an available action.');
     
     const targetAlly = args[0];
 
-    if(user.game.alliances.includes(targetAlly)) return socket.emit('message', 'You are already in this alliance!');
-
-    const allianceEnemies = {
-      "penguin": ["pigeon"],
-      "pigeon": ["penguin"]
-    }
-
-    let enemy = false;
-
-    for(let alliance of user.game.alliances){
-      if(allianceEnemies[targetAlly].includes(alliance)) return enemy = true;
-    }
-
-    if(enemy == true) return socket.emit('message', 'You are already in an opposing alliance!');
+    if(user.game.alliance == targetAlly) return socket.emit('message', 'You are already in this alliance!');
+    if(user.game.alliance != '') return socket.emit('message', 'You are already in another alliance!');
 
     let newUser = user;
-    newUser.game.alliances.push(targetAlly);
+    newUser.game.alliance = targetAlly;
 
-    await db.set(username, newUser);
+    await db.set(user.username, newUser);
 
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
     socket.emit('message', `Joined the ${targetAlly} alliance!`);
   } else if(command == 'eat'){
     // Eating system
-    if(!user.game.items.includes(capitalizeFirstLetter(args[0]))) return socket.emit('message', 'That is not an available action.');
+    if(user.game.health >= user.game.maxHealth) return socket.emit('message', 'You are already at full health!');
     
-    const food = {
-      "sandwich":30,
-      "cake":200
-    }
-    const healAmount = food[args[0]];
-    
-    if(healAmount == undefined) return socket.emit('message', 'That is not an available action.');
-
-    if(user.game.health <= user.game.maxHealth) return socket.emit('message', 'You are already at full health!');
-
-    let oldHealth = user.health;
+    let healAmount;
+    let oldHealth = user.game.health;
     let newUser = user;
+    let message;
+
+    if(user.game.items.includes('Pouch')){
+      // User has food pouch
+      healAmount = Math.floor(+args[0]);
     
-    const foodIndex = newUser.game.items.indexOf(capitalizeFirstLetter(args[0]));
+      if(isNaN(healAmount)) return socket.emit('message', 'You must include a valid food value! Ex. \"eat 25\"');
+      if(healAmount > user.game.food) return socket.emit('message', 'You don\'t have that much food!');
+      if(healAmount < 1) return socket.emit('message', 'You must eat a minimum of 1!');
+      if(healAmount > (user.game.maxHealth - user.game.health)) return socket.emit('message', 'You don\'t need to eat that much!');
+
+      newUser.food -= healAmount;
+      newUser.game.health += healAmount;
+      
+      message = `Healed ${formatNumber(newUser.game.health - oldHealth)} HP!`;
+    } else {
+      // User is eating normally
+      if(food[args[0]] == undefined) return socket.emit('message', 'That is not an available action.');
+      if(!user.game.items.includes(capitalizeFirstLetter(args[0]))) return socket.emit('message', 'That is not an available action.');
+
+      // Multiply by 1.5 if user has the microwave
+      healAmount = food[args[0]] * ((user.game.items.includes('Microwave'))? 1.5 : 1);
+      const foodIndex = newUser.game.items.indexOf(capitalizeFirstLetter(args[0]));
     
-    if(foodIndex == -1) return socket.emit('message', 'That is not an available action.');
+      if(foodIndex == -1) return socket.emit('message', 'That is not an available action.');
+      newUser.game.items.splice(foodIndex, 1);
+      
+      newUser.game.health += healAmount;
+      if(newUser.game.health > newUser.game.maxHealth) newUser.game.health = newUser.game.maxHealth;
+      
+      message = `Healed ${formatNumber(newUser.game.health - oldHealth)} HP by eating the ${capitalizeFirstLetter(args[0])}!`
+    }
     
-    newUser.game.items.splice(foodIndex, 1);
-    newUser.game.health += healAmount;
-    if(newUser.game.health > newUser.game.maxHealth) newUser.game.health = newUser.game.maxHealth;
-    
-    await db.set(username, newUser);
+    await db.set(user.username, newUser);
     
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
-    return socket.emit('message', `Healed ${newUser.game.health - oldHealth} HP by eating the ${capitalizeFirstLetter(args[0])}!`);
+    return socket.emit('message', message);
   } else if(command == 'spawn'){
     // Porter
     if(!user.game.items.includes('Porter')) return socket.emit('message', 'That is not an available action.');
@@ -563,14 +682,586 @@ async function playAction(username, socket, actionObj){
     let newUser = user;
     newUser.game.location = 'spawnpoint';
 
-    await db.set(username, newUser);
+    await db.set(user.username, newUser);
     
     socket.emit('gameUpdate', {"user": newUser, "notify": true});
+  } else if(command == 'raid'){
+    // Raiding
+    if(!((user.game.location == 'penguinHQ') || (user.game.location == 'pigeonHQ'))) return socket.emit('message', 'That is not an available action.');
+    if(user.game.level < 5) return socket.emit('message', 'You must be at least level 5 to participate in a raid!');
+
+    const raidTeam = (user.game.location == 'penguinHQ')? 'penguin' : 'pigeon';
+    
+    busyPlayers.set(user.username, 'raiding');
+    raidingPlayers.set(user.username,{
+      'team': raidTeam,
+      'location': 'start',
+      'score': 0,
+      'troops': 50
+    });
+    
+    return socket.emit('message', raidMap[raidTeam].start.text);
+  } else if(command == 'option'){
+    let raid = raidingPlayers.get(user.username);
+    
+    if(!raid) return socket.emit('message', 'That is not an available action.');
+
+    const selectedOption = raidMap[raid.team][raid.location].options[(+args[0] - 1)];
+    
+    if(!selectedOption) return socket.emit('message', 'You must specify what option you want to choose! Ex. \"option 1\"');
+
+    socket.emit('message', selectedOption.text);
+
+    // Update raid
+    raid.troops -= selectedOption.troopsLost;
+    
+    if((raid.troops > 0) && (selectedOption.destination != 'victory')){
+      raid.score += selectedOption.score;
+      raid.location = selectedOption.destination;
+
+      raidingPlayers.set(user.username, raid);
+      socket.emit('message', raidMap[raid.team][raid.location].text);
+    } else {
+      // Raid complete
+      const victory = (selectedOption.destination == 'victory')? true : false;
+
+      // Update raid scores
+      const oldScore = await raidScores.get(raid.team);
+      raidScores.set(raid.team, (oldScore + 1));
+      
+      raidingPlayers.delete(user.username);
+      busyPlayers.delete(user.username);
+
+      // Calculate XP
+      const xpMult = (victory == true)? (1.1 + (Math.random() / 2)) : 0.75;
+      const troopBonus = Math.floor(raid.troops / 3.3);
+      const xpGained = (raid.score + troopBonus) * xpMult;
+      
+      socket.emit('message', `${(victory == true)? 'Raid successful!' : 'All of your troops have died. You manage to make it back to base alive.'}\nFinal score: ${raid.score}${(troopBonus > 0)? `\nRemaning troop bonus: ${troopBonus}` : ''}`);
+      
+      let newUser = addXP(user, xpGained, socket);
+      await db.set(user.username, newUser);
+
+      // Warring nations quest
+      if((victory == true) && (!user.completedQuests.includes('warringnations'))) newUser.game.completedQuests.push('warringnations');
+    
+      socket.emit('gameUpdate', {"user": newUser, "notify": true});
+    }
+  } else if(command == 'blackjack'){
+    if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
+      
+    const oldGame = blackjackGames.get(user.username);
+    if(oldGame != undefined) return socket.emit('message', 'You are already in a game of blackjack!');
+
+    const bet = Math.floor(+args[0]);
+    
+    if(isNaN(bet)) return socket.emit('message', 'You must include a valid bet value! Ex. \"blackjack 100\"');
+    if(bet > user.game.money) return socket.emit('message', 'You don\'t have that much money!');
+    if(bet < 1) return socket.emit('message', 'You must bet a minimum of $1!');
+
+    const game = new Blackjack(bet, user, socket);
+    
+    blackjackGames.set(user.username, game);
+  } else if(command == 'hit'){
+    if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
+    
+    const game = blackjackGames.get(user.username);
+    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    
+    game.hit();
+  } else if(command == 'double'){
+    if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
+    
+    const game = blackjackGames.get(user.username);
+    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    
+    game.double();
+  } else if(command == 'stand'){
+    if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
+    
+    const game = blackjackGames.get(user.username);
+    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    
+    game.end();
+  } else if(command == 'quests'){
+    // Quest system
+    if(user.game.location != 'courtyard') return socket.emit('message', 'That is not an available action.');
+
+    let incompleteQuests = '';
+    let completedQuests = '';
+    let newlyCompletedQuests = '';
+    let totalReward = 0;
+
+    let newUser = user;
+
+    for(let key of Object.keys(quests)){
+      const quest = quests[key];
+      
+      if(user.game.level >= quest.appearAtLevel){
+        if(user.game.completedQuests.includes(key)){
+          completedQuests += `${quest.name}${(quest.secret == true)? ' (Secret)' : ''} - ${quest.description} - Reward: $${formatNumber(quest.reward)}\n`;
+          
+          if(!user.game.claimedQuests.includes(key)){
+            newlyCompletedQuests += `${quest.name}, `;
+            totalReward += quest.reward;
+  
+            newUser.game.claimedQuests.push(key);
+            newUser.game.money += quest.reward;
+          }
+        } else {
+          if(quest.secret == false){
+            incompleteQuests += `${quest.name} - ${quest.description} - Reward: $${formatNumber(quest.reward)}\n`;
+          } else {
+            incompleteQuests += '???\n';
+          }
+        }
+      }
+    }
+
+    let message = '';
+
+    if(incompleteQuests != '') message += `INCOMPLETE Quests:\n\n${incompleteQuests}\n`;
+    if(completedQuests != '') message += `COMPLETED Quests:\n\n${completedQuests}\n`;
+    if(newlyCompletedQuests != '') message += `Newly completed quests!\n\n${newlyCompletedQuests.slice(0, -2)}\nTotal rewards: $${formatNumber(totalReward)}\n`;
+
+    message += '\nIf you complete a quest, come back and use the \"quests\" command to claim your rewards!';
+
+    socket.emit('message', message);
+
+    await db.set(user.username, newUser);
+    socket.emit('gameUpdate', {"user": newUser, "notify": false});
+  } else if (command == 'raidreward'){
+    // Raid stats and reward
+    if(user.game.location != 'courtyard') return socket.emit('message', 'That is not an available action.');
+
+    const penguinScore = await raidScores.get('penguin');
+    const pigeonScore = await raidScores.get('pigeon');
+    const penguinMultiplier = penguinScore / (penguinScore + pigeonScore);
+    const pigeonMultiplier = pigeonScore / (penguinScore + pigeonScore);
+    const multipliers = {
+      'penguin': (penguinMultiplier >= 0.5)? (penguinMultiplier + 1) : penguinMultiplier,
+      'pigeon': (pigeonMultiplier >= 0.5)? (pigeonMultiplier + 1) : pigeonMultiplier
+    }
+
+    let message = `Currently, the Penguins have won ~${Math.floor(penguinMultiplier * 100)}% of raids (${penguinScore - 1}), and the Pigeons have won ~${Math.floor(pigeonMultiplier * 100)}% of raids. (${pigeonScore - 1})`
+
+    if(user.game.alliance == ''){
+      message += '\n(If you join an alliance, you can come back here to collect a daily reward depending on the victory rate of your alliance!)';
+      return socket.emit('message', message);
+    }
+    
+    const time = Date.now();
+    
+    if((time - user.game.lastDailyReward) > (1000 * 60 * 60 * 24)){
+      const finalReward = Math.floor(100 * (1 + (user.game.level / 5)) * multipliers[user.game.alliance]);
+  
+      let newUser = user;
+      newUser.game.money += finalReward;
+      newUser.game.lastDailyReward = time;
+
+      message += `\nSince you are on the ${capitalizeFirstLetter(user.game.alliance)} alliance, and at a level of ${user.game.level}, your daily reward comes to $${formatNumber(finalReward)}!\nReward collected.`;
+      
+      socket.emit('message', message);
+    
+      await db.set(user.username, newUser);
+      socket.emit('gameUpdate', {"user": newUser, "notify": false});
+    } else {
+      const hours = (24 - Math.floor((time - user.game.lastDailyReward) / (1000 * 60 * 60)));
+      message += `\n(You can only collect your daily reward once every 24 hours, yours will be next available in ~${hours} hour${(hours == 1)? '' : 's'}.)`;
+
+      socket.emit('message', message);
+    }
+  } else if(command == 'burn'){
+    // Burners quest
+    if(user.game.location != 'field') return socket.emit('message', 'That is not an available action.');
+    if(user.game.completedQuests.includes('burners')) return socket.emit('message', 'The cabin is already burned to the ground!');
+
+    socket.emit('message', 'Upon closer inspection, the canister has a small trademark inscribed near the nozzle that reads \"Burners\". You pick it up and begin pouring the gas onto the cabin, and even though you pour out what should have been all of the gas, the canister is still full when you finish. You strike a match and light the building on fire.\n(You feel as though you\'ve completed something important, maybe you should check the quest board!)');
+
+    let newUser = user;
+    newUser.game.completedQuests.push('burners');
+    await db.set(user.username, newUser);
+
+    socket.emit('gameUpdate', {"user": newUser, "notify": false});
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
   }
 }
+
+
+// XP and leveling
+
+function addXP(user, xpGained, socket){
+  user.game.xp += Math.floor(xpGained);
+  socket.emit('message', `Gained ${Math.floor(xpGained)}XP!`);
+  
+  while(user.game.xp >= user.game.xpRequired){
+    user.game.level++;
+    user.game.xp = user.game.xp - user.game.xpRequired;
+    user.game.xpRequired = xpRequired(user.game.level);
+    socket.emit('message', `Leveled up! Now level ${user.game.level}.`);
+  }
+
+  // Junior player quest
+  if((user.game.level >= 10) && (!user.game.completedQuests.includes('juniorplayer'))) user.game.completedQuests.push('juniorplayer');
+
+  // Senior player quest
+  if((user.game.level >= 100) && (!user.game.completedQuests.includes('seniorplayer'))) user.game.completedQuests.push('seniorplayer');
+
+  socket.emit('message', `${user.game.xpRequired - user.game.xp}XP until next level.`);
+  return user;
+}
+
+
+function xpRequired(currentLevel){
+  const uncapped = Math.ceil((currentLevel + Math.sqrt(currentLevel)) / 5) * 5 * (Math.ceil(currentLevel / 10) * 10);
+  return (uncapped > 5000)? 5000 : uncapped;
+}
+
+
+// Raid DB
+
+async function validateRaidScores(){
+  const penguinScore = await raidScores.get('penguin');
+  const pigeonScore = await raidScores.get('pigeon');
+  
+  if(!penguinScore) raidScores.set('penguin', 1);
+  if(!pigeonScore) raidScores.set('pigeon', 1);
+}
+
+// Validate scores on startup
+validateRaidScores();
+
+
+// Blackjack
+
+class Deck{
+  constructor(){
+    this.cards = ['as', '2s', '3s', '4s', '5s', '6s', '7s', '8s', '9s', '10s', 'js', 'qs', 'ks', 'ah', '2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', 'jh', 'qh', 'kh', 'ac', '2c', '3c', '4c', '5c', '6c', '7c', '8c', '9c', '10c', 'jc', 'qc', 'kc', 'ad', '2d', '3d', '4d', '5d', '6d', '7d', '8d', '9d', '10d', 'jd', 'qd', 'kd'];
+  }
+
+  shuffle(){
+    for (let i = this.cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = this.cards[i];
+      this.cards[i] = this.cards[j];
+      this.cards[j] = temp;
+    }
+  }
+
+  draw(amount){
+    let cards = [];
+    
+    for (let i = 0; i < amount; i++) {
+      cards.push(this.cards[0]);
+      this.cards.shift();
+    }
+
+    return cards;
+  }
+}
+
+class Blackjack{
+  constructor(bet, user, socket){
+    this.bet = bet;
+    this.user = user;
+    this.socket = socket;
+    
+    this.deck = new Deck();
+    this.deck.shuffle();
+
+    // I know that this isn't how you would deal in real life, but it doesn't matter since that's only a rule to prevent cheating, which can't be done here anyways.
+    this.dealerHand = this.deck.draw(2);
+    this.playerHand = this.deck.draw(2);
+
+    if(this.total(this.playerHand) == 21){
+      this.end();
+    } else {
+      this.updateUser();
+    }
+  }
+
+  // Find total score of a hand
+  total(hand){
+    let total = 0;
+    let hasAce = false;
+
+    for(let card of hand){
+      const value = card.slice(0, -1);
+      const faces = ['j', 'q', 'k'];
+      
+      if(faces.includes(value)){
+        // Card is a face card
+        total += 10;
+      } else if(value == 'a'){
+        // Card is an ace
+        total += 11;
+        hasAce = true;
+      } else {
+        // Card is a number
+        total += +value
+      }
+    }
+
+    if((total > 21) && (hasAce == true)){
+      total -= 10;
+    }
+
+    return total;
+  }
+
+  // Change card from basic string to pretty uppercase one using suit characters
+  formatCard(card){
+    let newCard = card;
+    
+    if(newCard.slice(-1) == 's') newCard = newCard.slice(0, -1) + '♤';
+    if(newCard.slice(-1) == 'h') newCard = newCard.slice(0, -1) + '♡';
+    if(newCard.slice(-1) == 'c') newCard = newCard.slice(0, -1) + '♧';
+    if(newCard.slice(-1) == 'd') newCard = newCard.slice(0, -1) + '♢';
+
+    return newCard.toUpperCase();
+  }
+
+  // Generate a string to emit to the user
+  updateUser(playerStood = false){
+    const playerTotal = this.total(this.playerHand);
+    let playerHandString = '';
+    let dealerHandString = '';
+
+    for(let card of this.playerHand){
+      playerHandString += `${this.formatCard(card)} `;
+    }
+
+    if(playerStood == true){
+      for(let card of this.dealerHand){
+        dealerHandString += `${this.formatCard(card)} `;
+      }
+    }
+    
+    const gameString = `\n\nDealer's hand\n ${(playerStood == true)? dealerHandString : `${this.formatCard(this.dealerHand[1])} ??`}${(playerStood == true)? `(${this.total(this.dealerHand)})` : ''}\n\n ${playerHandString}(${playerTotal})\nYour hand\n`;
+
+    return this.socket.emit('message', gameString);
+  }
+
+  // Hit the player's hand
+  hit(){
+    this.playerHand.push(...this.deck.draw(1));
+    if(this.total(this.playerHand) > 21){
+      this.end();
+    } else {
+      this.updateUser();
+    }
+  }
+
+  // Double: double bet and hit once before ending the game
+  double(){
+    if(this.playerHand.length != 2) return this.socket.emit('message', 'You can only double before hitting!');
+    if(this.user.game.money < (this.bet * 2)) return this.socket.emit('message', 'You don\'t have enough money to double your bet!');
+    
+    this.bet = this.bet * 2;
+    this.hit();
+
+    // Make sure the end() function is only called once
+    if(this.total(this.playerHand) > 21) return;
+    this.end();
+  }
+
+  // End the game and determine payout/loss
+  async end(){
+    const playerTotal = this.total(this.playerHand);
+    let status = '';
+    let payout = 0;
+    
+    if((playerTotal == 21) && (this.playerHand.length == 2)){
+      // Blackjack
+      payout = Math.floor(this.bet * 1.5);
+      status = 'Blackjack!';
+    } else if(playerTotal > 21){
+      // Bust
+      payout = -this.bet;
+      status = 'Bust.'
+    } else {
+      while(this.total(this.dealerHand) < 17){
+        this.dealerHand.push(...this.deck.draw(1));
+      }
+
+      const dealerTotal = this.total(this.dealerHand);
+
+      if(dealerTotal > 21){
+        // Dealer bust
+        payout = this.bet;
+        status = 'Dealer bust!';
+      } else if(playerTotal > dealerTotal){
+        // Player beat dealer
+        payout = this.bet;
+        status = 'Player higher score!';
+      } else if(playerTotal < dealerTotal){
+        // Dealer beat player
+        payout = -this.bet;
+        status = 'Dealer higher score.';
+      } else {
+        // Push
+        payout = 0;
+        status = 'Push.';
+      }
+    }
+
+    let newUser = this.user;
+    newUser.game.money += payout;
+    await db.set(this.user.username, newUser);
+    
+    this.updateUser(true);
+
+    setTimeout(function(){
+      this.socket.emit('message', status);
+    }.bind(this), 1000);
+    // .bind(this) binds the timeout function to the original .this object, very useful
+
+    busyPlayers.delete(this.user.username);
+    blackjackGames.delete(this.user.username);
+
+    return setTimeout(function(){
+      this.socket.emit('message', `${(payout >= 0)? 'Gained': 'Lost'} $${formatNumber(Math.abs(payout))}${(payout > 0)? '!' : '.'}`);
+    }.bind(this), 2000);
+  }
+}
+
+
+// Online battles
+
+function onlineBattle(playerOne, playerTwo){
+  // Shuffle the players
+  if(Math.random() < 0.5){
+    let temp = playerOne;
+    playerOne = playerTwo;
+    playerTwo = temp;
+  }
+
+  // Apply buffs and set as busy
+  for(let player of [playerOne, playerTwo]){
+    busyPlayers.set(player.user.username, 'fighting');
+
+    player.buff = {
+      attack: (player.buff == 'attack')? (Math.ceil(player.user.game.damage / 6)) : 0,
+      speed: (player.buff == 'speed')? (Math.ceil(player.user.game.level / 5) * 10) : 0,
+      defense: (player.buff == 'defense')? (Math.ceil(player.user.game.damage / 6)) : 0
+    }
+  }
+  
+  let nextTurn = ((playerOne.user.game.speed + playerTwo.user.game.speedBuff + playerOne.buff.speed) >= (playerTwo.user.game.speed + playerOne.user.game.speedBuff + playerOne.buff.speed))? 'playerOne' : 'playerTwo';
+
+  const fightInterval = setInterval(function(){
+    const attackingPlayer = (nextTurn == 'playerOne')? playerOne : playerTwo;
+    const defendingPlayer = (nextTurn == 'playerTwo')? playerOne : playerTwo;
+
+    // Deal damage to the defending player
+    const dealtDamage = attackingPlayer.user.game.damage + attackingPlayer.user.game.damageBuff + attackingPlayer.buff.attack - defendingPlayer.buff.defense;
+
+    defendingPlayer.user.game.health -= dealtDamage;
+
+    // Update players and set next turn
+    if(nextTurn == 'playerOne'){
+      playerOne = attackingPlayer;
+      playerTwo = defendingPlayer;
+      
+      nextTurn = 'playerTwo';
+    } else {
+      playerOne = defendingPlayer;
+      playerTwo = attackingPlayer;
+      
+      nextTurn = 'playerOne';
+    }
+
+    // Emit update message
+    const message = `${attackingPlayer.user.username} attacked ${defendingPlayer.user.username} and dealt ${dealtDamage} damage!\nDealt: ${attackingPlayer.user.game.damage + attackingPlayer.user.game.damageBuff + attackingPlayer.buff.attack}\nBlocked: ${defendingPlayer.buff.defense}\n\n${playerOne.user.username}'s health: ${(playerOne.user.game.health > 0)? playerOne.user.game.health : 0}HP\n${playerTwo.user.username}'s health: ${(playerTwo.user.game.health > 0)? playerTwo.user.game.health : 0}HP`;
+
+    playerOne.socket.emit('message', message);
+    playerTwo.socket.emit('message', message);
+
+    if((playerOne.user.game.health <= 0) || (playerTwo.user.game.health <= 0)){
+      let winMessage;
+      let winner;
+
+      // Pay out and formulate the winning message
+      if(playerOne.user.game.health <= 0){
+        // Player two wins
+        winner = playerTwo;
+        loser = playerOne;
+        winMessage = `${playerTwo.user.username} beat ${playerOne.user.username} and won $${formatNumber(Math.floor(playerOne.user.game.money / 10))}!`;
+        
+        playerTwo.user.game.money += Math.floor(playerOne.user.game.money / 10);
+        playerOne.user.game.money -= Math.floor(playerOne.user.game.money / 10);
+      } else {
+        // Player one wins
+        winner = playerOne;
+        loser = playerTwo;
+        winMessage = `${playerOne.user.username} beat ${playerTwo.user.username} and won $${Math.floor(playerTwo.user.game.money / 10)}!`;
+        
+        playerOne.user.game.money += Math.floor(playerOne.user.game.money / 10);
+        playerTwo.user.game.money -= Math.floor(playerOne.user.game.money / 10);
+      }
+
+      // Heal & save players, give XP, and clean up
+      for(let player of [playerOne, playerTwo]){
+        
+        player.user.game.health = player.user.game.maxHealth;
+        
+        let xpGained;
+        if(player.user.username == winner.username){
+          const levelDifference = (loser.user.game.level >= winner.user.game.level)? (loser.user.game.level - winner.user.game.level) : 0;
+          xpGained = Math.floor(10 + (levelDifference ** 1.75));
+
+          // Ringfighter quest
+          if(!player.user.game.completedQuests.includes('ringfighter')) player.user.game.completedQuests.push('ringfighter');
+        } else {
+          xpGained = Math.ceil(10 * Math.random());
+        }
+        
+        player.socket.emit('message', winMessage);
+
+        player.user = addXP(player.user, xpGained, player.socket);
+        db.set(player.user.username, player.user);
+        
+        player.socket.emit('gameUpdate', {"user": player.user, "notify": true});
+        
+        busyPlayers.delete(player.user.username);
+      }
+      
+      clearInterval(fightInterval);
+    }
+  }, 1500);
+}
+
+function matchmakeBattles(){
+  // Return if less than 2 players are waiting
+  if(battleQueue.size < 2) return;
+    
+  const battleArray = [...battleQueue.values()];
+
+  // Sort players by money
+  battleArray.sort((a, b) => b.user.game.money - a.user.game.money);
+  
+  let pairs = [];
+
+  // Make pairs
+  battleArray.reduce(function(result, value, index, array) {
+    if (index % 2 === 0) pairs.push(array.slice(index, index + 2));
+  }, []);
+
+  // Battle each pair
+  for(let pair of pairs){
+    for(let player in pair){
+      battleQueue.delete(pair[player].user.username);
+      pair[player].socket.emit('message', `Found match! Opponent: ${(player == 0)? pair[1].user.username : pair[0].user.username}`)
+    }
+
+    onlineBattle(pair[0], pair[1]);
+  }
+}
+
+// Make matches every 5 seconds
+setInterval(matchmakeBattles, 5000);
 
 
 // Chat
@@ -581,7 +1272,7 @@ async function sendChat(username, msg, socket){
 
   const user = await db.get(username);
 
-  if(user.banStatus == true) return systemMessage(socket.id, 'You are currently banned from using the chat function.');
+  if(user.banStatus == true) return systemMessage(socket.id, 'You are currently banned from sending chat messages.');
 
   let badgeColor = '#D1D1CD';
   let title = '';
@@ -708,6 +1399,7 @@ function systemMessage(socketID, msg){
 
 async function getLeaderboard(){
   const all = await db.all();
+  
   all.sort(function (a, b) {
     return b.value.game.money - a.value.game.money;
   });
@@ -732,12 +1424,17 @@ setInterval(async function(){
   io.emit('leaderboard', leaderboard);
 }, 5000);
 
-// Misc.
 
+// Misc.
 
 function capitalizeFirstLetter(word){
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
+
+function formatNumber(number){
+  return(number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+}
+
 
 // Replit tip system
 
