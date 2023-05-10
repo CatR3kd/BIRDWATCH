@@ -740,11 +740,11 @@ async function playAction(username, socket, actionObj){
       socket.emit('message', `${(victory == true)? 'Raid successful!' : 'All of your troops have died. You manage to make it back to base alive.'}\nFinal score: ${raid.score}${(troopBonus > 0)? `\nRemaning troop bonus: ${troopBonus}` : ''}`);
       
       let newUser = addXP(user, xpGained, socket);
-      await db.set(user.username, newUser);
 
       // Warring nations quest
       if((victory == true) && (!user.completedQuests.includes('warringnations'))) newUser.game.completedQuests.push('warringnations');
-    
+      
+      await db.set(user.username, newUser);
       socket.emit('gameUpdate', {"user": newUser, "notify": true});
     }
   } else if(command == 'blackjack'){
