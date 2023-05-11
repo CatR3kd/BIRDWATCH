@@ -17,6 +17,8 @@ const raidingPlayers = new Map();
 const blackjackGames = new Map();
 const battleQueue = new Map();
 
+
+
 // Get leaderboard
 let leaderboard = getLeaderboard();
 
@@ -836,6 +838,9 @@ async function playAction(username, socket, actionObj){
 
     const penguinScore = await raidScores.get('penguin');
     const pigeonScore = await raidScores.get('pigeon');
+
+    if((!penguinScore) || (!pigeonScore)) await validateRaidScores();
+    
     const penguinMultiplier = penguinScore / (penguinScore + pigeonScore);
     const pigeonMultiplier = pigeonScore / (penguinScore + pigeonScore);
     const multipliers = {
