@@ -742,7 +742,7 @@ async function playAction(username, socket, actionObj){
       let newUser = addXP(user, xpGained, socket);
 
       // Warring nations quest
-      if((victory == true) && (!user.completedQuests.includes('warringnations'))) newUser.game.completedQuests.push('warringnations');
+      if((victory == true) && (!user.game.completedQuests.includes('warringnations'))) newUser.game.completedQuests.push('warringnations');
       
       await db.set(user.username, newUser);
       socket.emit('gameUpdate', {"user": newUser, "notify": true});
