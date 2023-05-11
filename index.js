@@ -469,7 +469,7 @@ async function playAction(username, socket, actionObj){
     const maxDamage = (user.game.level + 1) * 15;
     const maxSpeed = user.game.level * 5;
 
-    if((user.game.speed >= maxSpeed) && (user.game.damage >= maxDamage)) return socket.emit('message', 'Your speed and strength stats are already maxed! Level up to increase your maximum stats.');
+    if((user.game.speed >= maxSpeed) || (user.game.damage >= maxDamage)) return socket.emit('message', 'Your speed and strength stats are already maxed! Level up to increase your maximum stats.');
 
     let newUser = user;
     newUser.game.money -= 50;
@@ -485,8 +485,8 @@ async function playAction(username, socket, actionObj){
       socket.emit('message', `Training... (${counter * 10}%)`);
       if(counter >= 10){
         const multiplier = (user.game.items.includes('Supplements'))? 5 : 4; 
-        const damageGained = Math.floor(Math.random() * multiplier);
-        const speedGained = Math.floor(Math.random() * multiplier);
+        let damageGained = Math.floor(Math.random() * multiplier);
+        let speedGained = Math.floor(Math.random() * multiplier);
         const punctuation = ((damageGained + speedGained) > 0)? '!' : '.';
 
         // Make sure user isn't over their level stat limit
@@ -1191,7 +1191,7 @@ function onlineBattle(playerOne, playerTwo){
         winMessage = `${playerTwo.user.username} beat ${playerOne.user.username} and won $${formatNumber(Math.floor(playerOne.user.game.money / 10))}!`;
         
         playerTwo.user.game.money += Math.floor(playerOne.user.game.money / 10);
-        playerOne.user.game.money -= Math.floor(playerOne.user.game.money / 10);
+        playerOne.user.game.money = Math.floor(playerOne.user.game.money * 0.9);
       } else {
         // Player one wins
         winner = playerOne;
@@ -1199,7 +1199,7 @@ function onlineBattle(playerOne, playerTwo){
         winMessage = `${playerOne.user.username} beat ${playerTwo.user.username} and won $${Math.floor(playerTwo.user.game.money / 10)}!`;
         
         playerOne.user.game.money += Math.floor(playerOne.user.game.money / 10);
-        playerTwo.user.game.money -= Math.floor(playerOne.user.game.money / 10);
+        playerTwo.user.game.money = Math.floor(playerOne.user.game.money * 0.9);
       }
 
       // Heal & save players, give XP, and clean up
