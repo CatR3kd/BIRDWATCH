@@ -1196,15 +1196,15 @@ function onlineBattle(playerOne, playerTwo){
         winMessage = `${playerTwo.user.username} beat ${playerOne.user.username} and won $${formatNumber(Math.floor(playerOne.user.game.money / 10))}!`;
         
         playerTwo.user.game.money += Math.floor(playerOne.user.game.money / 10);
-        playerOne.user.game.money = Math.floor(playerOne.user.game.money * 0.9);
+        playerOne.user.game.money -= Math.floor(playerOne.user.game.money / 10);
       } else {
         // Player one wins
         winner = playerOne;
         loser = playerTwo;
         winMessage = `${playerOne.user.username} beat ${playerTwo.user.username} and won $${Math.floor(playerTwo.user.game.money / 10)}!`;
         
-        playerOne.user.game.money += Math.floor(playerOne.user.game.money / 10);
-        playerTwo.user.game.money = Math.floor(playerOne.user.game.money * 0.9);
+        playerOne.user.game.money += Math.floor(playerTwo.user.game.money / 10);
+        playerTwo.user.game.money -= Math.floor(playerTwo.user.game.money / 10);
       }
 
       // Heal & save players, give XP, and clean up
