@@ -431,7 +431,7 @@
     "neededToEnter":[],
     "neighbors":{
       "east":"forestTrail",
-      "south":"spawnpoint",
+      "south":"trail",
       "west":"town"
     },
     "neededAlliances":[],
