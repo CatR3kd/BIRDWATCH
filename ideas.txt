@@ -3,3 +3,7 @@ remove brawlers' stat cap
 make brawlers give less money and wayyyyy less xp
 make raids give more xp
 maybe rewrite the paying out for online battles because it's weird
+buff training to give more stats
+make health stat increase more with levels, other stats increase less
+ADD INVITATION WARE TEXT TO GUARD
+blackjack doesnt pay out?

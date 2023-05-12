@@ -1115,6 +1115,7 @@ class Blackjack{
     let newUser = this.user;
     newUser.game.money += payout;
     await db.set(this.user.username, newUser);
+    this.socket.emit('gameUpdate', {"user": newUser, "notify": false});
     
     this.updateUser(true);
 
