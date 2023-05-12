@@ -471,7 +471,7 @@ async function playAction(username, socket, actionObj){
     const maxDamage = (user.game.level + 1) * 15;
     const maxSpeed = user.game.level * 5;
 
-    if((user.game.speed >= maxSpeed) || (user.game.damage >= maxDamage)) return socket.emit('message', 'Your speed and strength stats are already maxed! Level up to increase your maximum stats.');
+    if((user.game.speed >= maxSpeed) && (user.game.damage >= maxDamage)) return socket.emit('message', 'Your speed and strength stats are already maxed! Level up to increase your maximum stats.');
 
     let newUser = user;
     newUser.game.money -= 50;

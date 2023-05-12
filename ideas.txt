@@ -2,3 +2,4 @@ add delete account option
 remove brawlers' stat cap
 make brawlers give less money and wayyyyy less xp
 make raids give more xp
+maybe rewrite the paying out for online battles because it's weird
