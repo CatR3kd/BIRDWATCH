@@ -1,9 +1,19 @@
 add delete account option
 remove brawlers' stat cap
 make brawlers give less money and wayyyyy less xp
-make raids give more xp
+make raids give more xp and maybe money but probably not
 maybe rewrite the paying out for online battles because it's weird
-buff training to give more stats
+buff training to give more stats depending on level
 make health stat increase more with levels, other stats increase less
 ADD INVITATION WARE TEXT TO GUARD
-blackjack doesnt pay out?
+gang wars for high level players
+buff plat mines
+show level, alliance, and maybe profile pic when hover on chat/leaderboard username
+buff pigeons 
+consider raising speed cap
+check that speed even affects mining
+make capitalized directions work (North instead of north)
+make the system send you a success message when you warn someone
+fix "already logged in" bug by checking if player is actually logged in
+Make name selector for commands
+Players online list
