@@ -64,7 +64,7 @@
     document.getElementById('chatInput').placeholder = `Players online: ${count}`;
   });
 
-  socket.on('kicked', function (){
+  socket.on('reload', function (){
     window.location.reload();
   });
 
@@ -117,6 +117,9 @@
     "alliances": Lists your alliances.
     "eat {item}": Consume a food item to heal. Must have item in inventory
     "clear": Clears the terminal. (The text you are currently reading)
+
+    "reset": Resets your account. THIS IS PERMANENT!
+    
     NOTE: There are other location-specific commands that will be explained by other characters.\n\n`;
     
     scroll();

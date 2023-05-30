@@ -16,6 +16,7 @@ const busyPlayers = new Map();
 const raidingPlayers = new Map();
 const blackjackGames = new Map();
 const battleQueue = new Map();
+const resetRequests = new Map();
 
 
 
@@ -892,6 +893,18 @@ async function playAction(username, socket, actionObj){
     await db.set(user.username, newUser);
 
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
+  } else if(command == 'reset'){
+    if(resetRequests.has(user.username)){
+      db.delete(user.username);
+      socket.emit('reload');
+      socket.disconnect();
+    } else {
+      resetRequests.set(user.username, '');
+      socket.emit('message', 'If you are sure you want to PERMANENTLY DELETE your progress, type \"reset\" one more time within the next 10 seconds.');
+      setTimeout(function(){
+        resetRequests.delete(user.username);
+      }, 10000);
+    }
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
@@ -1342,7 +1355,7 @@ async function chatCommand(msg, socketID){
     const targetSocket = await connectedPlayers.get(args[0]);
     if(targetSocket == undefined) return systemMessage(socketID, 'User not found.');
 
-    io.to(targetSocket).emit('kicked');
+    io.to(targetSocket).emit('reload');
     return systemMessage(socketID, `Kicked user ${args[0]}.`);
   }
 

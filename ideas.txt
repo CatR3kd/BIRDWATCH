@@ -1,9 +1,8 @@
-add delete account option
 make raid options be randomly ordered
 cheat/macro detection
 maybe rewrite the paying out for online battles because it's weird
 map location with private chat for high level/leaderboard players
-make health stat increase more with levels, other stats increase less
+make health stat increase more with levels, other stats increase less (ESPECIALLY DAMAGE)
 gang wars for high level players
 show level, alliance, and maybe profile pic when hover on chat/leaderboard username
 buff pigeons 
@@ -33,6 +32,7 @@ made platinum give $100 per gram instead of $75
 made raid rewards give 20% more money
 made senior player quest give 5m instead of 10m
 increased raidrewards again and fixed related bug
+added option to reset account
 
 -------------
 needs testing:
