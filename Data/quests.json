@@ -30,7 +30,7 @@
   "seniorplayer":{
     "name":"Senior Player",
     "description":"Reach level 100",
-    "reward":10000000,
+    "reward":5000000,
     "appearAtLevel":10,
     "secret":false
   },

@@ -1,19 +1,41 @@
 add delete account option
-remove brawlers' stat cap
-make brawlers give less money and wayyyyy less xp
-make raids give more xp and maybe money but probably not
+make raid options be randomly ordered
+cheat/macro detection
 maybe rewrite the paying out for online battles because it's weird
-buff training to give more stats depending on level
+map location with private chat for high level/leaderboard players
 make health stat increase more with levels, other stats increase less
-ADD INVITATION WARE TEXT TO GUARD
 gang wars for high level players
-buff plat mines
 show level, alliance, and maybe profile pic when hover on chat/leaderboard username
 buff pigeons 
-consider raising speed cap
+consider raising speed cap on mining
 check that speed even affects mining
-make capitalized directions work (North instead of north)
 make the system send you a success message when you warn someone
 fix "already logged in" bug by checking if player is actually logged in
-Make name selector for commands
+Make name selector for chat commands
+make client js get obfuscated before being sent to the client
 Players online list
+maybe make training more expensive depending on your level or stats
+make chat scrollable
+add level caps
+add asenscion for higher level caps
+add airdrops with troops and stuff that other players can buy to help active raiders
+add quests
+
+---------
+completed:
+
+nerfed brawlers into the ground, now they give no money and less xp
+made raids give lots more xp and minimum for victories
+added invitation ware text guard
+buffed training
+made capitalized directions work ("North" instead of "north")
+made platinum give $100 per gram instead of $75
+made raid rewards give 20% more money
+made senior player quest give 5m instead of 10m
+increased raidrewards again and fixed related bug
+
+-------------
+needs testing:
+
+raidrewards
+balancing

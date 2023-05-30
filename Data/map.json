@@ -316,7 +316,7 @@
       },
       "governor":{
         "name": "Governor Thompson",
-        "text":"\"Hello there! I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.) The Birdwatch has taken pretty good care of us, but I'm not as fond of them as the people in the Diner to the north. Their obesession with the Birdwatch has become something of an... Oh- well, never mind that.\"",
+        "text":"\"Hello there! I'm the Governor of prospect town, named for its abundance in gold, and more importantly, prospectors! (Of course, we haven't had much busniness since the great bird war started.) The Birdwatch has taken pretty good care of us, but I'm not as fond of them as the people in the Diner to the north. Their obesession with the Birdwatch has become something of an... Oh-- well, never mind that.\"",
         "wares":{}
       },
       "prospector":{
@@ -537,7 +537,7 @@
       },
       "guard":{
         "name": "Birdwatch Guard",
-        "text":"*grunt* \"Five minutes 'till my shift is over... I can't even go to the arena tonight, not with my back the way it is... I guess I could sell you my invitation for a few bucks, how about $1000? What a deal...\"\n\n(Use \"inspect {item}\" or \"buy {item}\")",
+        "text":"*grunt* \"Five minutes 'till my shift is over... I can't even go to the arena tonight, not with my back the way it is... I guess I could sell you my invitation for a few bucks, how about $1000? What a deal...\"\nWares:\n\nInvitation - $1000\n\n(Use \"inspect {item}\" or \"buy {item}\")",
         "wares":{
           "invitation":{
             "name":"Invitation",
@@ -689,13 +689,13 @@
             "name":"Microwave",
             "price":1000,
             "type":"other",
-            "description":"A cordless microwave. Adds a x1.5 HP bonus to all the food you eat!."
+            "description":"A cordless microwave. Adds a x1.5 HP bonus to all the food you eat!"
           },
           "pouch":{
             "name":"Pouch",
             "price":2500,
             "type":"other",
-            "description":"A pouch to store food in. Kind of gross, but allows you to store infinite food. Instead of using \"eat <food>\", use \"eat <amount>\"."
+            "description":"A pouch to store food in. Kind of gross, but allows you to store infinite food. Instead of using \"eat <food>\", use \"eat <amount>\". You can also check how much food you have by using the \"inventory\" command."
           },
           "mine":{
             "name":"Mine",
@@ -723,7 +723,7 @@
     "npcs":{
       "robot":{
         "name": "Miner Robot",
-        "text":"*beep beep* \"Hello there. You are currently in the platinum mine. Platinum is number 78 on the periodic table. It takes more time to find, and is rarer, but is worth 50% more than gold. You can mine it using (\"mine\")\"",
+        "text":"*beep beep* \"Hello there. You are currently in the platinum mine. Platinum is number 78 on the periodic table. It takes more time to find, and is rarer, but is worth 2x more than gold. You can mine it using (\"mine\")\"",
         "wares":{}
       }
     },

@@ -255,7 +255,10 @@ async function playAction(username, socket, actionObj){
     let newUser = user;
 
     // Manny's Midnight Market quest
-    if((destinationName == 'hollow') && (!user.game.completedQuests.includes('midnightmarket'))) newUser.game.completedQuests.push('midnightmarket');
+    if((destinationName == 'hollow') && (!user.game.completedQuests.includes('midnightmarket'))){
+      newUser.game.completedQuests.push('midnightmarket');
+      socket.emit('message', '(You feel as though you\'ve completed something important, maybe you should check the quest board!)');
+    }
     
     newUser.game.location = destinationName;
     if(!newUser.game.discoveredLocations.includes(destinationName)) newUser.game.discoveredLocations.push(destinationName);
@@ -410,12 +413,12 @@ async function playAction(username, socket, actionObj){
     if((user.game.location != 'mine') && (user.game.location != 'platinumMine')) return socket.emit('message', 'That is not an available action.');
 
     const ore = (user.game.location == 'platinumMine')? 'platinum' : 'gold';
-    const oreValue = (ore == 'platinum')? 75 : 50;
+    const oreValue = (ore == 'platinum')? 100 : 50;
 
     // Change stats based on user items, stats, and ore type
     let mineTime = 1000;
     
-    const speedReduction = ((user.game.speed + user.game.speedBuff)  > 250)? 250 : user.game.speed;
+    const speedReduction = ((user.game.speed + user.game.speedBuff) > 250)? 250 : (user.game.speed + user.game.speedBuff);
     mineTime -= speedReduction;
     
     if(user.game.items.includes('SuperPick')) mineTime -= 350;
@@ -487,15 +490,15 @@ async function playAction(username, socket, actionObj){
       socket.emit('message', `Training... (${counter * 10}%)`);
       if(counter >= 10){
         const multiplier = (user.game.items.includes('Supplements'))? 5 : 4; 
-        let damageGained = Math.floor(Math.random() * multiplier);
-        let speedGained = Math.floor(Math.random() * multiplier);
+        let damageGained = Math.floor(Math.random() * multiplier) + Math.ceil((maxDamage - user.game.damage) / 25);
+        let speedGained = Math.floor(Math.random() * multiplier) + Math.ceil((maxSpeed - user.game.speed) / 25);
         const punctuation = ((damageGained + speedGained) > 0)? '!' : '.';
 
         // Make sure user isn't over their level stat limit
         if((newUser.game.damage + damageGained) > maxDamage) damageGained = (maxDamage - user.game.damage);
         if((newUser.game.speed + speedGained) > maxSpeed) speedGained = (maxSpeed - user.game.speed);
         
-        socket.emit('message', `Finished${punctuation} Damage stat increased by ${damageGained}, speed stat increased by ${speedGained}${punctuation}`);
+        socket.emit('message', `Finished! Damage stat increased by ${damageGained}, speed stat increased by ${speedGained}!`);
 
         // Save gainz
         newUser.game.damage += damageGained;
@@ -514,14 +517,14 @@ async function playAction(username, socket, actionObj){
 
     if(user.game.location == 'camp'){
       // Camp battle
-      const enemyHealth = ((Math.floor(Math.random() * 2) + 2) * 50);
+      const enemyHealth = Math.floor((Math.random() + 0.55) * (user.game.damage + user.game.damageBuff));
       const enemy = {
         name: "Opposing Brawler",
         stats: {
-          speed: (Math.floor(Math.random() * Math.random() * 9) + 1),
+          speed: Math.floor((Math.random() + 0.45) * (user.game.speed + user.game.speedBuff)),
           health: enemyHealth,
           maxHealth: enemyHealth,
-          damage: ((Math.floor(Math.random() * 5) + 1) * 5)
+          damage: Math.floor((Math.random() + 0.4) * user.game.health)
         }
       }
       
@@ -544,23 +547,20 @@ async function playAction(username, socket, actionObj){
         socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health: ${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
         
         if((user.game.health <= 0) || (enemy.stats.health <= 0)){
-          let newUser = user;
           let xpMultiplier;
           
           if(user.game.health > 0){
             // Fight won
             xpMultiplier = 1.1;
-            
-            socket.emit('message', `You beat the ${enemy.name} and gained $75!`);
-            newUser.game.money += 75;
+            socket.emit('message', `You beat the ${enemy.name}!`);
           } else {
             // Fight lost
             xpMultiplier = 0.1;
             socket.emit('message', `You lost to the ${enemy.name}.`);
           }
   
-          const xpGained = 35 * (Math.random() + 1) * xpMultiplier;
-          newUser = addXP(newUser, xpGained, socket);
+          const xpGained = Math.ceil(10 * (Math.random() + 0.75) * xpMultiplier);
+          let newUser = addXP(user, xpGained, socket);
           newUser.game.health = startingHP;
           
           db.set(user.username, newUser);
@@ -735,9 +735,11 @@ async function playAction(username, socket, actionObj){
       busyPlayers.delete(user.username);
 
       // Calculate XP
-      const xpMult = (victory == true)? (1.1 + (Math.random() / 2)) : 0.75;
+      const xpMultiplier = (victory == true)? (1.1 + (Math.random() / 3)) : 0.75;
       const troopBonus = Math.floor(raid.troops / 3.3);
-      const xpGained = (raid.score + troopBonus) * xpMult;
+      let xpGained = ((raid.score + troopBonus) * xpMultiplier) + ((victory == true)? (user.game.xpRequired / 15) : 0);
+      if((xpGained < 35) && (victory == true)) xpGained = 35;
+      if(xpGained > 250) xpGained = 250;
       
       socket.emit('message', `${(victory == true)? 'Raid successful!' : 'All of your troops have died. You manage to make it back to base alive.'}\nFinal score: ${raid.score}${(troopBonus > 0)? `\nRemaning troop bonus: ${troopBonus}` : ''}`);
       
@@ -838,17 +840,19 @@ async function playAction(username, socket, actionObj){
 
     const penguinScore = await raidScores.get('penguin');
     const pigeonScore = await raidScores.get('pigeon');
+    const totalScore = penguinScore + pigeonScore;
 
     if((!penguinScore) || (!pigeonScore)) await validateRaidScores();
     
-    const penguinMultiplier = penguinScore / (penguinScore + pigeonScore);
-    const pigeonMultiplier = pigeonScore / (penguinScore + pigeonScore);
+    const penguinMultiplier = (totalScore > 0)? (penguinScore / (penguinScore + pigeonScore)) : 0.5;
+    const pigeonMultiplier = (totalScore > 0)? (pigeonScore / (penguinScore + pigeonScore)) : 0.5;
+    
     const multipliers = {
-      'penguin': (penguinMultiplier >= 0.5)? (penguinMultiplier + 1) : penguinMultiplier,
-      'pigeon': (pigeonMultiplier >= 0.5)? (pigeonMultiplier + 1) : pigeonMultiplier
+      'penguin': (penguinMultiplier >= 0.5)? (penguinMultiplier + 0.5) : penguinMultiplier,
+      'pigeon': (pigeonMultiplier >= 0.5)? (pigeonMultiplier + 0.5) : pigeonMultiplier
     }
 
-    let message = `Currently, the Penguins have won ~${Math.floor(penguinMultiplier * 100)}% of raids (${penguinScore - 1}), and the Pigeons have won ~${Math.floor(pigeonMultiplier * 100)}% of raids. (${pigeonScore - 1})`
+    let message = `Currently, the Penguins have won ~${Math.floor(penguinMultiplier * 100)}% of raids (${penguinScore}), and the Pigeons have won ~${Math.floor(pigeonMultiplier * 100)}% of raids. (${pigeonScore})`;
 
     if(user.game.alliance == ''){
       message += '\n(If you join an alliance, you can come back here to collect a daily reward depending on the victory rate of your alliance!)';
@@ -858,7 +862,7 @@ async function playAction(username, socket, actionObj){
     const time = Date.now();
     
     if((time - user.game.lastDailyReward) > (1000 * 60 * 60 * 24)){
-      const finalReward = Math.floor(100 * (1 + (user.game.level / 5)) * multipliers[user.game.alliance]);
+      const finalReward = Math.floor(200 * (1 + (user.game.level / 5)) * multipliers[user.game.alliance]);
   
       let newUser = user;
       newUser.game.money += finalReward;
@@ -931,8 +935,8 @@ async function validateRaidScores(){
   const penguinScore = await raidScores.get('penguin');
   const pigeonScore = await raidScores.get('pigeon');
   
-  if(!penguinScore) raidScores.set('penguin', 1);
-  if(!pigeonScore) raidScores.set('pigeon', 1);
+  if(!penguinScore) raidScores.set('penguin', 0);
+  if(!pigeonScore) raidScores.set('pigeon', 0);
 }
 
 // Validate scores on startup
@@ -1217,7 +1221,7 @@ function onlineBattle(playerOne, playerTwo){
         let xpGained;
         if(player.user.username == winner.username){
           const levelDifference = (loser.user.game.level >= winner.user.game.level)? (loser.user.game.level - winner.user.game.level) : 0;
-          xpGained = Math.floor(10 + (levelDifference ** 1.75));
+          xpGained = 10 + (levelDifference ** 1.75);
 
           // Ringfighter quest
           if(!player.user.game.completedQuests.includes('ringfighter')) player.user.game.completedQuests.push('ringfighter');

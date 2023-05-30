@@ -80,7 +80,7 @@
 
     if(action == '') return;
     if(action.toLowerCase() == 'blackjack help') return blackjackHelp();
-    if(['north', 'east', 'south', 'west'].includes(action)) action = `move ${action}`;
+    if(['north', 'east', 'south', 'west'].includes(action.toLowerCase())) action = `move ${action}`;
     
     let args = action.split(' ');
     const command = args[0];
