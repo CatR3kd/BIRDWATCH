@@ -10,6 +10,10 @@ html, body {
   overflow: hidden;
 }
 
+#mobileNotice{
+  color: #D1D1CD;
+}
+
 *{
   font-family: Inconsolata, monospace;
 }
@@ -274,19 +278,32 @@ a:active{
 
 /* Responsiveness */
 
-@media (max-width: 767px) {
+/* Mobile */
+@media (min-width: 768px){
+  #mobileNotice{
+    visibility: hidden;
+  }
+}
+
+/* Desktop */
+@media (max-width: 767px){
   html, body{
+    height: 100dvh;
+    width: 100dvw;
     margin: 0;
     overflow-y: scroll;
   }
 
+  #startMenu{
+    text-align: center;
+  }
+
   #login{
-    width: 50vw;
+    width: 50dvw;
   }
 
   #plug{
-    right: unset;
-    text-align: center;
+    visibility: hidden;
   }
   
   #terminal, #text, #actionInput{
@@ -300,11 +317,12 @@ a:active{
   }
 
   #actionInput{
-    width: calc(100vw - 8px);
+    width: calc(100dvw - 8px);
   }
 
   #terminal{
-    width: 100vw;
+    width: 100dvw;
+    height: calc(100dvh - 25px);
   }
 
   .sidebar{
@@ -312,7 +330,12 @@ a:active{
   }
 
   #loginError{
-    width: 95vw;
+    width: 95dvw;
     max-width: unset;
+  }
+
+  #map{
+    top: 5px;
+    right: 5px;
   }
 }
