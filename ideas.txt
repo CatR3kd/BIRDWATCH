@@ -19,8 +19,6 @@ add level caps
 add asenscion for higher level caps
 add airdrops with troops and stuff that other players can buy to help active raiders
 add quests
-try using structuredClone() to make deep copy
-make button not overlap on medium sized mobile device (tablet-ish)
 
 ---------
 completed:
@@ -35,6 +33,8 @@ made raid rewards give 20% more money
 made senior player quest give 5m instead of 10m
 increased raidrewards again and fixed related bug
 added option to reset account
+added responsiveness
+added more responsiveness
 
 -------------
 needs testing:

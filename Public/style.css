@@ -79,6 +79,7 @@ html, body {
   text-shadow: none;
   box-shadow: none;
   transition: box-shadow 0.3s ease, text-shadow 0.25s ease;
+  max-width: calc(20vw - 20px);
 }
 
 #login:hover{
@@ -278,14 +279,14 @@ a:active{
 
 /* Responsiveness */
 
-/* Mobile */
+/* Desktop */
 @media (min-width: 768px){
   #mobileNotice{
     visibility: hidden;
   }
 }
 
-/* Desktop */
+/* Mobile */
 @media (max-width: 767px){
   html, body{
     height: 100dvh;
@@ -299,6 +300,7 @@ a:active{
   }
 
   #login{
+    max-width: unset;
     width: 50dvw;
   }
 
