@@ -3,10 +3,6 @@ cheat/macro detection
 maybe rewrite the paying out for online battles because it's weird
 map location with private chat for high level/leaderboard players
 gang wars for high level players
-show level, alliance, and maybe profile pic when hover on chat/leaderboard username
-buff pigeons 
-consider raising speed cap on mining
-check that speed even affects mining
 make the system send you a success message when you warn someone
 fix "already logged in" bug by checking if player is actually logged in
 Make name selector for chat commands
@@ -18,7 +14,6 @@ add level caps
 add asenscion for higher level caps
 add airdrops with troops and stuff that other players can buy to help active raiders for like 10 minutes
 add quests
-make it so battles don't heal you fully if you were damaged when you arrived
 
 ---------
 completed:
@@ -39,6 +34,8 @@ made damage stat increase less
 made max health stat increase
 buffed companion to discount training and online battles (winner gains 10% less and loser loses 10% less)
 buffed kunai to do 30 damage instead of 20
+added playerinfo <username> command
+made battles return you to the health you started with instead of full hp
 
 -------------
 needs testing:
@@ -47,3 +44,6 @@ raidrewards
 balancing
 stats
 companion discounts and payouts for online battles
+playerinfo command
+speed cap on mining
+healing after online battle

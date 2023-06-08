@@ -189,9 +189,18 @@ async function playAction(username, socket, actionObj){
   if(user == undefined) return;
 
   const command = (actionObj.command).toLowerCase();
-  const args = (actionObj.args).map(elem => {
-    return elem.toLowerCase();
-  });
+
+  // Only make args lowercase for case-insensitive commands
+  const caseSensitiveCommands = ['playerinfo'];
+  let args;
+  
+  if(caseSensitiveCommands.includes(command)){
+    args = actionObj.args;
+  } else {
+    args = (actionObj.args).map(elem => {
+      return elem.toLowerCase();
+    });
+  }
 
   const busy = busyPlayers.get(user.username);
   const busyWhitelist = ['option', 'leave'];
@@ -891,6 +900,18 @@ async function playAction(username, socket, actionObj){
 
       socket.emit('message', message);
     }
+  } else if(command == 'playerinfo'){
+    // Player info
+    if(args[0] == undefined) return socket.emit('message', 'You must provide a player\'s username to search! Ex. \"playerinfo <username>\"');
+
+    const player = await db.get(args[0]);
+    if(player == undefined) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
+
+    // Make sure the player has a "game" object, otherwise users could request things like "playerinfo username.game.money" and crash the server
+    const playerInfo = player.game;
+    if(playerInfo == undefined) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
+    
+    return socket.emit('message', `${args[0]}:\nAlliance: ${(playerInfo.alliance == '')? 'None' : capitalizeFirstLetter(playerInfo.alliance)}\nLevel: ${playerInfo.level}\nBalance: $${playerInfo.money}\nLocation: ${(user.game.discoveredLocations.includes(playerInfo.location))? gameMap[playerInfo.location].name : '???'}`);
   } else if(command == 'burn'){
     // Burners quest
     if(user.game.location != 'field') return socket.emit('message', 'That is not an available action.');
@@ -1172,6 +1193,9 @@ function onlineBattle(playerOne, playerTwo){
     playerTwo = temp;
   }
 
+  const playerOne.startingHealth = playerOne.user.game.health;
+  const playerTwo.startingHealth = playerTwo.user.game.health;
+
   // Apply buffs and set as busy
   for(let player of [playerOne, playerTwo]){
     busyPlayers.set(player.user.username, 'fighting');
@@ -1247,7 +1271,7 @@ function onlineBattle(playerOne, playerTwo){
       // Heal & save players, give XP, and clean up
       for(let player of [playerOne, playerTwo]){
         
-        player.user.game.health = (player.user.game.maxHealth + player.user.game.maxHealthBuff);
+        player.user.game.health = player.startingHealth;
         
         let xpGained;
         if(player.user.username == winner.username){
