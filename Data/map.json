@@ -233,7 +233,7 @@
             "name":"Kunai",
             "price":1000,
             "type":"weapon",
-            "damage":20,
+            "damage":30,
             "description":"A sleek, tapered knife with a case that slides over top perfectly. Masterfully crafted, anodized matte black. Deals 20 damage."
           },
           "birdseed":{

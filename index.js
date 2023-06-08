@@ -35,6 +35,7 @@ class Game{
     this.damageBuff = 0;
     this.health = 100;
     this.maxHealth = 100;
+    this.maxHealthBuff = 0;
     this.location = 'spawnpoint';
   	this.items = [];
     this.alliance = '';
@@ -383,7 +384,7 @@ async function playAction(username, socket, actionObj){
     }
 
     if(item.type == 'armor'){
-      newUser.game.maxHealth += item.defense;
+      newUser.game.maxHealthBuff += item.defense;
       newUser.game.health += item.defense;
     }
 
@@ -470,15 +471,17 @@ async function playAction(username, socket, actionObj){
   } else if(command == 'train'){
     // Training
     if(user.game.location != 'gym') return socket.emit('message', 'That is not an available action.');
-    if(user.game.money < 50) return socket.emit('message', 'You don\'t have enough money!');
+    const price = (user.game.items.includes('Companion'))? 45 : 50;
+    if(user.game.money < price) return socket.emit('message', 'You don\'t have enough money!');
 
-    const maxDamage = (user.game.level + 1) * 15;
+    const maxHealth = ((user.game.level + 1) * 15) + user.game.maxHealth;
+    const maxDamage = (user.game.level + 1) * 10;
     const maxSpeed = user.game.level * 5;
 
-    if((user.game.speed >= maxSpeed) && (user.game.damage >= maxDamage)) return socket.emit('message', 'Your speed and strength stats are already maxed! Level up to increase your maximum stats.');
+    if((user.game.speed >= maxSpeed) && (user.game.damage >= maxDamage) && (user.game.maxHealth >= maxHealth)) return socket.emit('message', 'Your speed, strength, and health stats are already maxed! Level up to increase your maximum stats.');
 
     let newUser = user;
-    newUser.game.money -= 50;
+    newUser.game.money -= price;
 
     let counter = 0;
     const trainTime = (user.game.items.includes('Supplements'))? 450 : 500;
@@ -490,20 +493,27 @@ async function playAction(username, socket, actionObj){
       counter++;
       socket.emit('message', `Training... (${counter * 10}%)`);
       if(counter >= 10){
-        const multiplier = (user.game.items.includes('Supplements'))? 5 : 4; 
+        const multiplier = (user.game.items.includes('Supplements'))? 6 : 5; 
+        let maxHealthGained = Math.floor(Math.random() * (multiplier - 1)) + Math.ceil((maxHealth - user.game.maxHealth) / 25);
         let damageGained = Math.floor(Math.random() * multiplier) + Math.ceil((maxDamage - user.game.damage) / 25);
         let speedGained = Math.floor(Math.random() * multiplier) + Math.ceil((maxSpeed - user.game.speed) / 25);
         const punctuation = ((damageGained + speedGained) > 0)? '!' : '.';
 
         // Make sure user isn't over their level stat limit
+        if((newUser.game.maxHealth + maxHealthGained) > maxHealth) maxHealthGained = (maxHealth - user.game.maxHealth);
         if((newUser.game.damage + damageGained) > maxDamage) damageGained = (maxDamage - user.game.damage);
         if((newUser.game.speed + speedGained) > maxSpeed) speedGained = (maxSpeed - user.game.speed);
         
-        socket.emit('message', `Finished! Damage stat increased by ${damageGained}, speed stat increased by ${speedGained}!`);
+        socket.emit('message', `Finished! Speed +${speedGained}, damage +${damageGained}, and max health +${maxHealthGained}!`);
 
         // Save gainz
+        newUser.game.maxHealth += maxHealthGained;
+        newUser.game.health += maxHealthGained;
         newUser.game.damage += damageGained;
         newUser.game.speed += speedGained;
+
+        // Double check that health isn't over maximum
+        if(newUser.health > (newUser.maxHealth + newUser.maxHealthBuff)) newUser.health = (newUser.maxHealth + newUser.maxHealthBuff);
         
         db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": false});
@@ -545,7 +555,7 @@ async function playAction(username, socket, actionObj){
         }
   
         socket.emit('gameUpdate', {"user": user, "notify": false});
-        socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health: ${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
+        socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth + user.game.maxHealthBuff}\nEnemy health: ${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
         
         if((user.game.health <= 0) || (enemy.stats.health <= 0)){
           let xpMultiplier;
@@ -601,7 +611,7 @@ async function playAction(username, socket, actionObj){
     if(user.game.money < 5) return socket.emit('message', 'You don\'t have enough money.');
 
     // Get amount of HP to heal, and cost
-    let HPToHeal = (user.game.maxHealth - user.game.health);
+    let HPToHeal = ((user.game.maxHealth + user.game.maxHealthBuff) - user.game.health);
 
     if(HPToHeal <= 0) return socket.emit('message', 'You are already at full health!');
 
@@ -617,7 +627,7 @@ async function playAction(username, socket, actionObj){
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
 
     // Emit message
-    socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth})\nMoney spent: $${formatNumber(price)}`);
+    socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth + newUser.game.maxHealthBuff})\nMoney spent: $${formatNumber(price)}`);
   } else if(command == 'ally'){
     // Ally system
     if(!gameMap[user.game.location].availableAlliances.includes(args[0])) return socket.emit('message', 'That is not an available action.');
@@ -636,7 +646,7 @@ async function playAction(username, socket, actionObj){
     socket.emit('message', `Joined the ${targetAlly} alliance!`);
   } else if(command == 'eat'){
     // Eating system
-    if(user.game.health >= user.game.maxHealth) return socket.emit('message', 'You are already at full health!');
+    if(user.game.health >= (user.game.maxHealth + user.game.maxHealthBuff)) return socket.emit('message', 'You are already at full health!');
     
     let healAmount;
     let oldHealth = user.game.health;
@@ -650,7 +660,7 @@ async function playAction(username, socket, actionObj){
       if(isNaN(healAmount)) return socket.emit('message', 'You must include a valid food value! Ex. \"eat 25\"');
       if(healAmount > user.game.food) return socket.emit('message', 'You don\'t have that much food!');
       if(healAmount < 1) return socket.emit('message', 'You must eat a minimum of 1!');
-      if(healAmount > (user.game.maxHealth - user.game.health)) return socket.emit('message', 'You don\'t need to eat that much!');
+      if(healAmount > ((user.game.maxHealth + user.game.maxHealthBuff) - user.game.health)) return socket.emit('message', 'You don\'t need to eat that much!');
 
       newUser.food -= healAmount;
       newUser.game.health += healAmount;
@@ -669,7 +679,7 @@ async function playAction(username, socket, actionObj){
       newUser.game.items.splice(foodIndex, 1);
       
       newUser.game.health += healAmount;
-      if(newUser.game.health > newUser.game.maxHealth) newUser.game.health = newUser.game.maxHealth;
+      if(newUser.game.health > (newUser.game.maxHealth + newUser.game.maxHealthBuff)) newUser.game.health = newUser.game.maxHealth;
       
       message = `Healed ${formatNumber(newUser.game.health - oldHealth)} HP by eating the ${capitalizeFirstLetter(args[0])}!`
     }
@@ -1212,24 +1222,32 @@ function onlineBattle(playerOne, playerTwo){
         // Player two wins
         winner = playerTwo;
         loser = playerOne;
-        winMessage = `${playerTwo.user.username} beat ${playerOne.user.username} and won $${formatNumber(Math.floor(playerOne.user.game.money / 10))}!`;
+
+        // Account for companion
+        const multiplier = (playerOne.user.game.items.includes('Companion'))? 0.09 : 0.1;
         
-        playerTwo.user.game.money += Math.floor(playerOne.user.game.money / 10);
-        playerOne.user.game.money -= Math.floor(playerOne.user.game.money / 10);
+        winMessage = `${playerTwo.user.username} beat ${playerOne.user.username} and won $${formatNumber(Math.floor(playerOne.user.game.money * multiplier))}!`;
+        
+        playerTwo.user.game.money += Math.floor(playerOne.user.game.money * multiplier);
+        playerOne.user.game.money -= Math.floor(playerOne.user.game.money * multiplier);
       } else {
         // Player one wins
         winner = playerOne;
         loser = playerTwo;
-        winMessage = `${playerOne.user.username} beat ${playerTwo.user.username} and won $${Math.floor(playerTwo.user.game.money / 10)}!`;
+
+        // Account for companion
+        const multiplier = (playerTwo.user.game.items.includes('Companion'))? 0.09 : 0.1;
         
-        playerOne.user.game.money += Math.floor(playerTwo.user.game.money / 10);
-        playerTwo.user.game.money -= Math.floor(playerTwo.user.game.money / 10);
+        winMessage = `${playerOne.user.username} beat ${playerTwo.user.username} and won $${Math.floor(playerTwo.user.game.money * multiplier)}!`;
+        
+        playerOne.user.game.money += Math.floor(playerTwo.user.game.money * multiplier);
+        playerTwo.user.game.money -= Math.floor(playerTwo.user.game.money * multiplier);
       }
 
       // Heal & save players, give XP, and clean up
       for(let player of [playerOne, playerTwo]){
         
-        player.user.game.health = player.user.game.maxHealth;
+        player.user.game.health = (player.user.game.maxHealth + player.user.game.maxHealthBuff);
         
         let xpGained;
         if(player.user.username == winner.username){
