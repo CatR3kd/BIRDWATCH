@@ -10,10 +10,11 @@ make client js get obfuscated before being sent to the client
 Players online list
 maybe make training more expensive depending on your level or stats
 make chat scrollable
-add level caps
-add asenscion for higher level caps
+add prestige brackets to leaderboard and chat
 add airdrops with troops and stuff that other players can buy to help active raiders for like 10 minutes
 add quests
+make online battle stat choices increase depending on level
+make online battle payout be partially determined by difference of players' levels
 
 ---------
 completed:
@@ -36,6 +37,8 @@ buffed companion to discount training and online battles (winner gains 10% less 
 buffed kunai to do 30 damage instead of 20
 added playerinfo <username> command
 made battles return you to the health you started with instead of full hp
+prestige
+prestige quests
 
 -------------
 needs testing:
@@ -47,3 +50,5 @@ companion discounts and payouts for online battles
 playerinfo command
 speed cap on mining
 healing after online battle
+prestige 
+quests

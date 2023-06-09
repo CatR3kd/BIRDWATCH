@@ -227,7 +227,7 @@
             "name":"Companion",
             "price":2000,
             "type":"other",
-            "description":"A robotic pigeon companion. Flies behind you, always watching. Prevents you from losing money on death, and gives a 10% discount on all purchasable items. (Will be applied AFTER purchase)"
+            "description":"A robotic pigeon companion. Flies behind you, always watching. Prevents you from losing money on death, and gives a 10% discount on all purchasable items (Includes training fee and online battle losses, and will be applied AFTER purchase)"
           },
           "kunai":{
             "name":"Kunai",

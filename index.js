@@ -17,6 +17,7 @@ const raidingPlayers = new Map();
 const blackjackGames = new Map();
 const battleQueue = new Map();
 const resetRequests = new Map();
+const prestigeRequests = new Map();
 
 
 
@@ -27,6 +28,8 @@ class Game{
 	constructor(){
     this.money = 0;
     this.level = 1;
+    this.highestLevel = 1;
+    this.prestige = 0;
     this.xp = 0;
     this.xpRequired = xpRequired(this.level);
     this.speed = 1;
@@ -821,7 +824,7 @@ async function playAction(username, socket, actionObj){
     for(let key of Object.keys(quests)){
       const quest = quests[key];
       
-      if(user.game.level >= quest.appearAtLevel){
+      if(user.game.highestLevel >= quest.appearAtLevel){
         if(user.game.completedQuests.includes(key)){
           completedQuests += `${quest.name}${(quest.secret == true)? ' (Secret)' : ''} - ${quest.description} - Reward: $${formatNumber(quest.reward)}\n`;
           
@@ -900,6 +903,41 @@ async function playAction(username, socket, actionObj){
 
       socket.emit('message', message);
     }
+  } else if(command == 'prestige'){
+    // Prestiging
+    if(user.game.level < (50 + (user.game.prestige * 10))) return socket.emit('message', `You can only prestige when you've reached the your level cap! Currently, you are level ${user.game.level}/${(50 + (user.game.prestige * 10))}!`);
+      
+    if(prestigeRequests.has(user.username)){
+      prestigeRequests.delete(user.username);
+      let newUser = user;
+      
+      newUser.game.level = 1;
+      newUser.game.xpRequired = xpRequired(newUser.game.level);
+      newUser.game.speed = 1;
+      newUser.game.damage = 15;
+      newUser.game.maxHealth = 100;
+      if(newUser.game.health > (newUser.game.maxHealth + newUser.game.maxHealthBuff)) newUser.game.health = (newUser.game.maxHealth + newUser.game.maxHealthBuff);
+      newUser.game.prestige++;
+
+      // Prestigious Player quests
+      if(!newUser.game.completedQuests.includes('prestigiousplayer')){
+        newUser.game.completedQuests.push('prestigiousplayer');
+      } else if((!newUser.game.completedQuests.includes('prestigiousplayertwo')) && (newUser.game.prestige >= 5)){
+        newUser.game.completedQuests.push('prestigiousplayertwo');
+      } else if((!newUser.game.completedQuests.includes('prestigiousplayerthree')) && (newUser.game.prestige >= 10)){
+        newUser.game.completedQuests.push('prestigiousplayerthree');
+      }
+
+      db.set(user.username, newUser);
+
+      return socket.emit('message', `You prestiged! Prestige level: ${newUser.game.prestige}`);
+    } else {
+      prestigeRequests.set(user.username, '');
+      socket.emit('message', 'Are you sure? Prestiging will reset your level and stats! Type \"prestige\" once more within 60 seconds to confirm!');
+      setTimeout(function(){
+        if(prestigeRequests.has(user.username)) prestigeRequests.delete(user.username);
+      }, 60000);
+    }
   } else if(command == 'playerinfo'){
     // Player info
     if(args[0] == undefined) return socket.emit('message', 'You must provide a player\'s username to search! Ex. \"playerinfo <username>\"');
@@ -911,7 +949,7 @@ async function playAction(username, socket, actionObj){
     const playerInfo = player.game;
     if(playerInfo == undefined) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
     
-    return socket.emit('message', `${args[0]}:\nAlliance: ${(playerInfo.alliance == '')? 'None' : capitalizeFirstLetter(playerInfo.alliance)}\nLevel: ${playerInfo.level}\nBalance: $${playerInfo.money}\nLocation: ${(user.game.discoveredLocations.includes(playerInfo.location))? gameMap[playerInfo.location].name : '???'}`);
+    return socket.emit('message', `${args[0]}:\nAlliance: ${(playerInfo.alliance == '')? 'None' : capitalizeFirstLetter(playerInfo.alliance)}\nLevel: ${playerInfo.level}\nPrestige: ${playerInfo.prestige}\nBalance: $${playerInfo.money}\nLocation: ${(user.game.discoveredLocations.includes(playerInfo.location))? gameMap[playerInfo.location].name : '???'}`);
   } else if(command == 'burn'){
     // Burners quest
     if(user.game.location != 'field') return socket.emit('message', 'That is not an available action.');
@@ -926,14 +964,17 @@ async function playAction(username, socket, actionObj){
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
   } else if(command == 'reset'){
     if(resetRequests.has(user.username)){
+      resetRequests.delete(user.username);
+      
       db.delete(user.username);
+      
       socket.emit('reload');
       socket.disconnect();
     } else {
       resetRequests.set(user.username, '');
       socket.emit('message', 'If you are sure you want to PERMANENTLY DELETE your progress, type \"reset\" one more time within the next 10 seconds.');
       setTimeout(function(){
-        resetRequests.delete(user.username);
+        if(resetRequests.has(user.username)) resetRequests.delete(user.username);
       }, 10000);
     }
   } else {
@@ -950,10 +991,13 @@ function addXP(user, xpGained, socket){
   socket.emit('message', `Gained ${Math.floor(xpGained)}XP!`);
   
   while(user.game.xp >= user.game.xpRequired){
-    user.game.level++;
-    user.game.xp = user.game.xp - user.game.xpRequired;
-    user.game.xpRequired = xpRequired(user.game.level);
-    socket.emit('message', `Leveled up! Now level ${user.game.level}.`);
+    if(user.game.level < (50 + (user.game.prestige * 10))){
+      user.game.level++;
+      if(user.game.highestLevel < user.game.level) user.game.highestLevel = user.game.level;
+      user.game.xp = user.game.xp - user.game.xpRequired;
+      user.game.xpRequired = xpRequired(user.game.level);
+      socket.emit('message', `Leveled up! Now level ${user.game.level}.`);
+    }
   }
 
   // Junior player quest
@@ -962,7 +1006,12 @@ function addXP(user, xpGained, socket){
   // Senior player quest
   if((user.game.level >= 100) && (!user.game.completedQuests.includes('seniorplayer'))) user.game.completedQuests.push('seniorplayer');
 
-  socket.emit('message', `${user.game.xpRequired - user.game.xp}XP until next level.`);
+  if(user.game.level >= (50 + (user.game.prestige * 10))){
+    socket.emit('message', `You're currently at the highest level (${user.game.level}) for your prestige ${user.game.prestige}! To unlock a higher prestige, use the "prestige" command which will reset your level but increase your level cap by 10.`);
+  } else {
+    socket.emit('message', `${user.game.xpRequired - user.game.xp}XP until next level.`);
+  }
+  
   return user;
 }
 
