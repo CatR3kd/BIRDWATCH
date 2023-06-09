@@ -1193,8 +1193,8 @@ function onlineBattle(playerOne, playerTwo){
     playerTwo = temp;
   }
 
-  const playerOne.startingHealth = playerOne.user.game.health;
-  const playerTwo.startingHealth = playerTwo.user.game.health;
+  playerOne.startingHealth = playerOne.user.game.health;
+  playerTwo.startingHealth = playerTwo.user.game.health;
 
   // Apply buffs and set as busy
   for(let player of [playerOne, playerTwo]){
