@@ -5,16 +5,15 @@ map location with private chat for high level/leaderboard players
 gang wars for high level players
 make the system send you a success message when you warn someone
 fix "already logged in" bug by checking if player is actually logged in
-Make name selector for chat commands
 make client js get obfuscated before being sent to the client
-Players online list
 maybe make training more expensive depending on your level or stats
-make chat scrollable
 add prestige brackets to leaderboard and chat
 add airdrops with troops and stuff that other players can buy to help active raiders for like 10 minutes
 add quests
 make online battle stat choices increase depending on level
 make online battle payout be partially determined by difference of players' levels
+maybe buff pigeons more
+make chat clearable and toggleable
 
 ---------
 completed:
@@ -39,6 +38,9 @@ added playerinfo <username> command
 made battles return you to the health you started with instead of full hp
 prestige
 prestige quests
+playersonline command
+made chat scrollable
+underlined keywords
 
 -------------
 needs testing:

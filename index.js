@@ -949,7 +949,10 @@ async function playAction(username, socket, actionObj){
     const playerInfo = player.game;
     if(playerInfo == undefined) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
     
-    return socket.emit('message', `${args[0]}:\nAlliance: ${(playerInfo.alliance == '')? 'None' : capitalizeFirstLetter(playerInfo.alliance)}\nLevel: ${playerInfo.level}\nPrestige: ${playerInfo.prestige}\nBalance: $${playerInfo.money}\nLocation: ${(user.game.discoveredLocations.includes(playerInfo.location))? gameMap[playerInfo.location].name : '???'}`);
+    return socket.emit('message', `${args[0]} (${(connectedPlayers.has(args[0]))? 'Online' : 'Offline'}):\nAlliance: ${(playerInfo.alliance == '')? 'None' : capitalizeFirstLetter(playerInfo.alliance)}\nLevel: ${playerInfo.level}\nPrestige: ${playerInfo.prestige}\nBalance: $${playerInfo.money}\nLocation: ${(user.game.discoveredLocations.includes(playerInfo.location))? gameMap[playerInfo.location].name : '???'}`);
+  } else if(command == 'playersonline'){
+    // Players online
+    socket.emit('message', `Players online: ${[...connectedPlayers.keys()].join(', ')}`);
   } else if(command == 'burn'){
     // Burners quest
     if(user.game.location != 'field') return socket.emit('message', 'That is not an available action.');

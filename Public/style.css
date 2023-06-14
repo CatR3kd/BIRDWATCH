@@ -10,6 +10,21 @@ html, body {
   overflow: hidden;
 }
 
+/* You have to set at least one style of the entire scrollbar to change the track or thumb for some reason */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #transparent; 
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 5px;
+  border: 2px solid #ffffff;
+}
+
 #mobileNotice{
   color: #D1D1CD;
 }
@@ -211,6 +226,7 @@ a:active{
 
 #leaderboardBox{
   text-align: center;
+  max-height: 350px;
 }
 
 #leaderboard{
@@ -264,6 +280,7 @@ a:active{
 }
 
 #chat{
+  max-height: calc(100vh - 400px);
   list-style-type: none;
   padding: 0;
   line-height: 20px;
@@ -271,6 +288,12 @@ a:active{
   overflow-wrap: break-word;
   display: inline-block;
   width: calc(25vw - 12px);
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
 }
 
 #chat li {
