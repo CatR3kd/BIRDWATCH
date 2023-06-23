@@ -111,10 +111,10 @@ html, body {
   color: #D1D1CD;
   position: fixed;
   left: 50%;
-  top: calc(50% + 400px);
+  top: calc(50% + 50px);
   transform: translate(-50%, -50%);
   text-align: center;
-  max-width: 20vw;
+  max-width: 18vw;
 }
 
 #plug{

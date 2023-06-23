@@ -88,23 +88,31 @@ io.on('connection', (socket) => {
   (async function(){
     const username = socket.handshake.headers['x-replit-user-name'];
     
-    if((!username) || (connectedPlayers.has(username))){
-      if(connectedPlayers.has(username)){
-        socket.emit('loginError', 'You are already logged in somewhere else!');
-      }
-      
-      socket.disconnect();
-    } else {
-      let user = await db.get(username);
-  
-      if(user == undefined) user = await createAccount(username);
-
-      connectedPlayers.set(username, socket.id);
-  
-      socket.emit('loggedIn', user);
-      socket.emit('leaderboard', leaderboard);
-      io.emit('playerCount', connectedPlayers.size);
+    // Check that there is a username header set
+    if(!username){
+      return socket.disconnect();
     }
+
+    // Delete existing connection
+    if(connectedPlayers.has(username)){
+      const connectedSocket = io.sockets.sockets.get(connectedPlayers.get(username));
+      
+      connectedSocket.emit('loginError', 'You logged in somewhere else, so this tab was disconnected. Please reload!');
+      connectedSocket.disconnect();
+      connectedPlayers.delete(username);
+
+      socket.emit('loginError', 'You were already logged in somewhere else, so that tab was disconnected.');
+    }
+    
+    let user = await db.get(username);
+    if(user == undefined) user = await createAccount(username);
+
+    connectedPlayers.set(username, socket.id);
+  
+    socket.emit('loggedIn', user);
+    socket.emit('leaderboard', leaderboard);
+    
+    io.emit('playerCount', connectedPlayers.size);
   })();
 
   socket.on('action', async function(actionObj) {
@@ -949,7 +957,7 @@ async function playAction(username, socket, actionObj){
     const playerInfo = player.game;
     if(playerInfo == undefined) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
     
-    return socket.emit('message', `${args[0]} (${(connectedPlayers.has(args[0]))? 'Online' : 'Offline'}):\nAlliance: ${(playerInfo.alliance == '')? 'None' : capitalizeFirstLetter(playerInfo.alliance)}\nLevel: ${playerInfo.level}\nPrestige: ${playerInfo.prestige}\nBalance: $${playerInfo.money}\nLocation: ${(user.game.discoveredLocations.includes(playerInfo.location))? gameMap[playerInfo.location].name : '???'}`);
+    return socket.emit('message', `${args[0]} (${(connectedPlayers.has(args[0]))? 'Online' : 'Offline'}):\n\nAlliance: ${(playerInfo.alliance == '')? 'None' : capitalizeFirstLetter(playerInfo.alliance)}\nLevel: ${playerInfo.level}\nPrestige: ${playerInfo.prestige}\nBalance: $${playerInfo.money}\nLocation: ${(user.game.discoveredLocations.includes(playerInfo.location))? gameMap[playerInfo.location].name : '???'}`);
   } else if(command == 'playersonline'){
     // Players online
     socket.emit('message', `Players online: ${[...connectedPlayers.keys()].join(', ')}`);
@@ -1456,9 +1464,10 @@ async function chatCommand(msg, socketID){
   if(command == 'warn'){
     const targetSocket = await connectedPlayers.get(args[0]);
     if(targetSocket == undefined) return systemMessage(socketID, 'User not found.');
-    if(args[1] == undefined) return systemMessage(socketID, 'You need to provide a warning message');
+    if(!args[1]) return systemMessage(socketID, 'You need to provide a warning message.');
 
-    return systemMessage(targetSocket, `An admin has warned you: ${args[1]}`);
+    systemMessage(targetSocket, `An admin has warned you: ${args[1]}`);
+    return systemMessage(socketID, `Warned user ${args[0]}: ${args[1]}`);
   }
 
   // Ban
@@ -1528,6 +1537,7 @@ async function getLeaderboard(){
   for(let user of topTen){
     const userObj = {
       username: user.value.username,
+      prestige: user.value.game.prestige,
       money: user.value.game.money
     }
 

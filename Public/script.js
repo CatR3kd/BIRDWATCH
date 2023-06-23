@@ -32,7 +32,7 @@
     
     button.innerText = 'Play Birdwatch';
     button.removeAttribute('onclick');
-    button.addEventListener("click", startGame);
+    button.addEventListener('click', startGame);
   });
 
   socket.on('gameUpdate', function(updateObj){
@@ -69,13 +69,24 @@
   });
 
   function startGame(){
+    if(socket.connected == false) return window.location.reload();
+      
     document.getElementById('startMenu').style.visibility = 'hidden';
     document.getElementById('game').style.visibility = 'visible';
     updateGame({"user": savedUser, "notify": true});
   }
   
   function sendAction(){
+    const text = document.getElementById('text');    
     const input = document.getElementById('actionInput');
+
+    if(socket.connected == false){
+      text.innerHTML += '<i>This game has been disconnected because you logged in somewhere else. If you want to continue playing on this tab, just reload!</i><br><br>';
+
+      input.value = '';
+      return scroll();
+    }
+    
     let action = input.value;
 
     if(action == '') return;
@@ -102,8 +113,6 @@
     if(command.toLowerCase() == 'clear') return clear();
 
     if(command.toLowerCase() == 'toggleunderline'){
-      const text = document.getElementById('text');
-      
       if((localStorage.getItem('underlineKeywordsPreference') == undefined) || (JSON.parse(localStorage.getItem('underlineKeywordsPreference')) == true)){
         localStorage.setItem('underlineKeywordsPreference', false);
 
@@ -186,7 +195,7 @@
   function stats(){
     const text = document.getElementById('text');
     
-    text.innerHTML += underlineKeywords(`Health: ${savedUser.game.health}/${savedUser.game.maxHealth + savedUser.game.maxHealthBuff}\nLevel: ${savedUser.game.level} (${savedUser.game.xp}/${savedUser.game.xpRequired}XP)\nStrength: ${savedUser.game.damage}/${(savedUser.game.level + 1) * 10} (+ ${savedUser.game.damageBuff} in items)\nSpeed: ${savedUser.game.speed}/${savedUser.game.level * 5} (+ ${savedUser.game.speedBuff} in items)\n\n`);
+    text.innerHTML += underlineKeywords(`Health: ${savedUser.game.health}/${savedUser.game.maxHealth + savedUser.game.maxHealthBuff}\nLevel: ${savedUser.game.level} (${savedUser.game.xp}/${savedUser.game.xpRequired}XP)\nPrestige: ${savedUser.game.prestige} (Next prestige available at level ${(50 + (savedUser.game.prestige * 10))}!)\nStrength: ${savedUser.game.damage}/${(savedUser.game.level + 1) * 10} (+ ${savedUser.game.damageBuff} in items)\nSpeed: ${savedUser.game.speed}/${savedUser.game.level * 5} (+ ${savedUser.game.speedBuff} in items)\n\n`);
     
     scroll();
   }
@@ -308,7 +317,7 @@
     for(let place in places){
       const player = leaderboard[place];
       if(player){
-        places[place].innerText = `${+place + 1}: ${player.username} - $${formatNumber(player.money)}`;
+        places[place].innerText = `${+place + 1}: [${player.prestige}] ${player.username} - $${formatNumber(player.money)}`;
       }
     }
   }
@@ -387,7 +396,7 @@
     let newWords = [];
     const keywords = [
       /\$[0-9]+/g, // Money
-      /(?:[0-9]+xp|level)/ig, // Experience/Level
+      /(?:[0-9]+xp|level|lvl|prestige)/ig, // Experience/Level/prestige
       /(?:north|east|south|west)/ig, // Directions
       /speed/ig, // Stats
       /health/ig,
