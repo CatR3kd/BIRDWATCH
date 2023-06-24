@@ -105,7 +105,7 @@ io.on('connection', (socket) => {
     }
     
     let user = await db.get(username);
-    if(user == undefined) user = await createAccount(username);
+    if(!user) user = await createAccount(username);
 
     connectedPlayers.set(username, socket.id);
   
@@ -197,7 +197,7 @@ const food = {
 async function playAction(username, socket, actionObj){
   // Make sure user exists and isn't busy
   const user = await db.get(username);
-  if(user == undefined) return;
+  if(!user) return;
 
   const command = (actionObj.command).toLowerCase();
 
@@ -226,7 +226,7 @@ async function playAction(username, socket, actionObj){
     // Moving system
     const destinationName = gameMap[user.game.location].neighbors[args[0]];
     const destination = gameMap[destinationName];
-    if(destination == undefined) return socket.emit('message', 'That is not an available action.');
+    if(!destination) return socket.emit('message', 'That is not an available action.');
 
     // Check if the user is allowed in the target destination based on items, alliances, and enemies
     let cannotPass = false;
@@ -293,14 +293,14 @@ async function playAction(username, socket, actionObj){
     const availableNPCs = gameMap[user.game.location].npcs;
     const targetNPC = availableNPCs[args[0]];
 
-    if(targetNPC == undefined) return socket.emit('message', 'That is not an available action.');
+    if(!targetNPC) return socket.emit('message', 'That is not an available action.');
 
     return socket.emit('message', `${targetNPC.name}: ${targetNPC.text}`);
   } else if(command == 'fight'){
     // Fighting system
     const targetEnemy = gameMap[user.game.location].enemies[args[0]];
     
-    if(targetEnemy == undefined) return socket.emit('message', 'That is not an available action.');
+    if(!targetEnemy) return socket.emit('message', 'That is not an available action.');
 
       if(user.game.defeatedEnemies.includes(targetEnemy.name)) return socket.emit('message', 'That is not an available action. (You have already beaten this enemy!)');
 
@@ -373,7 +373,7 @@ async function playAction(username, socket, actionObj){
     
     const item = targetItem;
     
-    if(item == undefined) return socket.emit('message', 'That is not an available action.');
+    if(!item) return socket.emit('message', 'That is not an available action.');
 
     // Inspect
     if(command == 'inspect'){
@@ -688,7 +688,7 @@ async function playAction(username, socket, actionObj){
       message = `Healed ${formatNumber(newUser.game.health - oldHealth)} HP!`;
     } else {
       // User is eating normally
-      if(food[args[0]] == undefined) return socket.emit('message', 'That is not an available action.');
+      if(!food[args[0]]) return socket.emit('message', 'That is not an available action.');
       if(!user.game.items.includes(capitalizeFirstLetter(args[0]))) return socket.emit('message', 'That is not an available action.');
 
       // Multiply by 1.5 if user has the microwave
@@ -801,21 +801,21 @@ async function playAction(username, socket, actionObj){
     if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
     
     const game = blackjackGames.get(user.username);
-    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    if(!game) return socket.emit('message', 'You must already be in a game of blackjack to play!');
     
     game.hit();
   } else if(command == 'double'){
     if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
     
     const game = blackjackGames.get(user.username);
-    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    if(!game) return socket.emit('message', 'You must already be in a game of blackjack to play!');
     
     game.double();
   } else if(command == 'stand'){
     if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
     
     const game = blackjackGames.get(user.username);
-    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    if(!game) return socket.emit('message', 'You must already be in a game of blackjack to play!');
     
     game.end();
   } else if(command == 'quests'){
@@ -948,14 +948,14 @@ async function playAction(username, socket, actionObj){
     }
   } else if(command == 'playerinfo'){
     // Player info
-    if(args[0] == undefined) return socket.emit('message', 'You must provide a player\'s username to search! Ex. \"playerinfo {username}\"');
+    if(!args[0]) return socket.emit('message', 'You must provide a player\'s username to search! Ex. \"playerinfo {username}\"');
 
     const player = await db.get(args[0]);
-    if(player == undefined) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
+    if(!player) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
 
     // Make sure the player has a "game" object, otherwise users could request things like "playerinfo username.game.money" and crash the server
     const playerInfo = player.game;
-    if(playerInfo == undefined) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
+    if(!playerInfo) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
     
     return socket.emit('message', `${args[0]} (${(connectedPlayers.has(args[0]))? 'Online' : 'Offline'}):\n\nAlliance: ${(playerInfo.alliance == '')? 'None' : capitalizeFirstLetter(playerInfo.alliance)}\nLevel: ${playerInfo.level}\nPrestige: ${playerInfo.prestige}\nBalance: $${playerInfo.money}\nLocation: ${(user.game.discoveredLocations.includes(playerInfo.location))? gameMap[playerInfo.location].name : '???'}`);
   } else if(command == 'playersonline'){
@@ -1455,7 +1455,7 @@ async function chatCommand(msg, socketID){
     if(args[0] == 'CatR3kd') return systemMessage(socketID, 'Cannot kick this user!');
     
     const targetSocket = await connectedPlayers.get(args[0]);
-    if(targetSocket == undefined) return systemMessage(socketID, 'User not found.');
+    if(!targetSocket) return systemMessage(socketID, 'User not found.');
 
     io.to(targetSocket).emit('reload');
     return systemMessage(socketID, `Kicked user ${args[0]}.`);
@@ -1463,7 +1463,7 @@ async function chatCommand(msg, socketID){
 
   if(command == 'warn'){
     const targetSocket = await connectedPlayers.get(args[0]);
-    if(targetSocket == undefined) return systemMessage(socketID, 'User not found.');
+    if(!targetSocket) return systemMessage(socketID, 'User not found.');
     if(!args[1]) return systemMessage(socketID, 'You need to provide a warning message.');
 
     systemMessage(targetSocket, `An admin has warned you: ${args[1]}`);
@@ -1475,7 +1475,7 @@ async function chatCommand(msg, socketID){
     if(args[0] == 'CatR3kd') return systemMessage(socketID, 'Cannot ban this user!');
     
     const targetUser = await db.get(args[0]);
-    if(targetUser == undefined) return systemMessage(socketID, 'User not found.');
+    if(!targetUser) return systemMessage(socketID, 'User not found.');
 
     const newUser = targetUser;
     newUser.banStatus = true;
@@ -1493,7 +1493,7 @@ async function chatCommand(msg, socketID){
   // Unban
   if(command == 'unban'){
     const targetUser = await db.get(args[0]);
-    if(targetUser == undefined) return systemMessage(socketID, 'User not found.');
+    if(!targetUser) return systemMessage(socketID, 'User not found.');
 
     const newUser = targetUser;
     newUser.banStatus = false;
