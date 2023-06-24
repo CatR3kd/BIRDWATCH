@@ -139,12 +139,12 @@
     "stats": List your current stats. (Health, strength, speed, etc.)
     "balance": Tells you how much money you have.
     "inventory": Shows you what items you own.
-    "move <direction>": Moves you in a given direction. (North, South, East, West) You can also just type the direction you want to move in, Ex. "north"
+    "move {direction}": Moves you in a given direction. (North, South, East, West) You can also just type the direction you want to move in, Ex. "north"
     "alliances": Lists your alliances.
-    "eat <item>": Consume a food item to heal. Must have item in inventory.
+    "eat {item}": Consume a food item to heal. Must have item in inventory.
     "toggleunderline": Toggles underlined keywords like "north". On by default.
     "playersonline": Lists all connected players.
-    "playerinfo <username>": Get some helpful information about another player's alliance, level, etc.
+    "playerinfo {username}": Get some helpful information about another player's alliance, level, etc.
     "clear": Clears the terminal. (The text you are currently reading)
 
     "reset": Resets your account. THIS IS PERMANENT!
@@ -157,7 +157,7 @@
   function blackjackHelp(){
     const text = document.getElementById('text');
     
-    text.innerHTML += underlineKeywords('The goal of blackjack is to get a higher point value than the dealer, without going over 21. You will be dealt two face up cards, and the dealer will have one face up card and one face down card. Your point value is the value of each of your cards added up, with these values:\nNumber cards: Worth their number (Ex. 2 of spades is worth 2 points)\nFace cards (J, Q, K): All worth 10 points\nAces: Can be worth either 1 or 11 points, and can be changed whenever\nTo get more points, you can \"hit\". When you hit, you will be given another card from the top of the deck. If your point value goes over 21, or \"bust\", at any time, you instantly lose your bet. On your first turn, you have the option to \"double\". Doing so doubles your bet, and hits your hand once before the dealer turns his cards face up. However, if you don\'t have enough money to double your bet, you will be unable to double. Once you are done hitting, you can \"stand\", and the dealer shows his hidden card, and hits until he has at least 17 points. (This also happens immediately after doubling.) The dealer can also bust. Once the dealer and player are done hitting, whomever has the higher score without busting wins the bet. There is also a chance of getting a \"blackjack\", or being dealt and Ace and a Ten or Face card, which pays you 1.5x your original bet.\n\nCommands:\nStart game: \"blackjack <bet amount>\"\nHit: \"hit\"\nDouble:\n\"double\"\nStand: \"stand\"');
+    text.innerHTML += underlineKeywords('The goal of blackjack is to get a higher point value than the dealer, without going over 21. You will be dealt two face up cards, and the dealer will have one face up card and one face down card. Your point value is the value of each of your cards added up, with these values:\nNumber cards: Worth their number (Ex. 2 of spades is worth 2 points)\nFace cards (J, Q, K): All worth 10 points\nAces: Can be worth either 1 or 11 points, and can be changed whenever\nTo get more points, you can \"hit\". When you hit, you will be given another card from the top of the deck. If your point value goes over 21, or \"bust\", at any time, you instantly lose your bet. On your first turn, you have the option to \"double\". Doing so doubles your bet, and hits your hand once before the dealer turns his cards face up. However, if you don\'t have enough money to double your bet, you will be unable to double. Once you are done hitting, you can \"stand\", and the dealer shows his hidden card, and hits until he has at least 17 points. (This also happens immediately after doubling.) The dealer can also bust. Once the dealer and player are done hitting, whomever has the higher score without busting wins the bet. There is also a chance of getting a \"blackjack\", or being dealt and Ace and a Ten or Face card, which pays you 1.5x your original bet.\n\nCommands:\nStart game: \"blackjack {bet amount}\"\nHit: \"hit\"\nDouble:\n\"double\"\nStand: \"stand\"');
     
     scroll();
   }

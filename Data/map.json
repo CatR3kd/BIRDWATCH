@@ -342,7 +342,7 @@
     "npcs":{
       "dealer":{
         "name": "Blackjack Dealer",
-        "text":"\"Hey. If ya'd like ta play blackjack, ya can use tha \"blackjack <bet>\" command. If ya need an explanation, type \"blackjack help\".\"",
+        "text":"\"Hey. If ya'd like ta play blackjack, ya can use tha \"blackjack {bet}\" command. If ya need an explanation, type \"blackjack help\".\"",
         "wares":{}
       },
       "bouncer":{
@@ -397,7 +397,7 @@
     "npcs":{
       "bookie":{
         "name": "Bookie",
-        "text":"\"If you want to fight someone, just use the \"battle <buff>\" command to be added to the queue to fight another player! You can choose a buff of attack, speed, or defense that will be temporarily applied to your stats to give you and edge over your opponent. The winner will receive 10% of the loser's money, and we'll get you back to full health afterwards.\"",
+        "text":"\"If you want to fight someone, just use the \"battle {buff}\" command to be added to the queue to fight another player! You can choose a buff of attack, speed, or defense that will be temporarily applied to your stats to give you and edge over your opponent. The winner will receive 10% of the loser's money, and we'll get you back to full health afterwards.\"",
         "wares":{}
       }
     },
@@ -695,7 +695,7 @@
             "name":"Pouch",
             "price":2500,
             "type":"other",
-            "description":"A pouch to store food in. Kind of gross, but allows you to store infinite food. Instead of using \"eat <food>\", use \"eat <amount>\". You can also check how much food you have by using the \"inventory\" command."
+            "description":"A pouch to store food in. Kind of gross, but allows you to store infinite food. Instead of using \"eat {food}\", use \"eat {amount}\". You can also check how much food you have by using the \"inventory\" command."
           },
           "mine":{
             "name":"Mine",

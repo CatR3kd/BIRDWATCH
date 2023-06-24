@@ -948,7 +948,7 @@ async function playAction(username, socket, actionObj){
     }
   } else if(command == 'playerinfo'){
     // Player info
-    if(args[0] == undefined) return socket.emit('message', 'You must provide a player\'s username to search! Ex. \"playerinfo <username>\"');
+    if(args[0] == undefined) return socket.emit('message', 'You must provide a player\'s username to search! Ex. \"playerinfo {username}\"');
 
     const player = await db.get(args[0]);
     if(player == undefined) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
