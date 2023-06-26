@@ -14,7 +14,6 @@ add prestige brackets to leaderboard and chat
 >> make chat clearable and toggleable
 if underlined keywords are laggy turn all the regexes into one big regex
 use the replit user data provided in the headers like pfp and bio and stuff
->> Fix regex to capture south and west in help command
 
 ---------
 completed:
@@ -41,7 +40,6 @@ prestige
 prestige quests
 playersonline command
 made chat scrollable
-underlined keywords
 fixed innerhtml <> problem
 
 -------------

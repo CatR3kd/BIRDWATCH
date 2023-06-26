@@ -41,7 +41,7 @@
 
   socket.on('message', function(message){
     const text = document.getElementById('text');
-    text.innerHTML += underlineKeywords(`${message}\n\n`);
+    text.innerText += `${message}\n\n`;
     scroll();
   });
   
@@ -112,20 +112,7 @@
     if(command.toLowerCase() == 'alliances') return alliances();
     if(command.toLowerCase() == 'clear') return clear();
 
-    if(command.toLowerCase() == 'toggleunderline'){
-      if((localStorage.getItem('underlineKeywordsPreference') == undefined) || (JSON.parse(localStorage.getItem('underlineKeywordsPreference')) == true)){
-        localStorage.setItem('underlineKeywordsPreference', false);
-
-        text.innerText += 'Underlined keywords now toggled OFF. Any new text will not be underlined. To clear the all of the text currently onscreen, use the \"clear\" command.\n\n';
-      } else {
-        localStorage.setItem('underlineKeywordsPreference', true);
-
-        text.innerText += 'Underlined keywords now toggled ON.\n\n';
-        text.innerHTML = underlineKeywords(text.innerText);
-      }
-
-      return scroll();
-    }
+    
     
     socket.emit('action', actionObj);
   }
@@ -133,7 +120,7 @@
   function help(){
     const text = document.getElementById('text');
     
-    text.innerHTML += underlineKeywords(`Use commands to navigate and interact with the game!
+    text.innerText += `Use commands to navigate and interact with the game!
     Global commands:
     "location": Reminds you of your surroundings.
     "stats": List your current stats. (Health, strength, speed, etc.)
@@ -142,14 +129,13 @@
     "move {direction}": Moves you in a given direction. (North, South, East, West) You can also just type the direction you want to move in, Ex. "north"
     "alliances": Lists your alliances.
     "eat {item}": Consume a food item to heal. Must have item in inventory.
-    "toggleunderline": Toggles underlined keywords like "north". On by default.
     "playersonline": Lists all connected players.
     "playerinfo {username}": Get some helpful information about another player's alliance, level, etc.
     "clear": Clears the terminal. (The text you are currently reading)
 
     "reset": Resets your account. THIS IS PERMANENT!
     
-    NOTE: There are other location-specific commands that will be explained by other characters.\n\n`);
+    NOTE: There are other location-specific commands that will be explained by other characters.\n\n`;
     
     scroll();
   }
@@ -157,7 +143,7 @@
   function blackjackHelp(){
     const text = document.getElementById('text');
     
-    text.innerHTML += underlineKeywords('The goal of blackjack is to get a higher point value than the dealer, without going over 21. You will be dealt two face up cards, and the dealer will have one face up card and one face down card. Your point value is the value of each of your cards added up, with these values:\nNumber cards: Worth their number (Ex. 2 of spades is worth 2 points)\nFace cards (J, Q, K): All worth 10 points\nAces: Can be worth either 1 or 11 points, and can be changed whenever\nTo get more points, you can \"hit\". When you hit, you will be given another card from the top of the deck. If your point value goes over 21, or \"bust\", at any time, you instantly lose your bet. On your first turn, you have the option to \"double\". Doing so doubles your bet, and hits your hand once before the dealer turns his cards face up. However, if you don\'t have enough money to double your bet, you will be unable to double. Once you are done hitting, you can \"stand\", and the dealer shows his hidden card, and hits until he has at least 17 points. (This also happens immediately after doubling.) The dealer can also bust. Once the dealer and player are done hitting, whomever has the higher score without busting wins the bet. There is also a chance of getting a \"blackjack\", or being dealt and Ace and a Ten or Face card, which pays you 1.5x your original bet.\n\nCommands:\nStart game: \"blackjack {bet amount}\"\nHit: \"hit\"\nDouble:\n\"double\"\nStand: \"stand\"');
+    text.innerText += 'The goal of blackjack is to get a higher point value than the dealer, without going over 21. You will be dealt two face up cards, and the dealer will have one face up card and one face down card. Your point value is the value of each of your cards added up, with these values:\nNumber cards: Worth their number (Ex. 2 of spades is worth 2 points)\nFace cards (J, Q, K): All worth 10 points\nAces: Can be worth either 1 or 11 points, and can be changed whenever\nTo get more points, you can \"hit\". When you hit, you will be given another card from the top of the deck. If your point value goes over 21, or \"bust\", at any time, you instantly lose your bet. On your first turn, you have the option to \"double\". Doing so doubles your bet, and hits your hand once before the dealer turns his cards face up. However, if you don\'t have enough money to double your bet, you will be unable to double. Once you are done hitting, you can \"stand\", and the dealer shows his hidden card, and hits until he has at least 17 points. (This also happens immediately after doubling.) The dealer can also bust. Once the dealer and player are done hitting, whomever has the higher score without busting wins the bet. There is also a chance of getting a \"blackjack\", or being dealt and Ace and a Ten or Face card, which pays you 1.5x your original bet.\n\nCommands:\nStart game: \"blackjack {bet amount}\"\nHit: \"hit\"\nDouble:\n\"double\"\nStand: \"stand\"';
     
     scroll();
   }
@@ -179,7 +165,7 @@
       if(!(savedUser.game.defeatedEnemies.includes(enemy.name))) addedMessage += `\n${capitalizeFirstLetter(enemyID)} blocks travel to the ${enemy.blockedDirection}! ("fight ${enemyID}")`;
     }
       
-    text.innerHTML += underlineKeywords(`Entered ${map[savedUser.game.location].name}.\n${map[savedUser.game.location].text}${addedMessage}\n\n`);
+    text.innerText += `Entered ${map[savedUser.game.location].name}.\n${map[savedUser.game.location].text}${addedMessage}\n\n`;
       
     scroll();
   }
@@ -187,7 +173,7 @@
   function balance(){
     const text = document.getElementById('text');
     
-    text.innerHTML += underlineKeywords(`Current balance: $${savedUser.game.money}\n\n`);
+    text.innerText += `Current balance: $${savedUser.game.money}\n\n`;
     
     scroll();
   }
@@ -195,7 +181,7 @@
   function stats(){
     const text = document.getElementById('text');
     
-    text.innerHTML += underlineKeywords(`Health: ${savedUser.game.health}/${savedUser.game.maxHealth + savedUser.game.maxHealthBuff}\nLevel: ${savedUser.game.level} (${savedUser.game.xp}/${savedUser.game.xpRequired}XP)\nPrestige: ${savedUser.game.prestige} (Next prestige available at level ${(50 + (savedUser.game.prestige * 10))}!)\nStrength: ${savedUser.game.damage}/${(savedUser.game.level + 1) * 10} (+ ${savedUser.game.damageBuff} in items)\nSpeed: ${savedUser.game.speed}/${savedUser.game.level * 5} (+ ${savedUser.game.speedBuff} in items)\n\n`);
+    text.innerText += `Health: ${savedUser.game.health}/${savedUser.game.maxHealth + savedUser.game.maxHealthBuff}\nLevel: ${savedUser.game.level} (${savedUser.game.xp}/${savedUser.game.xpRequired}XP)\nPrestige: ${savedUser.game.prestige} (Next prestige available at level ${(50 + (savedUser.game.prestige * 10))}!)\nStrength: ${savedUser.game.damage}/${(savedUser.game.level + 1) * 10} (+ ${savedUser.game.damageBuff} in items)\nSpeed: ${savedUser.game.speed}/${savedUser.game.level * 5} (+ ${savedUser.game.speedBuff} in items)\n\n`;
     
     scroll();
   }
@@ -217,7 +203,7 @@
     
     const text = document.getElementById('text');
     
-    text.innerHTML += underlineKeywords(`${textToDisplay}\n\n`);
+    text.innerText += `${textToDisplay}\n\n`;
     
     scroll();
   }
@@ -237,7 +223,7 @@
     
     const text = document.getElementById('text');
     
-    text.innerHTML += underlineKeywords(`${textToDisplay}\n\n`);
+    text.innerText += `${textToDisplay}\n\n`;
     
     scroll();
   }
@@ -387,42 +373,5 @@
 
   function capitalizeFirstLetter(word){
     return word.charAt(0).toUpperCase() + word.slice(1);
-  }
-
-  function underlineKeywords(text){
-    if(JSON.parse(localStorage.getItem('underlineKeywordsPreference')) == false) return text.replaceAll('\n', '<br>');
-    
-    let words = [];
-    let newWords = [];
-    const keywords = [
-      /\$[0-9]+/g, // Money
-      /(?:[0-9]+xp|level|lvl|prestige)/ig, // Experience/Level/prestige
-      /(?:north|east|south|west)/ig, // Directions
-      /speed/ig, // Stats
-      /health/ig,
-      /strength/ig,
-      /(?:^\("|"\)$)/ig, // Commands
-      /(?:penguin|pigeon)/ig // Alliances
-    ];
-
-    for(let word of text.split(' ')){
-      if(word.includes('\n')){
-        // Replace all line break chars with <br>'s, then remove all empty strings from the array
-        words.push(...word.replaceAll('\n', ' <br> ').split(' ').filter(function(a){return a !== ''}));
-      } else {
-        words.push(word);
-      }
-    }
-    
-    for(let word of words){
-      for(let keyword of keywords){
-        if(keyword.test(word) == true){
-          word = `<span style="text-decoration: underline">${word}</span>`;
-        }
-      }
-      newWords.push(word);
-    }
-  
-    return newWords.join(' ');
   }
 })();
