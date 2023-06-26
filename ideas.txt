@@ -1,7 +1,6 @@
 make raid options be randomly ordered
 cheat/macro detection
 maybe rewrite the paying out for online battles because it's weird
->> map location with private chat for high level/leaderboard players
 gang wars for high level players
 make client js get obfuscated before being sent to the client
 maybe make training more expensive depending on your level or stats
@@ -12,7 +11,8 @@ add prestige brackets to leaderboard and chat
 > make online battle payout be partially determined by difference of players' levels
 > maybe buff pigeons more
 >> make chat clearable and toggleable
-if underlined keywords are laggy turn all the regexes into one big regex
+>> add functionality to prestige hall (so you need to have acheived lvl 100 to enter)
+>> add more features to prestige hall
 use the replit user data provided in the headers like pfp and bio and stuff
 
 ---------

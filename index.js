@@ -108,6 +108,8 @@ io.on('connection', (socket) => {
     if(!user) user = await createAccount(username);
 
     connectedPlayers.set(username, socket.id);
+
+    if(user.game.location == 'prestigeHall') socket.join('Prestige Hall');
   
     socket.emit('loggedIn', user);
     socket.emit('leaderboard', leaderboard);
@@ -280,6 +282,13 @@ async function playAction(username, socket, actionObj){
     if((destinationName == 'hollow') && (!user.game.completedQuests.includes('midnightmarket'))){
       newUser.game.completedQuests.push('midnightmarket');
       socket.emit('message', '(You feel as though you\'ve completed something important, maybe you should check the quest board!)');
+    }
+
+    // Prestige hall Socket.IO room
+    if(destinationName == 'prestigeHall'){
+      socket.join('Prestige Hall');
+    } else if (socket.rooms.has('Prestige Hall')){
+      socket.leave('Prestige Hall');
     }
     
     newUser.game.location = destinationName;
@@ -1434,10 +1443,16 @@ async function sendChat(username, msg, socket){
   const msgObj = {
     sender: `${title}${username}`,
     msg: filter.clean(msg),
-    badgeColor: badgeColor
+    badgeColor: badgeColor,
+    prestige: socket.rooms.has('Prestige Hall')
   }
-    
-  io.emit('chatMsg', msgObj);
+
+  // Emit to correct room
+  if(socket.rooms.has('Prestige Hall')){
+    io.to("Prestige Hall").emit('chatMsg', msgObj);
+  } else {
+    io.emit('chatMsg', msgObj);
+  }
 }
 
 async function chatCommand(msg, socketID){

@@ -282,6 +282,10 @@
     msg.innerText = msgObj.msg;
     li.appendChild(badge);
     li.appendChild(msg);
+
+    if((savedUser.game.location == 'prestigeHall') && (msgObj.prestige == false)){
+      li.style.opacity = 0.5;
+    }
   
     document.getElementById('chat').appendChild(li);
 
