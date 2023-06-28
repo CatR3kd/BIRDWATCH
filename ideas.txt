@@ -1,7 +1,7 @@
 make raid options be randomly ordered
 cheat/macro detection
 maybe rewrite the paying out for online battles because it's weird
-gang wars for high level players
+> gang wars for high level players
 make client js get obfuscated before being sent to the client
 maybe make training more expensive depending on your level or stats
 > add airdrops with troops and stuff that other players can buy to help active raiders for like 10 minutes
@@ -12,6 +12,7 @@ maybe make training more expensive depending on your level or stats
 >> make chat clearable and toggleable
 use the replit user data provided in the headers like pfp and bio and stuff
 > make await used consistently for saving users to db (when to and when not to await)
+add weekly events or something
 
 ---------
 completed:
@@ -41,6 +42,7 @@ made chat scrollable
 fixed innerhtml <> problem
 added prestige hall
 added elixirs
+made chat toggleable and clearable
 
 -------------
 needs testing:
@@ -57,3 +59,4 @@ quests
 raids score file (when it's reset)
 disconnected socket checker
 elixirs
+chat toggling (and system messages + prestige hall with it)

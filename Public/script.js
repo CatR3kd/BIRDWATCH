@@ -70,10 +70,11 @@
 
   function startGame(){
     if(socket.connected == false) return window.location.reload();
-      
-    document.getElementById('startMenu').style.visibility = 'hidden';
+    
     document.getElementById('game').style.visibility = 'visible';
     updateGame({"user": savedUser, "notify": true});
+    
+    document.getElementById('startMenu').style.visibility = 'hidden';
   }
   
   function sendAction(){
@@ -111,9 +112,9 @@
     if(command.toLowerCase() == 'stats') return stats();
     if(command.toLowerCase() == 'alliances') return alliances();
     if(command.toLowerCase() == 'clear') return clear();
+    if(command.toLowerCase() == 'clearchat') return clearChat();
+    if(command.toLowerCase() == 'togglechat') return toggleChat();
 
-    
-    
     socket.emit('action', actionObj);
   }
 
@@ -132,6 +133,8 @@
     "playersonline": Lists all connected players.
     "playerinfo {username}": Get some helpful information about another player's alliance, level, etc.
     "clear": Clears the terminal. (The text you are currently reading)
+    "clearchat": Clears the chat.
+    "togglechat": Toggles the chat.
 
     "reset": Resets your account. THIS IS PERMANENT!
     
@@ -248,7 +251,29 @@
   }
 
   function sendChat(){
+    let toggled = JSON.parse(localStorage.getItem('chatToggled'));
+    if(toggled == undefined) toggled = true;
+
     const input = document.getElementById('chatInput');
+
+    if(toggled == false){
+      let li = document.createElement('li');
+      let badge = document.createElement('span');
+      let msg = document.createElement('msg');
+    
+        
+      badge.innerText = 'System: ';
+      badge.style.color = '#F45B69';
+    
+      msg.innerText = 'You have chat disabled! Use the \"togglechat\" command to reenable it.';
+      li.appendChild(badge);
+      li.appendChild(msg);
+
+      input.value = '';
+    
+      return document.getElementById('chat').appendChild(li);
+    }
+    
     const msg = input.value;
     
     if((msg.length < 1) || (msg.length > 199)) return;
@@ -258,6 +283,11 @@
   }
   
   function newChat(msgObj){
+    let toggled = JSON.parse(localStorage.getItem('chatToggled'));
+    if(toggled == undefined) toggled = true;
+
+    if((toggled == false) && (msgObj.system == false)) return;
+    
     const sender = msgObj.sender;
     const badgeColor = msgObj.badgeColor;
     
@@ -271,9 +301,9 @@
     const chatBox = document.getElementById('chat');
     const wasScrolledToBottom = chatBox.scrollTop === (chatBox.scrollHeight - chatBox.offsetHeight);
   
-    let li = document.createElement('li')
-    let badge = document.createElement('span')
-    let msg = document.createElement('msg')
+    let li = document.createElement('li');
+    let badge = document.createElement('span');
+    let msg = document.createElement('msg');
   
       
     badge.innerText = `${sender}: `;
@@ -283,13 +313,13 @@
     li.appendChild(badge);
     li.appendChild(msg);
 
-    if((savedUser.game.location == 'prestigeHall') && (msgObj.prestige == false)){
+    if((savedUser.game.location == 'prestigeHall') && (msgObj.prestige == false) && (msgObj.system == false)){
       li.style.opacity = 0.5;
     }
   
     document.getElementById('chat').appendChild(li);
 
-    if(wasScrolledToBottom == true)  chatBox.scrollTop = chatBox.scrollHeight;
+    if(wasScrolledToBottom == true) chatBox.scrollTop = chatBox.scrollHeight;
   }
   
   document.getElementById('chatInput').addEventListener('keyup', function(event) {
@@ -298,6 +328,28 @@
       sendChat();
     }
   });
+
+  function clearChat(){
+    const chatBox = document.getElementById('chat');
+    
+    chatBox.innerHTML = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function toggleChat(){
+    let toggled = JSON.parse(localStorage.getItem('chatToggled'));
+    
+    if(toggled == undefined) toggled = true;
+    toggled = !toggled;
+
+    if(toggled == false) clearChat();
+
+    localStorage.setItem('chatToggled', toggled);
+
+    const text = document.getElementById('text');
+    text.innerText += `Chat now toggled ${(toggled == true)? 'ON' : 'OFF'}.\n\n`;
+    scroll();
+  }
 
   function updateLeaderboard(leaderboard){
     if((leaderboard.length < 1) || (!leaderboard)) return;

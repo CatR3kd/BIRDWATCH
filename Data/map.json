@@ -464,7 +464,7 @@
             "name": "Elixir",
             "price": 1000000,
             "type": "other",
-            "description": "Buying this elixir will give you a 1.5x damage buff and 2x health buff for the next 45 minutes. These buffs only apply to online battles against other players who have access to the prestige hall."
+            "description": "Buying this elixir will give you a 1.5x damage buff and 2x health buff for the next 45 minutes. These buffs only apply to online battles against other players who have access to the prestige hall. (Does not stack.)"
           }
         }
       }

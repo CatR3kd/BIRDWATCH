@@ -1475,7 +1475,8 @@ async function sendChat(username, msg, socket){
     sender: `${title}${username}`,
     msg: filter.clean(msg),
     badgeColor: badgeColor,
-    prestige: socket.rooms.has('Prestige Hall')
+    prestige: socket.rooms.has('Prestige Hall'),
+    system: false
   }
 
   // Emit to correct room
@@ -1561,7 +1562,9 @@ function systemMessage(socketID, msg){
   const chatObj = {
     sender: 'System',
     msg: msg,
-    badgeColor: '#F45B69'
+    badgeColor: '#F45B69',
+    prestige: false,
+    system: true
   }
       
   io.to(socketID).emit('chatMsg', chatObj);
