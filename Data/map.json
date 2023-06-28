@@ -455,10 +455,23 @@
     "neededAlliances": [],
     "bannedAlliances": [],
     "availableAlliances": [],
-    "npcs": {},
+    "npcs": {
+      "vituoso": {
+        "name": "Birdwatch Virtuoso",
+        "text": "You have done well to earn passage into this hall, among the fellow masters of our talent. I offer a unique and precious elixir that will boost your skill in battle with others who have access to this hall.",
+        "wares": {
+          "elixir": {
+            "name": "Elixir",
+            "price": 1000000,
+            "type": "other",
+            "description": "Buying this elixir will give you a 1.5x damage buff and 2x health buff for the next 45 minutes. These buffs only apply to online battles against other players who have access to the prestige hall."
+          }
+        }
+      }
+    },
     "items": {},
     "enemies": {},
-    "text": "You enter a vast and magnificent marble Romanesque hall. Though you cannot see anyone else but yourself, you can sense and communicate with others of equal expertise and experience. (This location has a private chat that only you and other present players can see.)"
+    "text": "You enter a vast and magnificent marble Romanesque hall. Though you cannot see them, you can sense and communicate with others of equal expertise and experience. At the end of the hall, in an ivory throne sits an old but hardened man. (\"talk virtuoso\") (This location has a private chat that only you and other present players can see.)"
   },
   "trail": {
     "name": "Beaten Trail",

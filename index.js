@@ -48,6 +48,7 @@ class Game{
     this.claimedQuests = [];
     this.food = 0;
     this.lastDailyReward = 0;
+    this.lastElixir = 0;
   }
 }
 
@@ -276,6 +277,9 @@ async function playAction(username, socket, actionObj){
     // Nighttime hollow time check
     if((destinationName == 'hollow') && (actionObj.hour < 20)) return socket.emit('message', 'The trees are pointing up towards the sun and block your path. Maybe if you come back later you can get through...');
 
+    // Prestige hall level check
+    if((destinationName == 'prestigeHall') && (user.game.highestLevel < 100)) return socket.emit('message', 'You walk to the doors of the hall and push as hard as you can, but they don\'t budge. Perhaps you should come back once you\'re more powerful...');
+
     let newUser = user;
 
     // Manny's Midnight Market quest
@@ -399,6 +403,16 @@ async function playAction(username, socket, actionObj){
 
     let newUser = user;
     newUser.game.money -= price;
+
+    // Apply elixir
+    if(item.name == 'Elixir'){
+      newUser.game.lastElixir = Date.now();
+      
+      await db.set(user.username, newUser);
+
+      socket.emit('message', `You purchased the ${item.name}, your buffs will remain for the next 45 minutes!`);
+      return socket.emit('gameUpdate', {"user": newUser, "notify": false});
+    }
     
     if(user.game.items.includes('Pouch') && (item.type == 'food')){
       // Check if the player is buying food and has the pouch and/or microwave
@@ -1262,17 +1276,28 @@ function onlineBattle(playerOne, playerTwo){
     playerTwo = temp;
   }
 
-  playerOne.startingHealth = playerOne.user.game.health;
-  playerTwo.startingHealth = playerTwo.user.game.health;
+  playerOne.startingStats = [playerOne.user.game.speed, playerOne.user.game.damage, playerOne.user.game.health];
+  playerTwo.startingStats = [playerTwo.user.game.speed, playerTwo.user.game.damage, playerTwo.user.game.health];
 
-  // Apply buffs and set as busy
-  for(let player of [playerOne, playerTwo]){
+  // Set as busy, apply buffs and elixirs
+  for(let i in [playerOne, playerTwo]){
+    const player = [playerOne, playerTwo][i];
+    const otherPlayer = [playerOne, playerTwo][((i == 0)? 1 : 0)];
+    
     busyPlayers.set(player.user.username, 'fighting');
 
     player.buff = {
       attack: (player.buff == 'attack')? (Math.ceil(player.user.game.damage / 6)) : 0,
       speed: (player.buff == 'speed')? (Math.ceil(player.user.game.level / 5) * 10) : 0,
       defense: (player.buff == 'defense')? (Math.ceil(player.user.game.damage / 6)) : 0
+    }
+
+    const time = Date.now();
+
+    // Only apply elixir buffs if the player has bought an elixir in the last 45 minutes and the other player has achieved level 100
+    if(((time - player.user.game.lastElixir) <= (1000 * 60 * 45)) && (otherPlayer.user.game.highestLevel >= 100)){
+      player.user.game.damage += Math.ceil(player.user.game.damage / 2);
+      player.user.game.health += player.user.game.health;
     }
   }
   
@@ -1337,10 +1362,11 @@ function onlineBattle(playerOne, playerTwo){
         playerTwo.user.game.money -= Math.floor(playerTwo.user.game.money * multiplier);
       }
 
-      // Heal & save players, give XP, and clean up
+      // Reset player stats, save, give XP, and clean up
       for(let player of [playerOne, playerTwo]){
-        
-        player.user.game.health = player.startingHealth;
+
+        // Nice one-liner to set multiple values at once
+        [player.user.game.speed, player.user.game.damage, player.user.game.health] = [...player.startingStats];
         
         let xpGained;
         if(player.user.username == winner.username){
@@ -1386,12 +1412,17 @@ function matchmakeBattles(){
 
   // Battle each pair
   for(let pair of pairs){
+    const elixirsActiveMessage = ((pair[0].user.game.highestLevel >= 100) && (pair[1].user.game.highestLevel >= 100))? '\nActive elixirs WILL be applied in this battle!' : '';
+    
     for(let player in pair){
       battleQueue.delete(pair[player].user.username);
-      pair[player].socket.emit('message', `Found match! Opponent: ${(player == 0)? pair[1].user.username : pair[0].user.username}`)
+      pair[player].socket.emit('message', `Found match! Opponent: ${(player == 0)? pair[1].user.username : pair[0].user.username}${elixirsActiveMessage}`);
     }
 
-    onlineBattle(pair[0], pair[1]);
+    // Allow players a second to read the message before starting the battle
+    setTimeout(function(){
+      onlineBattle(pair[0], pair[1]);
+    }, 1000)
   }
 }
 
