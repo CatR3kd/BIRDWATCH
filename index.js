@@ -11,6 +11,7 @@ const { RateLimiterMemory } = require('rate-limiter-flexible');
 const { QuickDB } = require("quick.db");
 const db = new QuickDB({filePath: "Data/db.sqlite"});
 const raidScores = new QuickDB({filePath: "Data/raids.sqlite"});
+const airdrops = new QuickDB({filePath: "Data/airdrops.sqlite"});
 const connectedPlayers = new Map();
 const busyPlayers = new Map();
 const raidingPlayers = new Map();
@@ -51,6 +52,7 @@ class Game{
     this.lastElixir = 0;
   }
 }
+
 
 
 // Ratelimiter
@@ -746,17 +748,22 @@ async function playAction(username, socket, actionObj){
     if(!((user.game.location == 'penguinHQ') || (user.game.location == 'pigeonHQ'))) return socket.emit('message', 'That is not an available action.');
     if(user.game.level < 5) return socket.emit('message', 'You must be at least level 5 to participate in a raid!');
 
-    const raidTeam = (user.game.location == 'penguinHQ')? 'penguin' : 'pigeon';
-    
+    // Check airdrop buff
+    const currentAirdrop = await airdrops.get(user.game.alliance);
+    if(!currentAirdrop) await validateAirdrops();
+
+    const airdropActive = (((Date.now() - currentAirdrop) / (1000 * 60)) < 45);
+
+    // Set player as busy and save + start the raid
     busyPlayers.set(user.username, 'raiding');
     raidingPlayers.set(user.username,{
-      'team': raidTeam,
+      'team': user.game.alliance,
       'location': 'start',
       'score': 0,
-      'troops': 50
+      'troops': (50 * ((airdropActive == true)? 1.4 : 1))
     });
     
-    return socket.emit('message', raidMap[raidTeam].start.text);
+    return socket.emit('message', raidMap[user.game.alliance].start.text);
   } else if(command == 'option'){
     let raid = raidingPlayers.get(user.username);
     
@@ -788,14 +795,23 @@ async function playAction(username, socket, actionObj){
       raidingPlayers.delete(user.username);
       busyPlayers.delete(user.username);
 
+      // Check airdrop buff
+      const currentAirdrop = await airdrops.get(user.game.alliance);
+      if(!currentAirdrop) await validateAirdrops();
+  
+      const airdropActive = (((Date.now() - currentAirdrop) / (1000 * 60)) < 45);
+
       // Calculate XP
       const xpMultiplier = (victory == true)? (1.1 + (Math.random() / 3)) : 0.75;
       const troopBonus = Math.floor(raid.troops / 3.3);
       let xpGained = ((raid.score + troopBonus) * xpMultiplier) + ((victory == true)? (user.game.xpRequired / 15) : 0);
       if((xpGained < 35) && (victory == true)) xpGained = 35;
       if(xpGained > 250) xpGained = 250;
+
+      // Apply airdrop buff
+      if(airdropActive == true) xpGained = (xpGained * 1.3);
       
-      socket.emit('message', `${(victory == true)? 'Raid successful!' : 'All of your troops have died. You manage to make it back to base alive.'}\nFinal score: ${raid.score}${(troopBonus > 0)? `\nRemaning troop bonus: ${troopBonus}` : ''}`);
+      socket.emit('message', `${(victory == true)? 'Raid successful!' : 'All of your troops have died. You manage to make it back to base alive.'}\nFinal score: ${raid.score}${(troopBonus > 0)? `\nRemaining troop bonus: ${troopBonus}` : ''}${(airdropActive == true)? '\n(Airdrop bonus included!)' : ''}`);
       
       let newUser = addXP(user, xpGained, socket);
 
@@ -805,6 +821,58 @@ async function playAction(username, socket, actionObj){
       await db.set(user.username, newUser);
       socket.emit('gameUpdate', {"user": newUser, "notify": true});
     }
+  } else if(command == 'airdrop'){
+    // Airdrops
+    // Check that user is in a headquarters location and is at least level 5
+    if(!((user.game.location == 'penguinHQ') || (user.game.location == 'pigeonHQ'))) return socket.emit('message', 'That is not an available action.');
+    if(user.game.level < 5) return socket.emit('message', 'You must be at least level 5 to purchase an airdrop.');
+
+    // Check if player has enough money, accounting for companion
+    const price = (user.game.items.includes('Companion'))? 450_000 : 500_000;
+    if(user.game.money < price) return socket.emit('message', 'You don\'t have enough money to buy an airdrop.');
+
+    // Subtract price and save user
+    let newUser = user;
+    
+    newUser.game.money -= price;
+    db.set(user.username, newUser);
+
+    const currentAirdrop = await airdrops.get(user.game.alliance);
+    const time = Date.now();
+    
+    if(!currentAirdrop) await validateAirdrops();
+
+    const minutesSinceAirdrop = ((time - currentAirdrop) / (1000 * 60));
+    let newAirdrop;
+
+    // Update airdrop in airdrop DB
+    if(minutesSinceAirdrop >= 45){
+      newAirdrop = (time + (45 * 60 * 1000));
+    } else {
+      newAirdrop = (currentAirdrop + (45 * 60 * 1000));
+    }
+
+    airdrops.set(user.game.alliance, newAirdrop);
+
+    const remainingMinutes = Math.ceil((newAirdrop - time) / (1000 * 60));
+
+    return socket.emit('message', `You purchased an airdrop and boosted the ${capitalizeFirstLetter(user.game.alliance)} Team's raids for 45 minutes! Current airdrop boost will last for a total of: ${remainingMinutes} minute${(remainingMinutes == 1)? '' : 's'}.`);
+  } else if(command == 'activeairdrops'){
+    // Active airdrop checker
+    // Check that user is in a headquarters location
+    if(!((user.game.location == 'penguinHQ') || (user.game.location == 'pigeonHQ'))) return socket.emit('message', 'That is not an available action.');
+
+    const currentAirdrop = await airdrops.get(user.game.alliance);
+
+    if(!currentAirdrop) await validateAirdrops();
+    
+    const time = Date.now();
+    const remainingMinutes = Math.ceil((currentAirdrop - time) / (1000 * 60));
+    const minutesSinceAirdrop = ((time - currentAirdrop) / (1000 * 60));
+    
+    const message = (minutesSinceAirdrop < 45)? `Current ${capitalizeFirstLetter(user.game.alliance)} airdrop boost will last for a total of: ${remainingMinutes} minute${(remainingMinutes == 1)? '' : 's'}.` : `No ${capitalizeFirstLetter(user.game.alliance)} airdrops are currently active.`;
+    
+    return socket.emit('message', message);
   } else if(command == 'blackjack'){
     if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
       
@@ -1056,7 +1124,7 @@ function xpRequired(currentLevel){
 }
 
 
-// Raid DB
+// Raid Score and Airdrop DB's
 
 async function validateRaidScores(){
   const penguinScore = await raidScores.get('penguin');
@@ -1066,8 +1134,17 @@ async function validateRaidScores(){
   if(!pigeonScore) raidScores.set('pigeon', 0);
 }
 
-// Validate scores on startup
+async function validateAirdrops(){
+  const penguinAirdrop = await airdrops.get('penguin');
+  const pigeonAirdrop = await airdrops.get('pigeon');
+  
+  if(!penguinAirdrop) airdrops.set('penguin', 0);
+  if(!pigeonAirdrop) airdrops.set('pigeon', 0);
+}
+
+// Validate DB's on startup
 validateRaidScores();
+validateAirdrops();
 
 
 // Blackjack

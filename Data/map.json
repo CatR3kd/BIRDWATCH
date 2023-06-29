@@ -132,7 +132,7 @@
     "npcs": {
       "commander": {
         "name": "Penguin Commander",
-        "text": "\"Welcome to the Penguin Headquarters! Here, we plan and execute raids on the Pigeon Base. You can participate if you are at least level 5. Raids are a great way to support the team by driving up the win rate, which will grant you a higher daily reward at the courtyard! Also, raiding is a good way to get XP. (\"raid\")\"",
+        "text": "\"Welcome to the Penguin Headquarters! Here, we plan and execute raids on the Pigeon Base. You can participate if you are at least level 5. Raids are a great way to support the team by driving up the win rate, which will grant you a higher daily reward at the courtyard! Also, raiding is a good way to get XP. (\"raid\") Another way to aid is to purchase airdrops. They each cost $500,000 and provide a 45 minute 1.3x XP bonus and 1.4x troop buff to all raiding Penguin Agents! (\"airdrop\"). You can also check if there are any currently active airdrops by using the \"activeairdrops\" command.\"",
         "wares": {}
       }
     },
@@ -261,7 +261,7 @@
     "npcs": {
       "manager": {
         "name": "Pigeon Manager",
-        "text": "\"Welcome to the Pigeon Headquarters, where we launch raids on the hated penguins. If you're level 5 or higher, you can participate. Raids are a great way to support the team by driving up the win rate, which will grant you a higher daily reward at the courtyard, and raiding is also a good way to get XP. (\"raid\")\"",
+        "text": "\"Welcome to the Pigeon Headquarters, where we launch raids on the hated penguins. If you're level 5 or higher, you can participate. Raids are a great way to support the team by driving up the win rate, which will grant you a higher daily reward at the courtyard, and raiding is also a good way to get XP. (\"raid\") Another way to aid is to purchase airdrops. They each cost $500,000 and provide a 45 minute 1.3x XP bonus and 1.4x troop buff to all raiding Pigeon Agents. (\"airdrop\"). You can also check if there are any currently active airdrops by using the \"activeairdrops\" command.\"",
         "wares": {}
       }
     },
