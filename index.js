@@ -831,9 +831,15 @@ async function playAction(username, socket, actionObj){
     const price = (user.game.items.includes('Companion'))? 450_000 : 500_000;
     if(user.game.money < price) return socket.emit('message', 'You don\'t have enough money to buy an airdrop.');
 
-    // Subtract price and save user
     let newUser = user;
-    
+
+    // Team Player quest
+    if(!user.game.completedQuests.includes('teamplayer')){
+      newUser.game.completedQuests.push('teamplayer');
+      socket.emit('message', '(You feel as though you\'ve completed something important, maybe you should check the quest board!)');
+    }
+
+    // Subtract cost and save user
     newUser.game.money -= price;
     db.set(user.username, newUser);
 

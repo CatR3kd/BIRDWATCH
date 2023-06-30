@@ -75,5 +75,12 @@
     "reward":25000000,
     "appearAtLevel":200,
     "secret":false
+  },
+  "teamplayer":{
+    "name":"Team Player",
+    "description":"Purchase an airdrop for your team",
+    "reward":100000,
+    "appearAtLevel":5,
+    "secret":false
   }
 }
