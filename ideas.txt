@@ -12,6 +12,7 @@ use the replit user data provided in the headers like pfp and bio and stuff
 > make await used consistently for saving users to db (when to and when not to await)
 add weekly events or something
 add more ways to get more troops and stuff in raids
+addXP function can get laggy if the person has a ton of xp
 
 ---------
 completed:
@@ -47,17 +48,6 @@ airdrops
 -------------
 needs testing:
 
-raidrewards
-balancing
-stats
-companion discounts and payouts for online battles
-playerinfo command
 speed cap on mining
-healing after online battle
 prestige 
 quests
-raids score file (when it's reset)
-disconnected socket checker
-elixirs
-chat toggling (and system messages + prestige hall with it)
-airdrops and activeairdrops
