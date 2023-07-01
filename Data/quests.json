@@ -30,7 +30,7 @@
   "seniorplayer":{
     "name":"Senior Player",
     "description":"Reach level 100",
-    "reward":10000000,
+    "reward":1000000,
     "appearAtLevel":10,
     "secret":false
   },
@@ -54,5 +54,33 @@
     "reward":250,
     "appearAtLevel":1,
     "secret":true
+  },
+  "prestigiousplayer":{
+    "name":"Prestigious Player",
+    "description":"Prestige for the first time",
+    "reward":10000,
+    "appearAtLevel":40,
+    "secret":false
+  },
+  "prestigiousplayertwo":{
+    "name":"Extremely Prestigious Player",
+    "description":"Prestige five times",
+    "reward":5000000,
+    "appearAtLevel":100,
+    "secret":false
+  },
+  "prestigiousplayerthree":{
+    "name":"Legendarily Prestigious Player",
+    "description":"Prestige ten times",
+    "reward":25000000,
+    "appearAtLevel":200,
+    "secret":false
+  },
+  "teamplayer":{
+    "name":"Team Player",
+    "description":"Purchase an airdrop for your team",
+    "reward":100000,
+    "appearAtLevel":5,
+    "secret":false
   }
 }

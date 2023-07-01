@@ -11,11 +11,14 @@ const { RateLimiterMemory } = require('rate-limiter-flexible');
 const { QuickDB } = require("quick.db");
 const db = new QuickDB({filePath: "Data/db.sqlite"});
 const raidScores = new QuickDB({filePath: "Data/raids.sqlite"});
+const airdrops = new QuickDB({filePath: "Data/airdrops.sqlite"});
 const connectedPlayers = new Map();
 const busyPlayers = new Map();
 const raidingPlayers = new Map();
 const blackjackGames = new Map();
 const battleQueue = new Map();
+const resetRequests = new Map();
+const prestigeRequests = new Map();
 
 
 
@@ -26,6 +29,8 @@ class Game{
 	constructor(){
     this.money = 0;
     this.level = 1;
+    this.highestLevel = 1;
+    this.prestige = 0;
     this.xp = 0;
     this.xpRequired = xpRequired(this.level);
     this.speed = 1;
@@ -34,6 +39,7 @@ class Game{
     this.damageBuff = 0;
     this.health = 100;
     this.maxHealth = 100;
+    this.maxHealthBuff = 0;
     this.location = 'spawnpoint';
   	this.items = [];
     this.alliance = '';
@@ -43,8 +49,10 @@ class Game{
     this.claimedQuests = [];
     this.food = 0;
     this.lastDailyReward = 0;
+    this.lastElixir = 0;
   }
 }
+
 
 
 // Ratelimiter
@@ -83,23 +91,33 @@ io.on('connection', (socket) => {
   (async function(){
     const username = socket.handshake.headers['x-replit-user-name'];
     
-    if((!username) || (connectedPlayers.has(username))){
-      if(connectedPlayers.has(username)){
-        socket.emit('loginError', 'You are already logged in somewhere else!');
-      }
-      
-      socket.disconnect();
-    } else {
-      let user = await db.get(username);
-  
-      if(user == undefined) user = await createAccount(username);
-
-      connectedPlayers.set(username, socket.id);
-  
-      socket.emit('loggedIn', user);
-      socket.emit('leaderboard', leaderboard);
-      io.emit('playerCount', connectedPlayers.size);
+    // Check that there is a username header set
+    if(!username){
+      return socket.disconnect();
     }
+
+    // Delete existing connection
+    if(connectedPlayers.has(username)){
+      const connectedSocket = io.sockets.sockets.get(connectedPlayers.get(username));
+      
+      connectedSocket.emit('loginError', 'You logged in somewhere else, so this tab was disconnected. Please reload!');
+      connectedSocket.disconnect();
+      connectedPlayers.delete(username);
+
+      socket.emit('loginError', 'You were already logged in somewhere else, so that tab was disconnected.');
+    }
+    
+    let user = await db.get(username);
+    if(!user) user = await createAccount(username);
+
+    connectedPlayers.set(username, socket.id);
+
+    if(user.game.location == 'prestigeHall') socket.join('Prestige Hall');
+  
+    socket.emit('loggedIn', user);
+    socket.emit('leaderboard', leaderboard);
+    
+    io.emit('playerCount', connectedPlayers.size);
   })();
 
   socket.on('action', async function(actionObj) {
@@ -146,7 +164,7 @@ io.on('connection', (socket) => {
     if(blackjackGame != undefined)  blackjackGame.end();
 
     if(battleQueue.has(username)){
-      battleQueue.delete(user.username);
+      battleQueue.delete(username);
       busyPlayers.delete(username);
     }
   });
@@ -184,12 +202,21 @@ const food = {
 async function playAction(username, socket, actionObj){
   // Make sure user exists and isn't busy
   const user = await db.get(username);
-  if(user == undefined) return;
+  if(!user) return;
 
   const command = (actionObj.command).toLowerCase();
-  const args = (actionObj.args).map(elem => {
-    return elem.toLowerCase();
-  });
+
+  // Only make args lowercase for case-insensitive commands
+  const caseSensitiveCommands = ['playerinfo'];
+  let args;
+  
+  if(caseSensitiveCommands.includes(command)){
+    args = actionObj.args;
+  } else {
+    args = (actionObj.args).map(elem => {
+      return elem.toLowerCase();
+    });
+  }
 
   const busy = busyPlayers.get(user.username);
   const busyWhitelist = ['option', 'leave'];
@@ -204,7 +231,7 @@ async function playAction(username, socket, actionObj){
     // Moving system
     const destinationName = gameMap[user.game.location].neighbors[args[0]];
     const destination = gameMap[destinationName];
-    if(destination == undefined) return socket.emit('message', 'That is not an available action.');
+    if(!destination) return socket.emit('message', 'That is not an available action.');
 
     // Check if the user is allowed in the target destination based on items, alliances, and enemies
     let cannotPass = false;
@@ -252,10 +279,23 @@ async function playAction(username, socket, actionObj){
     // Nighttime hollow time check
     if((destinationName == 'hollow') && (actionObj.hour < 20)) return socket.emit('message', 'The trees are pointing up towards the sun and block your path. Maybe if you come back later you can get through...');
 
+    // Prestige hall level check
+    if((destinationName == 'prestigeHall') && (user.game.highestLevel < 100)) return socket.emit('message', 'You walk to the doors of the hall and push as hard as you can, but they don\'t budge. Perhaps you should come back once you\'re more powerful...');
+
     let newUser = user;
 
     // Manny's Midnight Market quest
-    if((destinationName == 'hollow') && (!user.game.completedQuests.includes('midnightmarket'))) newUser.game.completedQuests.push('midnightmarket');
+    if((destinationName == 'hollow') && (!user.game.completedQuests.includes('midnightmarket'))){
+      newUser.game.completedQuests.push('midnightmarket');
+      socket.emit('message', '(You feel as though you\'ve completed something important, maybe you should check the quest board!)');
+    }
+
+    // Prestige hall Socket.IO room
+    if(destinationName == 'prestigeHall'){
+      socket.join('Prestige Hall');
+    } else if (socket.rooms.has('Prestige Hall')){
+      socket.leave('Prestige Hall');
+    }
     
     newUser.game.location = destinationName;
     if(!newUser.game.discoveredLocations.includes(destinationName)) newUser.game.discoveredLocations.push(destinationName);
@@ -268,14 +308,14 @@ async function playAction(username, socket, actionObj){
     const availableNPCs = gameMap[user.game.location].npcs;
     const targetNPC = availableNPCs[args[0]];
 
-    if(targetNPC == undefined) return socket.emit('message', 'That is not an available action.');
+    if(!targetNPC) return socket.emit('message', 'That is not an available action.');
 
     return socket.emit('message', `${targetNPC.name}: ${targetNPC.text}`);
   } else if(command == 'fight'){
     // Fighting system
     const targetEnemy = gameMap[user.game.location].enemies[args[0]];
     
-    if(targetEnemy == undefined) return socket.emit('message', 'That is not an available action.');
+    if(!targetEnemy) return socket.emit('message', 'That is not an available action.');
 
       if(user.game.defeatedEnemies.includes(targetEnemy.name)) return socket.emit('message', 'That is not an available action. (You have already beaten this enemy!)');
 
@@ -348,7 +388,7 @@ async function playAction(username, socket, actionObj){
     
     const item = targetItem;
     
-    if(item == undefined) return socket.emit('message', 'That is not an available action.');
+    if(!item) return socket.emit('message', 'That is not an available action.');
 
     // Inspect
     if(command == 'inspect'){
@@ -365,6 +405,16 @@ async function playAction(username, socket, actionObj){
 
     let newUser = user;
     newUser.game.money -= price;
+
+    // Apply elixir
+    if(item.name == 'Elixir'){
+      newUser.game.lastElixir = Date.now();
+      
+      await db.set(user.username, newUser);
+
+      socket.emit('message', `You purchased the ${item.name}, your buffs will remain for the next 45 minutes!`);
+      return socket.emit('gameUpdate', {"user": newUser, "notify": false});
+    }
     
     if(user.game.items.includes('Pouch') && (item.type == 'food')){
       // Check if the player is buying food and has the pouch and/or microwave
@@ -379,7 +429,7 @@ async function playAction(username, socket, actionObj){
     }
 
     if(item.type == 'armor'){
-      newUser.game.maxHealth += item.defense;
+      newUser.game.maxHealthBuff += item.defense;
       newUser.game.health += item.defense;
     }
 
@@ -410,12 +460,12 @@ async function playAction(username, socket, actionObj){
     if((user.game.location != 'mine') && (user.game.location != 'platinumMine')) return socket.emit('message', 'That is not an available action.');
 
     const ore = (user.game.location == 'platinumMine')? 'platinum' : 'gold';
-    const oreValue = (ore == 'platinum')? 75 : 50;
+    const oreValue = (ore == 'platinum')? 100 : 50;
 
     // Change stats based on user items, stats, and ore type
     let mineTime = 1000;
     
-    const speedReduction = ((user.game.speed + user.game.speedBuff)  > 250)? 250 : user.game.speed;
+    const speedReduction = ((user.game.speed + user.game.speedBuff) > 250)? 250 : (user.game.speed + user.game.speedBuff);
     mineTime -= speedReduction;
     
     if(user.game.items.includes('SuperPick')) mineTime -= 350;
@@ -466,15 +516,17 @@ async function playAction(username, socket, actionObj){
   } else if(command == 'train'){
     // Training
     if(user.game.location != 'gym') return socket.emit('message', 'That is not an available action.');
-    if(user.game.money < 50) return socket.emit('message', 'You don\'t have enough money!');
+    const price = (user.game.items.includes('Companion'))? 45 : 50;
+    if(user.game.money < price) return socket.emit('message', 'You don\'t have enough money!');
 
-    const maxDamage = (user.game.level + 1) * 15;
+    const maxHealth = ((user.game.level + 1) * 15) + user.game.maxHealth;
+    const maxDamage = (user.game.level + 1) * 10;
     const maxSpeed = user.game.level * 5;
 
-    if((user.game.speed >= maxSpeed) || (user.game.damage >= maxDamage)) return socket.emit('message', 'Your speed and strength stats are already maxed! Level up to increase your maximum stats.');
+    if((user.game.speed >= maxSpeed) && (user.game.damage >= maxDamage) && (user.game.maxHealth >= maxHealth)) return socket.emit('message', 'Your speed, strength, and health stats are already maxed! Level up to increase your maximum stats.');
 
     let newUser = user;
-    newUser.game.money -= 50;
+    newUser.game.money -= price;
 
     let counter = 0;
     const trainTime = (user.game.items.includes('Supplements'))? 450 : 500;
@@ -486,20 +538,27 @@ async function playAction(username, socket, actionObj){
       counter++;
       socket.emit('message', `Training... (${counter * 10}%)`);
       if(counter >= 10){
-        const multiplier = (user.game.items.includes('Supplements'))? 5 : 4; 
-        let damageGained = Math.floor(Math.random() * multiplier);
-        let speedGained = Math.floor(Math.random() * multiplier);
+        const multiplier = (user.game.items.includes('Supplements'))? 6 : 5; 
+        let maxHealthGained = Math.floor(Math.random() * (multiplier - 1)) + Math.ceil((maxHealth - user.game.maxHealth) / 25);
+        let damageGained = Math.floor(Math.random() * multiplier) + Math.ceil((maxDamage - user.game.damage) / 25);
+        let speedGained = Math.floor(Math.random() * multiplier) + Math.ceil((maxSpeed - user.game.speed) / 25);
         const punctuation = ((damageGained + speedGained) > 0)? '!' : '.';
 
         // Make sure user isn't over their level stat limit
+        if((newUser.game.maxHealth + maxHealthGained) > maxHealth) maxHealthGained = (maxHealth - user.game.maxHealth);
         if((newUser.game.damage + damageGained) > maxDamage) damageGained = (maxDamage - user.game.damage);
         if((newUser.game.speed + speedGained) > maxSpeed) speedGained = (maxSpeed - user.game.speed);
         
-        socket.emit('message', `Finished${punctuation} Damage stat increased by ${damageGained}, speed stat increased by ${speedGained}${punctuation}`);
+        socket.emit('message', `Finished! Speed +${speedGained}, damage +${damageGained}, and max health +${maxHealthGained}!`);
 
         // Save gainz
+        newUser.game.maxHealth += maxHealthGained;
+        newUser.game.health += maxHealthGained;
         newUser.game.damage += damageGained;
         newUser.game.speed += speedGained;
+
+        // Double check that health isn't over maximum
+        if(newUser.health > (newUser.maxHealth + newUser.maxHealthBuff)) newUser.health = (newUser.maxHealth + newUser.maxHealthBuff);
         
         db.set(user.username, newUser);
         socket.emit('gameUpdate', {"user": newUser, "notify": false});
@@ -514,14 +573,14 @@ async function playAction(username, socket, actionObj){
 
     if(user.game.location == 'camp'){
       // Camp battle
-      const enemyHealth = ((Math.floor(Math.random() * 2) + 2) * 50);
+      const enemyHealth = Math.floor((Math.random() + 0.55) * (user.game.damage + user.game.damageBuff));
       const enemy = {
         name: "Opposing Brawler",
         stats: {
-          speed: (Math.floor(Math.random() * Math.random() * 9) + 1),
+          speed: Math.floor((Math.random() + 0.45) * (user.game.speed + user.game.speedBuff)),
           health: enemyHealth,
           maxHealth: enemyHealth,
-          damage: ((Math.floor(Math.random() * 5) + 1) * 5)
+          damage: Math.floor((Math.random() + 0.4) * user.game.health)
         }
       }
       
@@ -541,26 +600,23 @@ async function playAction(username, socket, actionObj){
         }
   
         socket.emit('gameUpdate', {"user": user, "notify": false});
-        socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth}\nEnemy health: ${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
+        socket.emit('message', `Your health: ${(user.game.health > 0)? user.game.health : 0}/${user.game.maxHealth + user.game.maxHealthBuff}\nEnemy health: ${(enemy.stats.health > 0)? enemy.stats.health : 0}/${enemy.stats.maxHealth}`);
         
         if((user.game.health <= 0) || (enemy.stats.health <= 0)){
-          let newUser = user;
           let xpMultiplier;
           
           if(user.game.health > 0){
             // Fight won
             xpMultiplier = 1.1;
-            
-            socket.emit('message', `You beat the ${enemy.name} and gained $75!`);
-            newUser.game.money += 75;
+            socket.emit('message', `You beat the ${enemy.name}!`);
           } else {
             // Fight lost
             xpMultiplier = 0.1;
             socket.emit('message', `You lost to the ${enemy.name}.`);
           }
   
-          const xpGained = 35 * (Math.random() + 1) * xpMultiplier;
-          newUser = addXP(newUser, xpGained, socket);
+          const xpGained = Math.ceil(10 * (Math.random() + 0.75) * xpMultiplier);
+          let newUser = addXP(user, xpGained, socket);
           newUser.game.health = startingHP;
           
           db.set(user.username, newUser);
@@ -600,7 +656,7 @@ async function playAction(username, socket, actionObj){
     if(user.game.money < 5) return socket.emit('message', 'You don\'t have enough money.');
 
     // Get amount of HP to heal, and cost
-    let HPToHeal = (user.game.maxHealth - user.game.health);
+    let HPToHeal = ((user.game.maxHealth + user.game.maxHealthBuff) - user.game.health);
 
     if(HPToHeal <= 0) return socket.emit('message', 'You are already at full health!');
 
@@ -616,7 +672,7 @@ async function playAction(username, socket, actionObj){
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
 
     // Emit message
-    socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth})\nMoney spent: $${formatNumber(price)}`);
+    socket.emit('message', `Bizarre Squirrel: [The squirrel looks up at you, and fear wells up in your stomach. You have no idea what to expect, until it jumps up and licks you, covering you in slime. Almost immediately, you pass out.]\n\nYou wake up, and the squirrel is exactly where it was before it attacked you.\nHP Healed: ${HPToHeal} (Current HP: ${newUser.game.health}/${newUser.game.maxHealth + newUser.game.maxHealthBuff})\nMoney spent: $${formatNumber(price)}`);
   } else if(command == 'ally'){
     // Ally system
     if(!gameMap[user.game.location].availableAlliances.includes(args[0])) return socket.emit('message', 'That is not an available action.');
@@ -635,7 +691,7 @@ async function playAction(username, socket, actionObj){
     socket.emit('message', `Joined the ${targetAlly} alliance!`);
   } else if(command == 'eat'){
     // Eating system
-    if(user.game.health >= user.game.maxHealth) return socket.emit('message', 'You are already at full health!');
+    if(user.game.health >= (user.game.maxHealth + user.game.maxHealthBuff)) return socket.emit('message', 'You are already at full health!');
     
     let healAmount;
     let oldHealth = user.game.health;
@@ -649,7 +705,7 @@ async function playAction(username, socket, actionObj){
       if(isNaN(healAmount)) return socket.emit('message', 'You must include a valid food value! Ex. \"eat 25\"');
       if(healAmount > user.game.food) return socket.emit('message', 'You don\'t have that much food!');
       if(healAmount < 1) return socket.emit('message', 'You must eat a minimum of 1!');
-      if(healAmount > (user.game.maxHealth - user.game.health)) return socket.emit('message', 'You don\'t need to eat that much!');
+      if(healAmount > ((user.game.maxHealth + user.game.maxHealthBuff) - user.game.health)) return socket.emit('message', 'You don\'t need to eat that much!');
 
       newUser.food -= healAmount;
       newUser.game.health += healAmount;
@@ -657,7 +713,7 @@ async function playAction(username, socket, actionObj){
       message = `Healed ${formatNumber(newUser.game.health - oldHealth)} HP!`;
     } else {
       // User is eating normally
-      if(food[args[0]] == undefined) return socket.emit('message', 'That is not an available action.');
+      if(!food[args[0]]) return socket.emit('message', 'That is not an available action.');
       if(!user.game.items.includes(capitalizeFirstLetter(args[0]))) return socket.emit('message', 'That is not an available action.');
 
       // Multiply by 1.5 if user has the microwave
@@ -668,7 +724,7 @@ async function playAction(username, socket, actionObj){
       newUser.game.items.splice(foodIndex, 1);
       
       newUser.game.health += healAmount;
-      if(newUser.game.health > newUser.game.maxHealth) newUser.game.health = newUser.game.maxHealth;
+      if(newUser.game.health > (newUser.game.maxHealth + newUser.game.maxHealthBuff)) newUser.game.health = newUser.game.maxHealth;
       
       message = `Healed ${formatNumber(newUser.game.health - oldHealth)} HP by eating the ${capitalizeFirstLetter(args[0])}!`
     }
@@ -692,17 +748,22 @@ async function playAction(username, socket, actionObj){
     if(!((user.game.location == 'penguinHQ') || (user.game.location == 'pigeonHQ'))) return socket.emit('message', 'That is not an available action.');
     if(user.game.level < 5) return socket.emit('message', 'You must be at least level 5 to participate in a raid!');
 
-    const raidTeam = (user.game.location == 'penguinHQ')? 'penguin' : 'pigeon';
-    
+    // Check airdrop buff
+    const currentAirdrop = await airdrops.get(user.game.alliance);
+    if(!currentAirdrop) await validateAirdrops();
+
+    const airdropActive = (((Date.now() - currentAirdrop) / (1000 * 60)) < 45);
+
+    // Set player as busy and save + start the raid
     busyPlayers.set(user.username, 'raiding');
     raidingPlayers.set(user.username,{
-      'team': raidTeam,
+      'team': user.game.alliance,
       'location': 'start',
       'score': 0,
-      'troops': 50
+      'troops': (50 * ((airdropActive == true)? 1.4 : 1))
     });
     
-    return socket.emit('message', raidMap[raidTeam].start.text);
+    return socket.emit('message', raidMap[user.game.alliance].start.text);
   } else if(command == 'option'){
     let raid = raidingPlayers.get(user.username);
     
@@ -734,12 +795,23 @@ async function playAction(username, socket, actionObj){
       raidingPlayers.delete(user.username);
       busyPlayers.delete(user.username);
 
+      // Check airdrop buff
+      const currentAirdrop = await airdrops.get(user.game.alliance);
+      if(!currentAirdrop) await validateAirdrops();
+  
+      const airdropActive = (((Date.now() - currentAirdrop) / (1000 * 60)) < 45);
+
       // Calculate XP
-      const xpMult = (victory == true)? (1.1 + (Math.random() / 2)) : 0.75;
+      const xpMultiplier = (victory == true)? (1.1 + (Math.random() / 3)) : 0.75;
       const troopBonus = Math.floor(raid.troops / 3.3);
-      const xpGained = (raid.score + troopBonus) * xpMult;
+      let xpGained = ((raid.score + troopBonus) * xpMultiplier) + ((victory == true)? (user.game.xpRequired / 15) : 0);
+      if((xpGained < 35) && (victory == true)) xpGained = 35;
+      if(xpGained > 250) xpGained = 250;
+
+      // Apply airdrop buff
+      if(airdropActive == true) xpGained = (xpGained * 1.3);
       
-      socket.emit('message', `${(victory == true)? 'Raid successful!' : 'All of your troops have died. You manage to make it back to base alive.'}\nFinal score: ${raid.score}${(troopBonus > 0)? `\nRemaning troop bonus: ${troopBonus}` : ''}`);
+      socket.emit('message', `${(victory == true)? 'Raid successful!' : 'All of your troops have died. You manage to make it back to base alive.'}\nFinal score: ${raid.score}${(troopBonus > 0)? `\nRemaining troop bonus: ${troopBonus}` : ''}${(airdropActive == true)? '\n(Airdrop bonus included!)' : ''}`);
       
       let newUser = addXP(user, xpGained, socket);
 
@@ -749,6 +821,64 @@ async function playAction(username, socket, actionObj){
       await db.set(user.username, newUser);
       socket.emit('gameUpdate', {"user": newUser, "notify": true});
     }
+  } else if(command == 'airdrop'){
+    // Airdrops
+    // Check that user is in a headquarters location and is at least level 5
+    if(!((user.game.location == 'penguinHQ') || (user.game.location == 'pigeonHQ'))) return socket.emit('message', 'That is not an available action.');
+    if(user.game.level < 5) return socket.emit('message', 'You must be at least level 5 to purchase an airdrop.');
+
+    // Check if player has enough money, accounting for companion
+    const price = (user.game.items.includes('Companion'))? 450_000 : 500_000;
+    if(user.game.money < price) return socket.emit('message', 'You don\'t have enough money to buy an airdrop.');
+
+    let newUser = user;
+
+    // Team Player quest
+    if(!user.game.completedQuests.includes('teamplayer')){
+      newUser.game.completedQuests.push('teamplayer');
+      socket.emit('message', '(You feel as though you\'ve completed something important, maybe you should check the quest board!)');
+    }
+
+    // Subtract cost and save user
+    newUser.game.money -= price;
+    db.set(user.username, newUser);
+
+    const currentAirdrop = await airdrops.get(user.game.alliance);
+    const time = Date.now();
+    
+    if(!currentAirdrop) await validateAirdrops();
+
+    const minutesSinceAirdrop = ((time - currentAirdrop) / (1000 * 60));
+    let newAirdrop;
+
+    // Update airdrop in airdrop DB
+    if(minutesSinceAirdrop >= 45){
+      newAirdrop = (time + (45 * 60 * 1000));
+    } else {
+      newAirdrop = (currentAirdrop + (45 * 60 * 1000));
+    }
+
+    airdrops.set(user.game.alliance, newAirdrop);
+
+    const remainingMinutes = Math.ceil((newAirdrop - time) / (1000 * 60));
+
+    return socket.emit('message', `You purchased an airdrop and boosted the ${capitalizeFirstLetter(user.game.alliance)} Team's raids for 45 minutes! Current airdrop boost will last for a total of: ${remainingMinutes} minute${(remainingMinutes == 1)? '' : 's'}.`);
+  } else if(command == 'activeairdrops'){
+    // Active airdrop checker
+    // Check that user is in a headquarters location
+    if(!((user.game.location == 'penguinHQ') || (user.game.location == 'pigeonHQ'))) return socket.emit('message', 'That is not an available action.');
+
+    const currentAirdrop = await airdrops.get(user.game.alliance);
+
+    if(!currentAirdrop) await validateAirdrops();
+    
+    const time = Date.now();
+    const remainingMinutes = Math.ceil((currentAirdrop - time) / (1000 * 60));
+    const minutesSinceAirdrop = ((time - currentAirdrop) / (1000 * 60));
+    
+    const message = (minutesSinceAirdrop < 45)? `Current ${capitalizeFirstLetter(user.game.alliance)} airdrop boost will last for a total of: ${remainingMinutes} minute${(remainingMinutes == 1)? '' : 's'}.` : `No ${capitalizeFirstLetter(user.game.alliance)} airdrops are currently active.`;
+    
+    return socket.emit('message', message);
   } else if(command == 'blackjack'){
     if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
       
@@ -768,21 +898,21 @@ async function playAction(username, socket, actionObj){
     if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
     
     const game = blackjackGames.get(user.username);
-    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    if(!game) return socket.emit('message', 'You must already be in a game of blackjack to play!');
     
     game.hit();
   } else if(command == 'double'){
     if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
     
     const game = blackjackGames.get(user.username);
-    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    if(!game) return socket.emit('message', 'You must already be in a game of blackjack to play!');
     
     game.double();
   } else if(command == 'stand'){
     if(user.game.location != 'diner') return socket.emit('message', 'That is not an available action.');
     
     const game = blackjackGames.get(user.username);
-    if(game == undefined) return socket.emit('message', 'You must already be in a game of blackjack to play!');
+    if(!game) return socket.emit('message', 'You must already be in a game of blackjack to play!');
     
     game.end();
   } else if(command == 'quests'){
@@ -799,7 +929,7 @@ async function playAction(username, socket, actionObj){
     for(let key of Object.keys(quests)){
       const quest = quests[key];
       
-      if(user.game.level >= quest.appearAtLevel){
+      if(user.game.highestLevel >= quest.appearAtLevel){
         if(user.game.completedQuests.includes(key)){
           completedQuests += `${quest.name}${(quest.secret == true)? ' (Secret)' : ''} - ${quest.description} - Reward: $${formatNumber(quest.reward)}\n`;
           
@@ -838,17 +968,19 @@ async function playAction(username, socket, actionObj){
 
     const penguinScore = await raidScores.get('penguin');
     const pigeonScore = await raidScores.get('pigeon');
+    const totalScore = penguinScore + pigeonScore;
 
     if((!penguinScore) || (!pigeonScore)) await validateRaidScores();
     
-    const penguinMultiplier = penguinScore / (penguinScore + pigeonScore);
-    const pigeonMultiplier = pigeonScore / (penguinScore + pigeonScore);
+    const penguinMultiplier = (totalScore > 0)? (penguinScore / (penguinScore + pigeonScore)) : 0.5;
+    const pigeonMultiplier = (totalScore > 0)? (pigeonScore / (penguinScore + pigeonScore)) : 0.5;
+    
     const multipliers = {
-      'penguin': (penguinMultiplier >= 0.5)? (penguinMultiplier + 1) : penguinMultiplier,
-      'pigeon': (pigeonMultiplier >= 0.5)? (pigeonMultiplier + 1) : pigeonMultiplier
+      'penguin': (penguinMultiplier >= 0.5)? (penguinMultiplier + 0.5) : penguinMultiplier,
+      'pigeon': (pigeonMultiplier >= 0.5)? (pigeonMultiplier + 0.5) : pigeonMultiplier
     }
 
-    let message = `Currently, the Penguins have won ~${Math.floor(penguinMultiplier * 100)}% of raids (${penguinScore - 1}), and the Pigeons have won ~${Math.floor(pigeonMultiplier * 100)}% of raids. (${pigeonScore - 1})`
+    let message = `Currently, the Penguins have won ~${Math.floor(penguinMultiplier * 100)}% of raids (${penguinScore}), and the Pigeons have won ~${Math.floor(pigeonMultiplier * 100)}% of raids. (${pigeonScore})`;
 
     if(user.game.alliance == ''){
       message += '\n(If you join an alliance, you can come back here to collect a daily reward depending on the victory rate of your alliance!)';
@@ -858,7 +990,7 @@ async function playAction(username, socket, actionObj){
     const time = Date.now();
     
     if((time - user.game.lastDailyReward) > (1000 * 60 * 60 * 24)){
-      const finalReward = Math.floor(100 * (1 + (user.game.level / 5)) * multipliers[user.game.alliance]);
+      const finalReward = Math.floor(200 * (1 + (user.game.level / 5)) * multipliers[user.game.alliance]);
   
       let newUser = user;
       newUser.game.money += finalReward;
@@ -876,6 +1008,56 @@ async function playAction(username, socket, actionObj){
 
       socket.emit('message', message);
     }
+  } else if(command == 'prestige'){
+    // Prestiging
+    if(user.game.level < (50 + (user.game.prestige * 10))) return socket.emit('message', `You can only prestige when you've reached the your level cap! Currently, you are level ${user.game.level}/${(50 + (user.game.prestige * 10))}!`);
+      
+    if(prestigeRequests.has(user.username)){
+      prestigeRequests.delete(user.username);
+      let newUser = user;
+      
+      newUser.game.level = 1;
+      newUser.game.xpRequired = xpRequired(newUser.game.level);
+      newUser.game.speed = 1;
+      newUser.game.damage = 15;
+      newUser.game.maxHealth = 100;
+      if(newUser.game.health > (newUser.game.maxHealth + newUser.game.maxHealthBuff)) newUser.game.health = (newUser.game.maxHealth + newUser.game.maxHealthBuff);
+      newUser.game.prestige++;
+
+      // Prestigious Player quests
+      if(!newUser.game.completedQuests.includes('prestigiousplayer')){
+        newUser.game.completedQuests.push('prestigiousplayer');
+      } else if((!newUser.game.completedQuests.includes('prestigiousplayertwo')) && (newUser.game.prestige >= 5)){
+        newUser.game.completedQuests.push('prestigiousplayertwo');
+      } else if((!newUser.game.completedQuests.includes('prestigiousplayerthree')) && (newUser.game.prestige >= 10)){
+        newUser.game.completedQuests.push('prestigiousplayerthree');
+      }
+
+      db.set(user.username, newUser);
+
+      return socket.emit('message', `You prestiged! Prestige level: ${newUser.game.prestige}`);
+    } else {
+      prestigeRequests.set(user.username, '');
+      socket.emit('message', 'Are you sure? Prestiging will reset your level and stats! Type \"prestige\" once more within 60 seconds to confirm!');
+      setTimeout(function(){
+        if(prestigeRequests.has(user.username)) prestigeRequests.delete(user.username);
+      }, 60000);
+    }
+  } else if(command == 'playerinfo'){
+    // Player info
+    if(!args[0]) return socket.emit('message', 'You must provide a player\'s username to search! Ex. \"playerinfo {username}\"');
+
+    const player = await db.get(args[0]);
+    if(!player) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
+
+    // Make sure the player has a "game" object, otherwise users could request things like "playerinfo username.game.money" and crash the server
+    const playerInfo = player.game;
+    if(!playerInfo) return socket.emit('message', `Player "${args[0]}" not found. (Usernames are case-sensitive!)`);
+    
+    return socket.emit('message', `${args[0]} (${(connectedPlayers.has(args[0]))? 'Online' : 'Offline'}):\n\nAlliance: ${(playerInfo.alliance == '')? 'None' : capitalizeFirstLetter(playerInfo.alliance)}\nLevel: ${playerInfo.level}\nPrestige: ${playerInfo.prestige}\nBalance: $${playerInfo.money}\nLocation: ${(user.game.discoveredLocations.includes(playerInfo.location))? gameMap[playerInfo.location].name : '???'}`);
+  } else if(command == 'playersonline'){
+    // Players online
+    socket.emit('message', `Players online: ${[...connectedPlayers.keys()].join(', ')}`);
   } else if(command == 'burn'){
     // Burners quest
     if(user.game.location != 'field') return socket.emit('message', 'That is not an available action.');
@@ -888,6 +1070,21 @@ async function playAction(username, socket, actionObj){
     await db.set(user.username, newUser);
 
     socket.emit('gameUpdate', {"user": newUser, "notify": false});
+  } else if(command == 'reset'){
+    if(resetRequests.has(user.username)){
+      resetRequests.delete(user.username);
+      
+      db.delete(user.username);
+      
+      socket.emit('reload');
+      socket.disconnect();
+    } else {
+      resetRequests.set(user.username, '');
+      socket.emit('message', 'If you are sure you want to PERMANENTLY DELETE your progress, type \"reset\" one more time within the next 10 seconds.');
+      setTimeout(function(){
+        if(resetRequests.has(user.username)) resetRequests.delete(user.username);
+      }, 10000);
+    }
   } else {
     // Unrecognized command
     return socket.emit('message', 'That is not an available action.');
@@ -902,10 +1099,13 @@ function addXP(user, xpGained, socket){
   socket.emit('message', `Gained ${Math.floor(xpGained)}XP!`);
   
   while(user.game.xp >= user.game.xpRequired){
-    user.game.level++;
-    user.game.xp = user.game.xp - user.game.xpRequired;
-    user.game.xpRequired = xpRequired(user.game.level);
-    socket.emit('message', `Leveled up! Now level ${user.game.level}.`);
+    if(user.game.level < (50 + (user.game.prestige * 10))){
+      user.game.level++;
+      if(user.game.highestLevel < user.game.level) user.game.highestLevel = user.game.level;
+      user.game.xp = user.game.xp - user.game.xpRequired;
+      user.game.xpRequired = xpRequired(user.game.level);
+      socket.emit('message', `Leveled up! Now level ${user.game.level}.`);
+    }
   }
 
   // Junior player quest
@@ -914,7 +1114,12 @@ function addXP(user, xpGained, socket){
   // Senior player quest
   if((user.game.level >= 100) && (!user.game.completedQuests.includes('seniorplayer'))) user.game.completedQuests.push('seniorplayer');
 
-  socket.emit('message', `${user.game.xpRequired - user.game.xp}XP until next level.`);
+  if(user.game.level >= (50 + (user.game.prestige * 10))){
+    socket.emit('message', `You're currently at the highest level (${user.game.level}) for your prestige ${user.game.prestige}! To unlock a higher prestige, use the "prestige" command which will reset your level but increase your level cap by 10.`);
+  } else {
+    socket.emit('message', `${user.game.xpRequired - user.game.xp}XP until next level.`);
+  }
+  
   return user;
 }
 
@@ -925,18 +1130,27 @@ function xpRequired(currentLevel){
 }
 
 
-// Raid DB
+// Raid Score and Airdrop DB's
 
 async function validateRaidScores(){
   const penguinScore = await raidScores.get('penguin');
   const pigeonScore = await raidScores.get('pigeon');
   
-  if(!penguinScore) raidScores.set('penguin', 1);
-  if(!pigeonScore) raidScores.set('pigeon', 1);
+  if(!penguinScore) raidScores.set('penguin', 0);
+  if(!pigeonScore) raidScores.set('pigeon', 0);
 }
 
-// Validate scores on startup
+async function validateAirdrops(){
+  const penguinAirdrop = await airdrops.get('penguin');
+  const pigeonAirdrop = await airdrops.get('pigeon');
+  
+  if(!penguinAirdrop) airdrops.set('penguin', 0);
+  if(!pigeonAirdrop) airdrops.set('pigeon', 0);
+}
+
+// Validate DB's on startup
 validateRaidScores();
+validateAirdrops();
 
 
 // Blackjack
@@ -1114,7 +1328,9 @@ class Blackjack{
 
     let newUser = this.user;
     newUser.game.money += payout;
+    
     await db.set(this.user.username, newUser);
+    this.socket.emit('gameUpdate', {"user": newUser, "notify": false});
     
     this.updateUser(true);
 
@@ -1143,14 +1359,28 @@ function onlineBattle(playerOne, playerTwo){
     playerTwo = temp;
   }
 
-  // Apply buffs and set as busy
-  for(let player of [playerOne, playerTwo]){
+  playerOne.startingStats = [playerOne.user.game.speed, playerOne.user.game.damage, playerOne.user.game.health];
+  playerTwo.startingStats = [playerTwo.user.game.speed, playerTwo.user.game.damage, playerTwo.user.game.health];
+
+  // Set as busy, apply buffs and elixirs
+  for(let i in [playerOne, playerTwo]){
+    const player = [playerOne, playerTwo][i];
+    const otherPlayer = [playerOne, playerTwo][((i == 0)? 1 : 0)];
+    
     busyPlayers.set(player.user.username, 'fighting');
 
     player.buff = {
       attack: (player.buff == 'attack')? (Math.ceil(player.user.game.damage / 6)) : 0,
       speed: (player.buff == 'speed')? (Math.ceil(player.user.game.level / 5) * 10) : 0,
       defense: (player.buff == 'defense')? (Math.ceil(player.user.game.damage / 6)) : 0
+    }
+
+    const time = Date.now();
+
+    // Only apply elixir buffs if the player has bought an elixir in the last 45 minutes and the other player has achieved level 100
+    if(((time - player.user.game.lastElixir) <= (1000 * 60 * 45)) && (otherPlayer.user.game.highestLevel >= 100)){
+      player.user.game.damage += Math.ceil(player.user.game.damage / 2);
+      player.user.game.health += player.user.game.health;
     }
   }
   
@@ -1193,29 +1423,38 @@ function onlineBattle(playerOne, playerTwo){
         // Player two wins
         winner = playerTwo;
         loser = playerOne;
-        winMessage = `${playerTwo.user.username} beat ${playerOne.user.username} and won $${formatNumber(Math.floor(playerOne.user.game.money / 10))}!`;
+
+        // Account for companion
+        const multiplier = (playerOne.user.game.items.includes('Companion'))? 0.09 : 0.1;
         
-        playerTwo.user.game.money += Math.floor(playerOne.user.game.money / 10);
-        playerOne.user.game.money -= Math.floor(playerOne.user.game.money / 10);
+        winMessage = `${playerTwo.user.username} beat ${playerOne.user.username} and won $${formatNumber(Math.floor(playerOne.user.game.money * multiplier))}!`;
+        
+        playerTwo.user.game.money += Math.floor(playerOne.user.game.money * multiplier);
+        playerOne.user.game.money -= Math.floor(playerOne.user.game.money * multiplier);
       } else {
         // Player one wins
         winner = playerOne;
         loser = playerTwo;
-        winMessage = `${playerOne.user.username} beat ${playerTwo.user.username} and won $${Math.floor(playerTwo.user.game.money / 10)}!`;
+
+        // Account for companion
+        const multiplier = (playerTwo.user.game.items.includes('Companion'))? 0.09 : 0.1;
         
-        playerOne.user.game.money += Math.floor(playerTwo.user.game.money / 10);
-        playerTwo.user.game.money -= Math.floor(playerTwo.user.game.money / 10);
+        winMessage = `${playerOne.user.username} beat ${playerTwo.user.username} and won $${Math.floor(playerTwo.user.game.money * multiplier)}!`;
+        
+        playerOne.user.game.money += Math.floor(playerTwo.user.game.money * multiplier);
+        playerTwo.user.game.money -= Math.floor(playerTwo.user.game.money * multiplier);
       }
 
-      // Heal & save players, give XP, and clean up
+      // Reset player stats, save, give XP, and clean up
       for(let player of [playerOne, playerTwo]){
-        
-        player.user.game.health = player.user.game.maxHealth;
+
+        // Nice one-liner to set multiple values at once
+        [player.user.game.speed, player.user.game.damage, player.user.game.health] = [...player.startingStats];
         
         let xpGained;
         if(player.user.username == winner.username){
           const levelDifference = (loser.user.game.level >= winner.user.game.level)? (loser.user.game.level - winner.user.game.level) : 0;
-          xpGained = Math.floor(10 + (levelDifference ** 1.75));
+          xpGained = 10 + (levelDifference ** 1.75);
 
           // Ringfighter quest
           if(!player.user.game.completedQuests.includes('ringfighter')) player.user.game.completedQuests.push('ringfighter');
@@ -1256,12 +1495,17 @@ function matchmakeBattles(){
 
   // Battle each pair
   for(let pair of pairs){
+    const elixirsActiveMessage = ((pair[0].user.game.highestLevel >= 100) && (pair[1].user.game.highestLevel >= 100))? '\nActive elixirs WILL be applied in this battle!' : '';
+    
     for(let player in pair){
       battleQueue.delete(pair[player].user.username);
-      pair[player].socket.emit('message', `Found match! Opponent: ${(player == 0)? pair[1].user.username : pair[0].user.username}`)
+      pair[player].socket.emit('message', `Found match! Opponent: ${(player == 0)? pair[1].user.username : pair[0].user.username}${elixirsActiveMessage}`);
     }
 
-    onlineBattle(pair[0], pair[1]);
+    // Allow players a second to read the message before starting the battle
+    setTimeout(function(){
+      onlineBattle(pair[0], pair[1]);
+    }, 1000)
   }
 }
 
@@ -1313,10 +1557,17 @@ async function sendChat(username, msg, socket){
   const msgObj = {
     sender: `${title}${username}`,
     msg: filter.clean(msg),
-    badgeColor: badgeColor
+    badgeColor: badgeColor,
+    prestige: socket.rooms.has('Prestige Hall'),
+    system: false
   }
-    
-  io.emit('chatMsg', msgObj);
+
+  // Emit to correct room
+  if(socket.rooms.has('Prestige Hall')){
+    io.to("Prestige Hall").emit('chatMsg', msgObj);
+  } else {
+    io.emit('chatMsg', msgObj);
+  }
 }
 
 async function chatCommand(msg, socketID){
@@ -1334,18 +1585,19 @@ async function chatCommand(msg, socketID){
     if(args[0] == 'CatR3kd') return systemMessage(socketID, 'Cannot kick this user!');
     
     const targetSocket = await connectedPlayers.get(args[0]);
-    if(targetSocket == undefined) return systemMessage(socketID, 'User not found.');
+    if(!targetSocket) return systemMessage(socketID, 'User not found.');
 
-    io.to(targetSocket).emit('kicked');
+    io.to(targetSocket).emit('reload');
     return systemMessage(socketID, `Kicked user ${args[0]}.`);
   }
 
   if(command == 'warn'){
     const targetSocket = await connectedPlayers.get(args[0]);
-    if(targetSocket == undefined) return systemMessage(socketID, 'User not found.');
-    if(args[1] == undefined) return systemMessage(socketID, 'You need to provide a warning message');
+    if(!targetSocket) return systemMessage(socketID, 'User not found.');
+    if(!args[1]) return systemMessage(socketID, 'You need to provide a warning message.');
 
-    return systemMessage(targetSocket, `An admin has warned you: ${args[1]}`);
+    systemMessage(targetSocket, `An admin has warned you: ${args[1]}`);
+    return systemMessage(socketID, `Warned user ${args[0]}: ${args[1]}`);
   }
 
   // Ban
@@ -1353,7 +1605,7 @@ async function chatCommand(msg, socketID){
     if(args[0] == 'CatR3kd') return systemMessage(socketID, 'Cannot ban this user!');
     
     const targetUser = await db.get(args[0]);
-    if(targetUser == undefined) return systemMessage(socketID, 'User not found.');
+    if(!targetUser) return systemMessage(socketID, 'User not found.');
 
     const newUser = targetUser;
     newUser.banStatus = true;
@@ -1371,7 +1623,7 @@ async function chatCommand(msg, socketID){
   // Unban
   if(command == 'unban'){
     const targetUser = await db.get(args[0]);
-    if(targetUser == undefined) return systemMessage(socketID, 'User not found.');
+    if(!targetUser) return systemMessage(socketID, 'User not found.');
 
     const newUser = targetUser;
     newUser.banStatus = false;
@@ -1393,7 +1645,9 @@ function systemMessage(socketID, msg){
   const chatObj = {
     sender: 'System',
     msg: msg,
-    badgeColor: '#F45B69'
+    badgeColor: '#F45B69',
+    prestige: false,
+    system: true
   }
       
   io.to(socketID).emit('chatMsg', chatObj);
@@ -1415,6 +1669,7 @@ async function getLeaderboard(){
   for(let user of topTen){
     const userObj = {
       username: user.value.username,
+      prestige: user.value.game.prestige,
       money: user.value.game.money
     }
 
